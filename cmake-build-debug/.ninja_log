@@ -1,0 +1,17 @@
+# ninja log v6
+575	702	1724791934601358086	untitled	ad526c544bbbb6fd
+1	307	1724792475330512961	CMakeFiles/shade_engine.dir/lib/core/input.cpp.o	559272f6ec86ec99
+0	434	1724792475330085084	CMakeFiles/shade_engine.dir/lib/core/draw.cpp.o	965f20960b51d5be
+1	436	1724792475330891921	CMakeFiles/shade_engine.dir/lib/core/structs.cpp.o	16b795e612dfb71a
+1	476	1724792475331098047	CMakeFiles/shade_engine.dir/main.cpp.o	85179b4cc9ba252c
+1	489	1724792475330368794	CMakeFiles/shade_engine.dir/lib/core/init.cpp.o	8c3381bf7c4bc68a
+489	615	1724792475818485320	shade_engine	5a31674fbc84fdbe
+5	587	1724792497134030198	CMakeFiles/shade_engine.dir/lib/core/init.cpp.o	8c3381bf7c4bc68a
+587	714	1724792497716183813	shade_engine	5a31674fbc84fdbe
+6	509	1724792618684123890	CMakeFiles/shade_engine.dir/main.cpp.o	85179b4cc9ba252c
+6	489	1724792711815956048	CMakeFiles/shade_engine.dir/main.cpp.o	85179b4cc9ba252c
+5	492	1724792711815343920	CMakeFiles/shade_engine.dir/lib/core/init.cpp.o	8c3381bf7c4bc68a
+492	618	1724792712301610979	shade_engine	5a31674fbc84fdbe
+5	446	1724792723167272499	CMakeFiles/shade_engine.dir/main.cpp.o	85179b4cc9ba252c
+5	449	1724792723166950455	CMakeFiles/shade_engine.dir/lib/core/init.cpp.o	8c3381bf7c4bc68a
+449	544	1724792723611301743	shade_engine	5a31674fbc84fdbe

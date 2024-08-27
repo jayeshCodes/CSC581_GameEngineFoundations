@@ -1,0 +1,3 @@
+/Users/utsav/Desktop/Repositories/Shade Engine/cmake-build-debug/CMakeFiles/shade_engine.dir
+/Users/utsav/Desktop/Repositories/Shade Engine/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/utsav/Desktop/Repositories/Shade Engine/cmake-build-debug/CMakeFiles/rebuild_cache.dir
