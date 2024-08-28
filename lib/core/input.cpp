@@ -1,4 +1,5 @@
 #include "input.hpp"
+#include "init.hpp"
 
 
 /*
@@ -15,7 +16,7 @@ void doInput(void)
         switch (event.type)
         {
         case SDL_QUIT:
-            exit(0);
+            gameRunning = false;
             break;
 
         default:

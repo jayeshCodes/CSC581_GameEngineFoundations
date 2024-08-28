@@ -1,15 +1,22 @@
 #include "main.hpp"
 #include <memory>
 
+#include "lib/objects/factory.hpp"
+#include "lib/objects/shapes/rectangle.hpp"
 
-int main(int argc, char* argv[])
-{
+bool gameRunning = false;
+
+
+int main(int argc, char *argv[]) {
     //Call the initialization functions
+    std::cout << ENGINE_NAME << " v" << ENGINE_VERSION << " initializing" << std::endl;
+    std::cout << "Created by Utsav and Jayesh" << std::endl;
+    std::cout << std::endl;
     initSDL();
+    gameRunning = true;
 
 
-    while (true)
-    {
+    while (gameRunning) {
         //Prep the scene
         prepareScene();
 
@@ -26,5 +33,7 @@ int main(int argc, char* argv[])
         SDL_Delay(16);
     }
 
+    cleanupSDL();
+    std::cout << "Closing " << ENGINE_NAME << " Engine" << std::endl;
     return 0;
 }

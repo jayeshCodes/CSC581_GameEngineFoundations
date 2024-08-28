@@ -5,7 +5,9 @@
 #include <iostream>
 
 // SDL render and window context
-extern App* app;
+extern App *app;
 
 // Initialize SDL rendering window
 void initSDL();
+
+void cleanupSDL();

@@ -10,6 +10,12 @@ set(SOURCES
         lib/core/input.cpp
         lib/core/structs.cpp
         main.cpp
+        lib/objects/shapes/rectangle.cpp
+        lib/objects/shapes/rectangle.hpp
+        lib/objects/object.cpp
+        lib/objects/object.hpp
+        lib/objects/factory.cpp
+        lib/objects/factory.hpp
 )
 
 

@@ -84,6 +84,27 @@ build CMakeFiles/shade_engine.dir/main.cpp.o: CXX_COMPILER__shade_engine_unscann
   OBJECT_DIR = CMakeFiles/shade_engine.dir
   OBJECT_FILE_DIR = CMakeFiles/shade_engine.dir
 
+build CMakeFiles/shade_engine.dir/lib/objects/shapes/rectangle.cpp.o: CXX_COMPILER__shade_engine_unscanned_Debug /Users/utsav/Desktop/Repositories/Shade$ Engine/lib/objects/shapes/rectangle.cpp || cmake_object_order_depends_target_shade_engine
+  DEP_FILE = CMakeFiles/shade_engine.dir/lib/objects/shapes/rectangle.cpp.o.d
+  FLAGS = -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -fcolor-diagnostics
+  INCLUDES = -isystem /Library/Frameworks/SDL2.framework/Headers -iframework /Library/Frameworks
+  OBJECT_DIR = CMakeFiles/shade_engine.dir
+  OBJECT_FILE_DIR = CMakeFiles/shade_engine.dir/lib/objects/shapes
+
+build CMakeFiles/shade_engine.dir/lib/objects/object.cpp.o: CXX_COMPILER__shade_engine_unscanned_Debug /Users/utsav/Desktop/Repositories/Shade$ Engine/lib/objects/object.cpp || cmake_object_order_depends_target_shade_engine
+  DEP_FILE = CMakeFiles/shade_engine.dir/lib/objects/object.cpp.o.d
+  FLAGS = -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -fcolor-diagnostics
+  INCLUDES = -isystem /Library/Frameworks/SDL2.framework/Headers -iframework /Library/Frameworks
+  OBJECT_DIR = CMakeFiles/shade_engine.dir
+  OBJECT_FILE_DIR = CMakeFiles/shade_engine.dir/lib/objects
+
+build CMakeFiles/shade_engine.dir/lib/objects/factory.cpp.o: CXX_COMPILER__shade_engine_unscanned_Debug /Users/utsav/Desktop/Repositories/Shade$ Engine/lib/objects/factory.cpp || cmake_object_order_depends_target_shade_engine
+  DEP_FILE = CMakeFiles/shade_engine.dir/lib/objects/factory.cpp.o.d
+  FLAGS = -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -fcolor-diagnostics
+  INCLUDES = -isystem /Library/Frameworks/SDL2.framework/Headers -iframework /Library/Frameworks
+  OBJECT_DIR = CMakeFiles/shade_engine.dir
+  OBJECT_FILE_DIR = CMakeFiles/shade_engine.dir/lib/objects
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target shade_engine
@@ -92,7 +113,7 @@ build CMakeFiles/shade_engine.dir/main.cpp.o: CXX_COMPILER__shade_engine_unscann
 #############################################
 # Link the executable shade_engine
 
-build shade_engine: CXX_EXECUTABLE_LINKER__shade_engine_Debug CMakeFiles/shade_engine.dir/lib/core/draw.cpp.o CMakeFiles/shade_engine.dir/lib/core/init.cpp.o CMakeFiles/shade_engine.dir/lib/core/input.cpp.o CMakeFiles/shade_engine.dir/lib/core/structs.cpp.o CMakeFiles/shade_engine.dir/main.cpp.o | /Library/Frameworks/SDL2.framework/Versions/A/SDL2
+build shade_engine: CXX_EXECUTABLE_LINKER__shade_engine_Debug CMakeFiles/shade_engine.dir/lib/core/draw.cpp.o CMakeFiles/shade_engine.dir/lib/core/init.cpp.o CMakeFiles/shade_engine.dir/lib/core/input.cpp.o CMakeFiles/shade_engine.dir/lib/core/structs.cpp.o CMakeFiles/shade_engine.dir/main.cpp.o CMakeFiles/shade_engine.dir/lib/objects/shapes/rectangle.cpp.o CMakeFiles/shade_engine.dir/lib/objects/object.cpp.o CMakeFiles/shade_engine.dir/lib/objects/factory.cpp.o | /Library/Frameworks/SDL2.framework/Versions/A/SDL2
   FLAGS = -g -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk
   LINK_LIBRARIES = -Wl,-rpath,/Library/Frameworks  /Library/Frameworks/SDL2.framework/Versions/A/SDL2
   LINK_PATH = -F/Library/Frameworks
