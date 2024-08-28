@@ -1,7 +1,7 @@
 #pragma once
 #include "structs.hpp"
 #include "defs.hpp"
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include <iostream>
 
 // SDL render and window context

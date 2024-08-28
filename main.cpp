@@ -1,6 +1,8 @@
 #include "main.hpp"
 #include <memory>
 
+#include "lib/core/timer.hpp"
+#include "lib/core/timer.hpp"
 #include "lib/objects/factory.hpp"
 #include "lib/objects/shapes/rectangle.hpp"
 
@@ -15,6 +17,12 @@ int main(int argc, char *argv[]) {
     initSDL();
     gameRunning = true;
 
+    // Create Rectangle instance
+    Rectangle rectangle({0,255,0,255}, {100,100,100,100});
+
+    //  init timer
+    Timer fpsTimer;
+    fpsTimer.start();
 
     while (gameRunning) {
         //Prep the scene
@@ -25,12 +33,21 @@ int main(int argc, char *argv[]) {
 
         //modify the game world here
 
+        // Draw the rectangle
+        rectangle.draw();
+
+        // Update the rectangle
+        rectangle.update();
 
         //Present the resulting scene
         presentScene();
 
-        //Inserting 16ms delay at the end for a budget frame-limiter.
-        SDL_Delay(16);
+        // Control frame rate
+        Uint32 frameTicks = fpsTimer.elapsed();
+        if (frameTicks < 16) {
+            SDL_Delay(16 - frameTicks);  // ~60 FPS
+        }
+        fpsTimer.start();
     }
 
     cleanupSDL();

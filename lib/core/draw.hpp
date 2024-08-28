@@ -1,6 +1,6 @@
 #pragma once
 #include "structs.hpp"
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 // SDL render and window context
 extern App* app;

@@ -16,6 +16,8 @@ set(SOURCES
         lib/objects/object.hpp
         lib/objects/factory.cpp
         lib/objects/factory.hpp
+        lib/core/timer.hpp
+        lib/core/timer.cpp
 )
 
 

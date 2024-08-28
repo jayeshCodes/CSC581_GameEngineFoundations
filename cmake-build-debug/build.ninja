@@ -39,7 +39,7 @@ include CMakeFiles/rules.ninja
 #############################################
 # Logical path to working directory; prefix for absolute paths.
 
-cmake_ninja_workdir = /Users/utsav/Desktop/Repositories/Shade$ Engine/cmake-build-debug/
+cmake_ninja_workdir = /Users/jayeshgajbhar/CSC581_GameEngineFoundations/cmake-build-debug/
 # =============================================================================
 # Object build statements for EXECUTABLE target shade_engine
 
@@ -49,61 +49,68 @@ cmake_ninja_workdir = /Users/utsav/Desktop/Repositories/Shade$ Engine/cmake-buil
 
 build cmake_object_order_depends_target_shade_engine: phony || .
 
-build CMakeFiles/shade_engine.dir/lib/core/draw.cpp.o: CXX_COMPILER__shade_engine_unscanned_Debug /Users/utsav/Desktop/Repositories/Shade$ Engine/lib/core/draw.cpp || cmake_object_order_depends_target_shade_engine
+build CMakeFiles/shade_engine.dir/lib/core/draw.cpp.o: CXX_COMPILER__shade_engine_unscanned_Debug /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/draw.cpp || cmake_object_order_depends_target_shade_engine
   DEP_FILE = CMakeFiles/shade_engine.dir/lib/core/draw.cpp.o.d
-  FLAGS = -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -fcolor-diagnostics
-  INCLUDES = -isystem /Library/Frameworks/SDL2.framework/Headers -iframework /Library/Frameworks
+  FLAGS = -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.0 -fcolor-diagnostics
+  INCLUDES = -isystem /opt/homebrew/Cellar/sdl2/2.30.6/include/SDL2
   OBJECT_DIR = CMakeFiles/shade_engine.dir
   OBJECT_FILE_DIR = CMakeFiles/shade_engine.dir/lib/core
 
-build CMakeFiles/shade_engine.dir/lib/core/init.cpp.o: CXX_COMPILER__shade_engine_unscanned_Debug /Users/utsav/Desktop/Repositories/Shade$ Engine/lib/core/init.cpp || cmake_object_order_depends_target_shade_engine
+build CMakeFiles/shade_engine.dir/lib/core/init.cpp.o: CXX_COMPILER__shade_engine_unscanned_Debug /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/init.cpp || cmake_object_order_depends_target_shade_engine
   DEP_FILE = CMakeFiles/shade_engine.dir/lib/core/init.cpp.o.d
-  FLAGS = -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -fcolor-diagnostics
-  INCLUDES = -isystem /Library/Frameworks/SDL2.framework/Headers -iframework /Library/Frameworks
+  FLAGS = -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.0 -fcolor-diagnostics
+  INCLUDES = -isystem /opt/homebrew/Cellar/sdl2/2.30.6/include/SDL2
   OBJECT_DIR = CMakeFiles/shade_engine.dir
   OBJECT_FILE_DIR = CMakeFiles/shade_engine.dir/lib/core
 
-build CMakeFiles/shade_engine.dir/lib/core/input.cpp.o: CXX_COMPILER__shade_engine_unscanned_Debug /Users/utsav/Desktop/Repositories/Shade$ Engine/lib/core/input.cpp || cmake_object_order_depends_target_shade_engine
+build CMakeFiles/shade_engine.dir/lib/core/input.cpp.o: CXX_COMPILER__shade_engine_unscanned_Debug /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/input.cpp || cmake_object_order_depends_target_shade_engine
   DEP_FILE = CMakeFiles/shade_engine.dir/lib/core/input.cpp.o.d
-  FLAGS = -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -fcolor-diagnostics
-  INCLUDES = -isystem /Library/Frameworks/SDL2.framework/Headers -iframework /Library/Frameworks
+  FLAGS = -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.0 -fcolor-diagnostics
+  INCLUDES = -isystem /opt/homebrew/Cellar/sdl2/2.30.6/include/SDL2
   OBJECT_DIR = CMakeFiles/shade_engine.dir
   OBJECT_FILE_DIR = CMakeFiles/shade_engine.dir/lib/core
 
-build CMakeFiles/shade_engine.dir/lib/core/structs.cpp.o: CXX_COMPILER__shade_engine_unscanned_Debug /Users/utsav/Desktop/Repositories/Shade$ Engine/lib/core/structs.cpp || cmake_object_order_depends_target_shade_engine
+build CMakeFiles/shade_engine.dir/lib/core/structs.cpp.o: CXX_COMPILER__shade_engine_unscanned_Debug /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/structs.cpp || cmake_object_order_depends_target_shade_engine
   DEP_FILE = CMakeFiles/shade_engine.dir/lib/core/structs.cpp.o.d
-  FLAGS = -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -fcolor-diagnostics
-  INCLUDES = -isystem /Library/Frameworks/SDL2.framework/Headers -iframework /Library/Frameworks
+  FLAGS = -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.0 -fcolor-diagnostics
+  INCLUDES = -isystem /opt/homebrew/Cellar/sdl2/2.30.6/include/SDL2
   OBJECT_DIR = CMakeFiles/shade_engine.dir
   OBJECT_FILE_DIR = CMakeFiles/shade_engine.dir/lib/core
 
-build CMakeFiles/shade_engine.dir/main.cpp.o: CXX_COMPILER__shade_engine_unscanned_Debug /Users/utsav/Desktop/Repositories/Shade$ Engine/main.cpp || cmake_object_order_depends_target_shade_engine
+build CMakeFiles/shade_engine.dir/main.cpp.o: CXX_COMPILER__shade_engine_unscanned_Debug /Users/jayeshgajbhar/CSC581_GameEngineFoundations/main.cpp || cmake_object_order_depends_target_shade_engine
   DEP_FILE = CMakeFiles/shade_engine.dir/main.cpp.o.d
-  FLAGS = -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -fcolor-diagnostics
-  INCLUDES = -isystem /Library/Frameworks/SDL2.framework/Headers -iframework /Library/Frameworks
+  FLAGS = -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.0 -fcolor-diagnostics
+  INCLUDES = -isystem /opt/homebrew/Cellar/sdl2/2.30.6/include/SDL2
   OBJECT_DIR = CMakeFiles/shade_engine.dir
   OBJECT_FILE_DIR = CMakeFiles/shade_engine.dir
 
-build CMakeFiles/shade_engine.dir/lib/objects/shapes/rectangle.cpp.o: CXX_COMPILER__shade_engine_unscanned_Debug /Users/utsav/Desktop/Repositories/Shade$ Engine/lib/objects/shapes/rectangle.cpp || cmake_object_order_depends_target_shade_engine
+build CMakeFiles/shade_engine.dir/lib/objects/shapes/rectangle.cpp.o: CXX_COMPILER__shade_engine_unscanned_Debug /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/objects/shapes/rectangle.cpp || cmake_object_order_depends_target_shade_engine
   DEP_FILE = CMakeFiles/shade_engine.dir/lib/objects/shapes/rectangle.cpp.o.d
-  FLAGS = -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -fcolor-diagnostics
-  INCLUDES = -isystem /Library/Frameworks/SDL2.framework/Headers -iframework /Library/Frameworks
+  FLAGS = -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.0 -fcolor-diagnostics
+  INCLUDES = -isystem /opt/homebrew/Cellar/sdl2/2.30.6/include/SDL2
   OBJECT_DIR = CMakeFiles/shade_engine.dir
   OBJECT_FILE_DIR = CMakeFiles/shade_engine.dir/lib/objects/shapes
 
-build CMakeFiles/shade_engine.dir/lib/objects/object.cpp.o: CXX_COMPILER__shade_engine_unscanned_Debug /Users/utsav/Desktop/Repositories/Shade$ Engine/lib/objects/object.cpp || cmake_object_order_depends_target_shade_engine
+build CMakeFiles/shade_engine.dir/lib/objects/object.cpp.o: CXX_COMPILER__shade_engine_unscanned_Debug /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/objects/object.cpp || cmake_object_order_depends_target_shade_engine
   DEP_FILE = CMakeFiles/shade_engine.dir/lib/objects/object.cpp.o.d
-  FLAGS = -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -fcolor-diagnostics
-  INCLUDES = -isystem /Library/Frameworks/SDL2.framework/Headers -iframework /Library/Frameworks
+  FLAGS = -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.0 -fcolor-diagnostics
+  INCLUDES = -isystem /opt/homebrew/Cellar/sdl2/2.30.6/include/SDL2
   OBJECT_DIR = CMakeFiles/shade_engine.dir
   OBJECT_FILE_DIR = CMakeFiles/shade_engine.dir/lib/objects
 
-build CMakeFiles/shade_engine.dir/lib/objects/factory.cpp.o: CXX_COMPILER__shade_engine_unscanned_Debug /Users/utsav/Desktop/Repositories/Shade$ Engine/lib/objects/factory.cpp || cmake_object_order_depends_target_shade_engine
+build CMakeFiles/shade_engine.dir/lib/objects/factory.cpp.o: CXX_COMPILER__shade_engine_unscanned_Debug /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/objects/factory.cpp || cmake_object_order_depends_target_shade_engine
   DEP_FILE = CMakeFiles/shade_engine.dir/lib/objects/factory.cpp.o.d
-  FLAGS = -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -fcolor-diagnostics
-  INCLUDES = -isystem /Library/Frameworks/SDL2.framework/Headers -iframework /Library/Frameworks
+  FLAGS = -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.0 -fcolor-diagnostics
+  INCLUDES = -isystem /opt/homebrew/Cellar/sdl2/2.30.6/include/SDL2
   OBJECT_DIR = CMakeFiles/shade_engine.dir
   OBJECT_FILE_DIR = CMakeFiles/shade_engine.dir/lib/objects
+
+build CMakeFiles/shade_engine.dir/lib/core/timer.cpp.o: CXX_COMPILER__shade_engine_unscanned_Debug /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/timer.cpp || cmake_object_order_depends_target_shade_engine
+  DEP_FILE = CMakeFiles/shade_engine.dir/lib/core/timer.cpp.o.d
+  FLAGS = -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.0 -fcolor-diagnostics
+  INCLUDES = -isystem /opt/homebrew/Cellar/sdl2/2.30.6/include/SDL2
+  OBJECT_DIR = CMakeFiles/shade_engine.dir
+  OBJECT_FILE_DIR = CMakeFiles/shade_engine.dir/lib/core
 
 
 # =============================================================================
@@ -113,10 +120,10 @@ build CMakeFiles/shade_engine.dir/lib/objects/factory.cpp.o: CXX_COMPILER__shade
 #############################################
 # Link the executable shade_engine
 
-build shade_engine: CXX_EXECUTABLE_LINKER__shade_engine_Debug CMakeFiles/shade_engine.dir/lib/core/draw.cpp.o CMakeFiles/shade_engine.dir/lib/core/init.cpp.o CMakeFiles/shade_engine.dir/lib/core/input.cpp.o CMakeFiles/shade_engine.dir/lib/core/structs.cpp.o CMakeFiles/shade_engine.dir/main.cpp.o CMakeFiles/shade_engine.dir/lib/objects/shapes/rectangle.cpp.o CMakeFiles/shade_engine.dir/lib/objects/object.cpp.o CMakeFiles/shade_engine.dir/lib/objects/factory.cpp.o | /Library/Frameworks/SDL2.framework/Versions/A/SDL2
-  FLAGS = -g -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk
-  LINK_LIBRARIES = -Wl,-rpath,/Library/Frameworks  /Library/Frameworks/SDL2.framework/Versions/A/SDL2
-  LINK_PATH = -F/Library/Frameworks
+build shade_engine: CXX_EXECUTABLE_LINKER__shade_engine_Debug CMakeFiles/shade_engine.dir/lib/core/draw.cpp.o CMakeFiles/shade_engine.dir/lib/core/init.cpp.o CMakeFiles/shade_engine.dir/lib/core/input.cpp.o CMakeFiles/shade_engine.dir/lib/core/structs.cpp.o CMakeFiles/shade_engine.dir/main.cpp.o CMakeFiles/shade_engine.dir/lib/objects/shapes/rectangle.cpp.o CMakeFiles/shade_engine.dir/lib/objects/object.cpp.o CMakeFiles/shade_engine.dir/lib/objects/factory.cpp.o CMakeFiles/shade_engine.dir/lib/core/timer.cpp.o | /opt/homebrew/Cellar/sdl2/2.30.6/lib/libSDL2.dylib
+  FLAGS = -g -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.0
+  LINK_LIBRARIES = -Wl,-rpath,/opt/homebrew/Cellar/sdl2/2.30.6/lib  /opt/homebrew/Cellar/sdl2/2.30.6/lib/libSDL2.dylib
+  LINK_PATH = -L/opt/homebrew/Cellar/sdl2/2.30.6/lib
   OBJECT_DIR = CMakeFiles/shade_engine.dir
   POST_BUILD = :
   PRE_LINK = :
@@ -128,7 +135,7 @@ build shade_engine: CXX_EXECUTABLE_LINKER__shade_engine_Debug CMakeFiles/shade_e
 # Utility command for edit_cache
 
 build CMakeFiles/edit_cache.util: CUSTOM_COMMAND
-  COMMAND = cd "/Users/utsav/Desktop/Repositories/Shade Engine/cmake-build-debug" && /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
+  COMMAND = cd /Users/jayeshgajbhar/CSC581_GameEngineFoundations/cmake-build-debug && /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
   DESC = No interactive CMake dialog available...
   restat = 1
 
@@ -139,7 +146,7 @@ build edit_cache: phony CMakeFiles/edit_cache.util
 # Utility command for rebuild_cache
 
 build CMakeFiles/rebuild_cache.util: CUSTOM_COMMAND
-  COMMAND = cd "/Users/utsav/Desktop/Repositories/Shade Engine/cmake-build-debug" && /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin/cmake --regenerate-during-build -S"/Users/utsav/Desktop/Repositories/Shade Engine" -B"/Users/utsav/Desktop/Repositories/Shade Engine/cmake-build-debug"
+  COMMAND = cd /Users/jayeshgajbhar/CSC581_GameEngineFoundations/cmake-build-debug && /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin/cmake --regenerate-during-build -S/Users/jayeshgajbhar/CSC581_GameEngineFoundations -B/Users/jayeshgajbhar/CSC581_GameEngineFoundations/cmake-build-debug
   DESC = Running CMake to regenerate build system...
   pool = console
   restat = 1
@@ -155,7 +162,7 @@ build rebuild_cache: phony CMakeFiles/rebuild_cache.util
 # =============================================================================
 
 #############################################
-# Folder: /Users/utsav/Desktop/Repositories/Shade Engine/cmake-build-debug
+# Folder: /Users/jayeshgajbhar/CSC581_GameEngineFoundations/cmake-build-debug
 
 build all: phony shade_engine
 
@@ -166,14 +173,14 @@ build all: phony shade_engine
 #############################################
 # Re-run CMake if any of its inputs changed.
 
-build build.ninja: RERUN_CMAKE | /Library/Frameworks/SDL2.framework/Resources/CMake/sdl2-config-version.cmake /Library/Frameworks/SDL2.framework/Resources/CMake/sdl2-config.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeCInformation.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeCXXInformation.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeCommonLanguageInclude.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeGenericSystem.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeInitializeConfigs.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeLanguageInformation.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeSystemSpecificInformation.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeSystemSpecificInitialize.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Compiler/AppleClang-C.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Compiler/AppleClang-CXX.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Compiler/CMakeCommonCompilerMacros.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Compiler/Clang.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Compiler/GNU.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/FeatureSummary.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Apple-AppleClang-C.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Apple-AppleClang-CXX.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Apple-Clang-C.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Apple-Clang-CXX.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Apple-Clang.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Darwin-Initialize.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Darwin.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/UnixPaths.cmake /Users/utsav/Desktop/Repositories/Shade$ Engine/CMakeLists.txt CMakeCache.txt CMakeFiles/3.29.6/CMakeCCompiler.cmake CMakeFiles/3.29.6/CMakeCXXCompiler.cmake CMakeFiles/3.29.6/CMakeSystem.cmake
+build build.ninja: RERUN_CMAKE | /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeCInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeCXXInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeCommonLanguageInclude.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeGenericSystem.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeInitializeConfigs.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeLanguageInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeSystemSpecificInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeSystemSpecificInitialize.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Compiler/AppleClang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Compiler/AppleClang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Compiler/CMakeCommonCompilerMacros.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Compiler/Clang.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Compiler/GNU.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/FeatureSummary.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Apple-AppleClang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Apple-AppleClang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Apple-Clang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Apple-Clang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Apple-Clang.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Darwin-Initialize.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Darwin.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/UnixPaths.cmake /Users/jayeshgajbhar/CSC581_GameEngineFoundations/CMakeLists.txt /opt/homebrew/lib/cmake/SDL2/sdl2-config-version.cmake /opt/homebrew/lib/cmake/SDL2/sdl2-config.cmake CMakeCache.txt CMakeFiles/3.29.6/CMakeCCompiler.cmake CMakeFiles/3.29.6/CMakeCXXCompiler.cmake CMakeFiles/3.29.6/CMakeSystem.cmake
   pool = console
 
 
 #############################################
 # A missing CMake input file is not an error.
 
-build /Library/Frameworks/SDL2.framework/Resources/CMake/sdl2-config-version.cmake /Library/Frameworks/SDL2.framework/Resources/CMake/sdl2-config.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeCInformation.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeCXXInformation.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeCommonLanguageInclude.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeGenericSystem.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeInitializeConfigs.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeLanguageInformation.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeSystemSpecificInformation.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeSystemSpecificInitialize.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Compiler/AppleClang-C.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Compiler/AppleClang-CXX.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Compiler/CMakeCommonCompilerMacros.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Compiler/Clang.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Compiler/GNU.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/FeatureSummary.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Apple-AppleClang-C.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Apple-AppleClang-CXX.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Apple-Clang-C.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Apple-Clang-CXX.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Apple-Clang.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Darwin-Initialize.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Darwin.cmake /Users/utsav/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/UnixPaths.cmake /Users/utsav/Desktop/Repositories/Shade$ Engine/CMakeLists.txt CMakeCache.txt CMakeFiles/3.29.6/CMakeCCompiler.cmake CMakeFiles/3.29.6/CMakeCXXCompiler.cmake CMakeFiles/3.29.6/CMakeSystem.cmake: phony
+build /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeCInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeCXXInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeCommonLanguageInclude.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeGenericSystem.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeInitializeConfigs.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeLanguageInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeSystemSpecificInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/CMakeSystemSpecificInitialize.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Compiler/AppleClang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Compiler/AppleClang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Compiler/CMakeCommonCompilerMacros.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Compiler/Clang.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Compiler/GNU.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/FeatureSummary.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Apple-AppleClang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Apple-AppleClang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Apple-Clang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Apple-Clang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Apple-Clang.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Darwin-Initialize.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/Darwin.cmake /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29/Modules/Platform/UnixPaths.cmake /Users/jayeshgajbhar/CSC581_GameEngineFoundations/CMakeLists.txt /opt/homebrew/lib/cmake/SDL2/sdl2-config-version.cmake /opt/homebrew/lib/cmake/SDL2/sdl2-config.cmake CMakeCache.txt CMakeFiles/3.29.6/CMakeCCompiler.cmake CMakeFiles/3.29.6/CMakeCXXCompiler.cmake CMakeFiles/3.29.6/CMakeSystem.cmake: phony
 
 
 #############################################
