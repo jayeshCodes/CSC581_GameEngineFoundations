@@ -3,6 +3,7 @@
 
 #include "lib/core/timer.hpp"
 #include "lib/core/timer.hpp"
+#include "lib/core/physics/gravity.hpp"
 #include "lib/objects/factory.hpp"
 #include "lib/objects/shapes/rectangle.hpp"
 
@@ -19,12 +20,28 @@ int main(int argc, char *argv[]) {
 
     // Create Rectangle instance
     Rectangle rectangle({0,255,0,255}, {100,100,100,100});
+    Gravity gravity(0, 9.8);
+
 
     //  init timer
     Timer fpsTimer;
     fpsTimer.start();
 
+    Uint32 lastTime = SDL_GetTicks();
+    Uint32 currentTime;
+    float deltaTime;
+
     while (gameRunning) {
+        // Control frame rate
+        // Uint32 frameTicks = fpsTimer.elapsed();
+        // if (frameTicks < 16) {
+        //     SDL_Delay(16 - frameTicks);  // ~60 FPS
+        // }
+
+        currentTime = SDL_GetTicks();
+        deltaTime = (currentTime - lastTime) / 1000.0f;
+        lastTime = currentTime;
+
         //Prep the scene
         prepareScene();
 
@@ -37,16 +54,14 @@ int main(int argc, char *argv[]) {
         rectangle.draw();
 
         // Update the rectangle
-        rectangle.update();
+        gravity.calculate(rectangle);
+        rectangle.update(deltaTime);
+
+        std::cout << deltaTime << std::endl;
 
         //Present the resulting scene
         presentScene();
 
-        // Control frame rate
-        Uint32 frameTicks = fpsTimer.elapsed();
-        if (frameTicks < 16) {
-            SDL_Delay(16 - frameTicks);  // ~60 FPS
-        }
         fpsTimer.start();
     }
 

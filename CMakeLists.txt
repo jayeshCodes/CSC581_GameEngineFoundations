@@ -18,6 +18,11 @@ set(SOURCES
         lib/objects/factory.hpp
         lib/core/timer.hpp
         lib/core/timer.cpp
+        lib/core/kinematic.hpp
+        lib/core/physics/physics.hpp
+        lib/core/physics/physics.cpp
+        lib/core/physics/gravity.hpp
+        lib/core/physics/gravity.cpp
 )
 
 

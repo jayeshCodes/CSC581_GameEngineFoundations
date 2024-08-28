@@ -112,6 +112,20 @@ build CMakeFiles/shade_engine.dir/lib/core/timer.cpp.o: CXX_COMPILER__shade_engi
   OBJECT_DIR = CMakeFiles/shade_engine.dir
   OBJECT_FILE_DIR = CMakeFiles/shade_engine.dir/lib/core
 
+build CMakeFiles/shade_engine.dir/lib/core/physics/physics.cpp.o: CXX_COMPILER__shade_engine_unscanned_Debug /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/physics/physics.cpp || cmake_object_order_depends_target_shade_engine
+  DEP_FILE = CMakeFiles/shade_engine.dir/lib/core/physics/physics.cpp.o.d
+  FLAGS = -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.0 -fcolor-diagnostics
+  INCLUDES = -isystem /opt/homebrew/Cellar/sdl2/2.30.6/include/SDL2
+  OBJECT_DIR = CMakeFiles/shade_engine.dir
+  OBJECT_FILE_DIR = CMakeFiles/shade_engine.dir/lib/core/physics
+
+build CMakeFiles/shade_engine.dir/lib/core/physics/gravity.cpp.o: CXX_COMPILER__shade_engine_unscanned_Debug /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/physics/gravity.cpp || cmake_object_order_depends_target_shade_engine
+  DEP_FILE = CMakeFiles/shade_engine.dir/lib/core/physics/gravity.cpp.o.d
+  FLAGS = -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.0 -fcolor-diagnostics
+  INCLUDES = -isystem /opt/homebrew/Cellar/sdl2/2.30.6/include/SDL2
+  OBJECT_DIR = CMakeFiles/shade_engine.dir
+  OBJECT_FILE_DIR = CMakeFiles/shade_engine.dir/lib/core/physics
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target shade_engine
@@ -120,7 +134,7 @@ build CMakeFiles/shade_engine.dir/lib/core/timer.cpp.o: CXX_COMPILER__shade_engi
 #############################################
 # Link the executable shade_engine
 
-build shade_engine: CXX_EXECUTABLE_LINKER__shade_engine_Debug CMakeFiles/shade_engine.dir/lib/core/draw.cpp.o CMakeFiles/shade_engine.dir/lib/core/init.cpp.o CMakeFiles/shade_engine.dir/lib/core/input.cpp.o CMakeFiles/shade_engine.dir/lib/core/structs.cpp.o CMakeFiles/shade_engine.dir/main.cpp.o CMakeFiles/shade_engine.dir/lib/objects/shapes/rectangle.cpp.o CMakeFiles/shade_engine.dir/lib/objects/object.cpp.o CMakeFiles/shade_engine.dir/lib/objects/factory.cpp.o CMakeFiles/shade_engine.dir/lib/core/timer.cpp.o | /opt/homebrew/Cellar/sdl2/2.30.6/lib/libSDL2.dylib
+build shade_engine: CXX_EXECUTABLE_LINKER__shade_engine_Debug CMakeFiles/shade_engine.dir/lib/core/draw.cpp.o CMakeFiles/shade_engine.dir/lib/core/init.cpp.o CMakeFiles/shade_engine.dir/lib/core/input.cpp.o CMakeFiles/shade_engine.dir/lib/core/structs.cpp.o CMakeFiles/shade_engine.dir/main.cpp.o CMakeFiles/shade_engine.dir/lib/objects/shapes/rectangle.cpp.o CMakeFiles/shade_engine.dir/lib/objects/object.cpp.o CMakeFiles/shade_engine.dir/lib/objects/factory.cpp.o CMakeFiles/shade_engine.dir/lib/core/timer.cpp.o CMakeFiles/shade_engine.dir/lib/core/physics/physics.cpp.o CMakeFiles/shade_engine.dir/lib/core/physics/gravity.cpp.o | /opt/homebrew/Cellar/sdl2/2.30.6/lib/libSDL2.dylib
   FLAGS = -g -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.0
   LINK_LIBRARIES = -Wl,-rpath,/opt/homebrew/Cellar/sdl2/2.30.6/lib  /opt/homebrew/Cellar/sdl2/2.30.6/lib/libSDL2.dylib
   LINK_PATH = -L/opt/homebrew/Cellar/sdl2/2.30.6/lib

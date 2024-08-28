@@ -12,14 +12,14 @@
 
 extern App *app;
 
-class Rectangle : public Object {
+class Rectangle : public Object{
 public:
-    Rectangle(const SDL_Color color, const SDL_Rect rect): Object(rect, color) {
+    Rectangle(const SDL_Color color, const SDL_FRect rect): Object(rect, color) {
     }
 
     void draw() const;
 
-    void update();
+    void update(float dt) override;
 };
 
 #endif //RECTANGLE_HPP

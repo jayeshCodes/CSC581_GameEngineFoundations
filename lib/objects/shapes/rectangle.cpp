@@ -11,16 +11,18 @@ void Rectangle::draw() const {
     SDL_SetRenderDrawColor(app->renderer, color.r, color.g, color.b, color.a);
 
     // Set the outline
-    SDL_RenderDrawRect(app->renderer, &rect);
+    SDL_RenderDrawRectF(app->renderer, &rect);
 
     // Fill the rectangle
-    SDL_RenderFillRect(app->renderer, &rect);
+    SDL_RenderFillRectF(app->renderer, &rect);
 }
 
-void Rectangle::update() {
-    if (rect.y == SCREEN_HEIGHT) {
-        rect.y = SCREEN_HEIGHT - 10;
-        return;
-    }
-    rect.y = rect.y + 1;
+void Rectangle::update(float dt) {
+    // if (rect.y == SCREEN_HEIGHT) {
+    //     // rect.y =
+    //     return;
+    // }
+    // rect.y = rect.y + 1;
+
+    Object::update(dt);
 }

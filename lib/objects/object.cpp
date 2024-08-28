@@ -4,9 +4,27 @@
 
 #include "object.hpp"
 
-Object::Object(SDL_Rect rect, SDL_Color color) {
+Object::Object(SDL_FRect rect, SDL_Color color) {
     this->rect = rect;
     this->color = color;
+    this->velocity = {0, 0};
+    this->acceleration = {0, 0};
+    this->orientation = 0;
+    this->rotation = 0;
+    this->angular_acceleration = 0;
+}
+
+void Object::update(float dt) {
+
+    rotation += angular_acceleration * dt;
+
+    velocity.x += acceleration.x * dt;
+    velocity.y += acceleration.y * dt;
+
+    rect.x += velocity.x * dt;
+    rect.y += velocity.y * dt;
+
+    orientation += rotation * dt;
 }
 
 Object::~Object() {
