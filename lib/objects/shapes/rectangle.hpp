@@ -14,7 +14,7 @@ extern App *app;
 
 class Rectangle : public Object{
 public:
-    Rectangle(const SDL_Color color, const SDL_FRect rect): Object(rect, color) {
+    Rectangle(const SDL_Color color, const SDL_FRect rect, bool rigid, float mass, float restitution): Object(rect, color, rigid, mass, restitution) {
     }
 
     void draw() const;

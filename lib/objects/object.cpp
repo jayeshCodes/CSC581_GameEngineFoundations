@@ -4,7 +4,7 @@
 
 #include "object.hpp"
 
-Object::Object(SDL_FRect rect, SDL_Color color) {
+Object::Object(SDL_FRect rect, SDL_Color color, bool rigid, float mass, float restitution) {
     this->rect = rect;
     this->color = color;
     this->velocity = {0, 0};
@@ -12,6 +12,9 @@ Object::Object(SDL_FRect rect, SDL_Color color) {
     this->orientation = 0;
     this->rotation = 0;
     this->angular_acceleration = 0;
+    this->is_rigidbody = rigid;
+    this->mass = mass;
+    this->restitution = restitution;
 }
 
 void Object::update(float dt) {

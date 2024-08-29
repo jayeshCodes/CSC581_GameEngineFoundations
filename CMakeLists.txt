@@ -25,10 +25,14 @@ set(SOURCES
         lib/core/physics/gravity.cpp
         lib/core/physics/keyMovement.cpp
         lib/core/physics/keyMovement.hpp
+        lib/core/physics/collision.hpp
+        lib/core/physics/collision.cpp
 )
 
 
-add_executable(shade_engine ${SOURCES})
+add_executable(shade_engine ${SOURCES}
+        lib/core/physics/collision.hpp
+        lib/core/physics/collision.cpp)
 
 find_package(SDL2 REQUIRED)
 target_link_libraries(shade_engine SDL2::SDL2)
