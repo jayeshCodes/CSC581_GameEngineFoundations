@@ -23,6 +23,8 @@ set(SOURCES
         lib/core/physics/physics.cpp
         lib/core/physics/gravity.hpp
         lib/core/physics/gravity.cpp
+        lib/core/physics/keyMovement.cpp
+        lib/core/physics/keyMovement.hpp
 )
 
 

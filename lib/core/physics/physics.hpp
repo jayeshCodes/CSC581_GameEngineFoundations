@@ -15,7 +15,9 @@ public:
 
     Physics();
 
-    virtual void calculate(Object &character) = 0;
+    virtual void calculate(Object &character) {}
+
+    virtual void calculate(Object &character, SDL_FPoint direction) {}
 
     virtual ~Physics() = default;
 };

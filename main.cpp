@@ -4,6 +4,7 @@
 #include "lib/core/timer.hpp"
 #include "lib/core/timer.hpp"
 #include "lib/core/physics/gravity.hpp"
+#include "lib/core/physics/keyMovement.hpp"
 #include "lib/objects/factory.hpp"
 #include "lib/objects/shapes/rectangle.hpp"
 
@@ -21,6 +22,7 @@ int main(int argc, char *argv[]) {
     // Create Rectangle instance
     Rectangle rectangle({0,255,0,255}, {100,100,100,100});
     Gravity gravity(0, 9.8);
+    KeyMovement key_movement(10, 10);
 
 
     //  init timer
@@ -32,12 +34,6 @@ int main(int argc, char *argv[]) {
     float deltaTime;
 
     while (gameRunning) {
-        // Control frame rate
-        // Uint32 frameTicks = fpsTimer.elapsed();
-        // if (frameTicks < 16) {
-        //     SDL_Delay(16 - frameTicks);  // ~60 FPS
-        // }
-
         currentTime = SDL_GetTicks();
         deltaTime = (currentTime - lastTime) / 1000.0f;
         lastTime = currentTime;
@@ -53,8 +49,15 @@ int main(int argc, char *argv[]) {
         // Draw the rectangle
         rectangle.draw();
 
-        // Update the rectangle
-        gravity.calculate(rectangle);
+        // Uncomment to add gravity
+        // gravity.calculate(rectangle);
+
+
+        // Uncomment to add keypress velocity
+        // SDL_FPoint direction = getKeyPress();
+        // key_movement.calculate(rectangle, direction);
+
+
         rectangle.update(deltaTime);
 
         std::cout << deltaTime << std::endl;
