@@ -7,15 +7,16 @@
 #include <SDL_rect.h>
 
 #include "../core/kinematic.hpp"
+#include "../core/defs.hpp"
 
 class Object {
 public:
-    Object(SDL_FRect rect, SDL_Color color);
+    Object(SDL_FRect rect, SDL_Color color, bool rigid, float mass = 1.0f, float restitution = 0.5f);
 
     virtual void update(float dt);
 
     virtual ~Object();
-    
+
     SDL_FRect rect;
     float orientation;
     SDL_Color color;
@@ -25,6 +26,11 @@ public:
 
     SDL_FPoint acceleration;
     float angular_acceleration;
+
+    bool is_rigidbody;
+
+    float mass;
+    float restitution;
 };
 
 #endif //OBJECT_HPP

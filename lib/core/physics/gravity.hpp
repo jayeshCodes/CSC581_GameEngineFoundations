@@ -6,7 +6,6 @@
 #define GRAVITY_HPP
 
 #include "physics.hpp"
-#include "../../objects/object.hpp"
 
 class Gravity : public Physics {
   public:

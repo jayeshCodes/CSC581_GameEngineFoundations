@@ -10,7 +10,7 @@
  */
 class Factory {
 public:
-    static std::unique_ptr<Rectangle> createRectangle(SDL_Color color, SDL_FRect rect);
+    static std::unique_ptr<Rectangle> createRectangle(SDL_Color color, SDL_FRect rect, bool rigid, float mass, float restitution);
 };
 
 #endif //FACTORY_HPP

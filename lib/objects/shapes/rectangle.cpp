@@ -4,8 +4,6 @@
 
 #include "rectangle.hpp"
 
-#include "../../core/defs.hpp"
-
 void Rectangle::draw() const {
     // Set the color of the rectangle
     SDL_SetRenderDrawColor(app->renderer, color.r, color.g, color.b, color.a);
