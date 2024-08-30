@@ -28,6 +28,21 @@ void Object::update(float dt) {
     rect.y += velocity.y * dt;
 
     orientation += rotation * dt;
+
+    if (rect.y < 0) {
+        rect.y = 0;
+        velocity.y = 0;  // Stop vertical movement if at the top
+    } else if (rect.y + rect.h > SCREEN_HEIGHT) { // `rect.h` is the height of the object
+        rect.y = SCREEN_HEIGHT - rect.h;
+        velocity.y = 0;  // Stop vertical movement if at the bottom
+    }
+    if(rect.x < 0) {
+        rect.x = 0;
+        velocity.x = 0;
+    } else if (rect.x + rect.w > SCREEN_WIDTH) {
+        rect.x = SCREEN_WIDTH - rect.w;
+        velocity.x = 0;
+    }
 }
 
 Object::~Object() {

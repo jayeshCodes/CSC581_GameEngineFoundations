@@ -7,6 +7,7 @@
 #include <SDL_rect.h>
 
 #include "../core/kinematic.hpp"
+#include "../core/defs.hpp"
 
 class Object {
 public:

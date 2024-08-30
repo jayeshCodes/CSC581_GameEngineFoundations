@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
     std::vector<std::unique_ptr<Rectangle> > rectangles;
     std::unique_ptr<Factory> factory;
 
-    rectangles.push_back(factory->createRectangle({0, 255, 0, 255}, {100, 0, 100, 100}, true, 1.0f, 0.5f));
+    rectangles.push_back(factory->createRectangle({0, 255, 0, 255}, {100, 0, 100, 100}, true, 0.001f, 0.5f));
     rectangles.push_back(factory->createRectangle({255, 0, 0, 255}, {100, 250, 500, 100}, true, 100000.0f, 0.5f));
 
 
@@ -56,8 +56,8 @@ int main(int argc, char *argv[]) {
 
 
         // Uncomment to add keypress velocity
-        // SDL_FPoint direction = getKeyPress();
-        // key_movement.calculate(*rectangles[0], direction);
+        SDL_FPoint direction = getKeyPress();
+        key_movement.calculate(*rectangles[1], direction);
 
         gravity.calculate(*rectangles[0]);
 
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
         }
         // rectangle.update(deltaTime);
         // rectangle2.update(deltaTime);
-        std::cout << rectangles[0]->velocity.y << std::endl;
+
 
         //Present the resulting scene
         presentScene();

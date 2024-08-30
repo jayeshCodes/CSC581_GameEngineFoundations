@@ -48,7 +48,7 @@ void Collision::calculate(Object &character, std::vector<std::unique_ptr<Rectang
             obj->velocity.y += impulse.y / obj->mass;
 
             // Apply damping
-            const float damping = 0.98f;
+            const float damping = 0.7f;
             character.velocity.x *= damping;
             character.velocity.y *= damping;
             obj->velocity.x *= damping;
