@@ -9,7 +9,7 @@ void initSDL() {
     int rendererFlags = SDL_RENDERER_ACCELERATED;
 
     //Nothing of note to add to the window here
-    int windowFlags = 0;
+    int windowFlags = SDL_WINDOW_RESIZABLE;
 
     //If the SDL initialization is unsuccessful
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {

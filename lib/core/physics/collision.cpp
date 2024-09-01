@@ -5,13 +5,12 @@
 #include "collision.hpp"
 #include <cmath>
 
-void Collision::calculate(Object &character, std::vector<std::unique_ptr<Rectangle>> &objects) {
-    for (auto &obj : objects) {
+void Collision::calculate(Object &character, std::vector<std::unique_ptr<Rectangle> > &objects) {
+    for (auto &obj: objects) {
         if (&character != obj.get() && obj != nullptr && character.is_rigidbody && obj->is_rigidbody &&
             SDL_HasIntersectionF(&obj->rect, &character.rect)) {
-
             // Calculate collision normal
-            SDL_FPoint normal = { obj->rect.x - character.rect.x, obj->rect.y - character.rect.y };
+            SDL_FPoint normal = {obj->rect.x - character.rect.x, obj->rect.y - character.rect.y};
             float length = std::sqrt(normal.x * normal.x + normal.y * normal.y);
             normal.x /= length;
             normal.y /= length;
@@ -30,7 +29,9 @@ void Collision::calculate(Object &character, std::vector<std::unique_ptr<Rectang
             }
 
             // Relative velocity
-            SDL_FPoint relativeVelocity = { obj->velocity.x - character.velocity.x, obj->velocity.y - character.velocity.y };
+            SDL_FPoint relativeVelocity = {
+                obj->velocity.x - character.velocity.x, obj->velocity.y - character.velocity.y
+            };
             float velocityAlongNormal = relativeVelocity.x * normal.x + relativeVelocity.y * normal.y;
 
             // Coefficient of restitution
@@ -41,7 +42,7 @@ void Collision::calculate(Object &character, std::vector<std::unique_ptr<Rectang
             j /= (1 / character.mass + 1 / obj->mass);
 
             // Apply impulse to both objects
-            SDL_FPoint impulse = { j * normal.x, j * normal.y };
+            SDL_FPoint impulse = {j * normal.x, j * normal.y};
             character.velocity.x -= impulse.x / character.mass;
             character.velocity.y -= impulse.y / character.mass;
             obj->velocity.x += impulse.x / obj->mass;

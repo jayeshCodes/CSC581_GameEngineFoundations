@@ -9,11 +9,12 @@
 #include "../../objects/object.hpp"
 #include <memory>
 
-class Collision : public Physics{
-    public:
-    Collision(){};
+// This is a physics collision class
+class Collision : public Physics {
+public:
+    Collision() = default;
 
-    void calculate(Object &character, std::vector<std::unique_ptr<Rectangle>> &objects) override;
+    void calculate(Object &character, std::vector<std::unique_ptr<Rectangle> > &objects) override;
 };
 
 #endif //COLLISION_HPP

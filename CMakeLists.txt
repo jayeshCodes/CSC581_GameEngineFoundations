@@ -27,6 +27,10 @@ set(SOURCES
         lib/core/physics/keyMovement.hpp
         lib/core/physics/collision.hpp
         lib/core/physics/collision.cpp
+        lib/generic/singleton.cpp
+        lib/generic/singleton.hpp
+        lib/game/GameManager.cpp
+        lib/game/GameManager.hpp
 )
 
 

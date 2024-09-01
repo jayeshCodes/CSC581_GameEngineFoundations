@@ -1,5 +1,6 @@
 #include "input.hpp"
 #include "init.hpp"
+#include "../game/GameManager.hpp"
 
 
 /*
@@ -21,8 +22,20 @@ void doInput(void) {
     }
 }
 
+/**
+ * This function will detect key press. WASD for movement. P for changing the scaling mode
+ * @return SDL_Point
+ */
 SDL_FPoint getKeyPress() {
     const Uint8 *state = SDL_GetKeyboardState(nullptr);
+    if (state[SDL_SCANCODE_P]) {
+        GameManager::getInstance()->scaleWithScreenSize = !GameManager::getInstance()->scaleWithScreenSize;
+        std::cout << "Changing scale type" << std::endl;
+
+        // Apparently this prevents debouncing effect.
+        SDL_Delay(200);
+        return {0, 0};
+    }
     if (state[SDL_SCANCODE_A]) {
         return {-1, 0};
     }

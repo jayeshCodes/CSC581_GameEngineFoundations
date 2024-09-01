@@ -15,6 +15,8 @@ public:
 
     virtual void update(float dt);
 
+    virtual void scale(SDL_FRect &r) const;
+
     virtual ~Object();
 
     SDL_FRect rect;

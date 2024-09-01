@@ -4,6 +4,9 @@
 
 #include "object.hpp"
 
+#include "../game/GameManager.hpp"
+#include "shapes/rectangle.hpp"
+
 Object::Object(SDL_FRect rect, SDL_Color color, bool rigid, float mass, float restitution) {
     this->rect = rect;
     this->color = color;
@@ -18,7 +21,6 @@ Object::Object(SDL_FRect rect, SDL_Color color, bool rigid, float mass, float re
 }
 
 void Object::update(float dt) {
-
     rotation += angular_acceleration * dt;
 
     velocity.x += acceleration.x * dt;
@@ -31,12 +33,13 @@ void Object::update(float dt) {
 
     if (rect.y < 0) {
         rect.y = 0;
-        velocity.y = 0;  // Stop vertical movement if at the top
-    } else if (rect.y + rect.h > SCREEN_HEIGHT) { // `rect.h` is the height of the object
+        velocity.y = 0; // Stop vertical movement if at the top
+    } else if (rect.y + rect.h > SCREEN_HEIGHT) {
+        // `rect.h` is the height of the object
         rect.y = SCREEN_HEIGHT - rect.h;
-        velocity.y = 0;  // Stop vertical movement if at the bottom
+        velocity.y = 0; // Stop vertical movement if at the bottom
     }
-    if(rect.x < 0) {
+    if (rect.x < 0) {
         rect.x = 0;
         velocity.x = 0;
     } else if (rect.x + rect.w > SCREEN_WIDTH) {
@@ -45,5 +48,20 @@ void Object::update(float dt) {
     }
 }
 
-Object::~Object() {
+void Object::scale(SDL_FRect &r) const {
+    if (GameManager::getInstance()->scaleWithScreenSize) {
+        int cwWidth, cwHeight;
+        SDL_GetWindowSizeInPixels(app->window, &cwWidth, &cwHeight);
+        SDL_FPoint scalingFactor = {
+            static_cast<float>(cwWidth) / SCREEN_WIDTH, static_cast<float>(cwHeight) / SCREEN_HEIGHT
+        };
+        float newX = r.x * scalingFactor.x;
+        float newY = r.y * scalingFactor.y;
+        float newWidth = r.w * scalingFactor.x;
+        float newHeight = r.h * scalingFactor.y;
+        r = {newX, newY, newWidth, newHeight};
+    }
 }
+
+
+Object::~Object() = default;

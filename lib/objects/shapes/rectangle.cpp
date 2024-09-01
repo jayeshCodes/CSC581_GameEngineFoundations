@@ -4,23 +4,26 @@
 
 #include "rectangle.hpp"
 
+#include <iostream>
+#include <ostream>
+
 void Rectangle::draw() const {
     // Set the color of the rectangle
     SDL_SetRenderDrawColor(app->renderer, color.r, color.g, color.b, color.a);
 
-    // Set the outline
-    SDL_RenderDrawRectF(app->renderer, &rect);
 
-    // Fill the rectangle
-    SDL_RenderFillRectF(app->renderer, &rect);
+    SDL_FRect tRect = rect;
+
+    // Calculate scale
+    Object::scale(tRect);
+
+    // Set the outline
+    SDL_RenderDrawRectF(app->renderer, &tRect);
+
+    // Fill the rectangle with the scaled dimensions
+    SDL_RenderFillRectF(app->renderer, &tRect);
 }
 
 void Rectangle::update(float dt) {
-    // if (rect.y == SCREEN_HEIGHT) {
-    //     // rect.y =
-    //     return;
-    // }
-    // rect.y = rect.y + 1;
-
     Object::update(dt);
 }
