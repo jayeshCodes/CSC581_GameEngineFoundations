@@ -14,7 +14,7 @@ void KeyMovement::calculate(Object &character, SDL_FPoint direction) {
         character.velocity.x = 0;
         character.velocity.y = 0;
     }
-    character.velocity.x += (direction.x * xVelocity);
-    character.velocity.y += (direction.y * yVelocity);
+    character.velocity.x = (direction.x * xVelocity);
+    character.velocity.y = (direction.y * yVelocity);
 }
 
