@@ -31,12 +31,12 @@ set(SOURCES
         lib/generic/singleton.hpp
         lib/game/GameManager.cpp
         lib/game/GameManager.hpp
+        lib/animation/controller/moveBetween2Points.cpp
+        lib/animation/controller/moveBetween2Points.hpp
 )
 
 
-add_executable(shade_engine ${SOURCES}
-        lib/core/physics/collision.hpp
-        lib/core/physics/collision.cpp)
+add_executable(shade_engine ${SOURCES})
 
 find_package(SDL2 REQUIRED)
 target_link_libraries(shade_engine SDL2::SDL2)
