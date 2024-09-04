@@ -9,6 +9,7 @@
 #include "lib/game/GameManager.hpp"
 #include "lib/objects/factory.hpp"
 #include "lib/objects/shapes/rectangle.hpp"
+#include "lib/animation/controller/moveBetween2Points.hpp"
 
 bool gameRunning = false;
 
@@ -21,12 +22,20 @@ int main(int argc, char *argv[]) {
     initSDL();
     gameRunning = true;
 
+
     // Create Rectangle instance
+    std::vector<std::unique_ptr<Rectangle> > rectangles;
+    rectangles.push_back(Factory::createRectangle({0, 255, 255, 255}, {100, 100, 100, 100}, true, 0.1, 0.8));
+    rectangles.push_back(Factory::createRectangle({255, 255, 0, 255}, {300, 100, 100, 100}, true, 0.001, 0.8));
+    rectangles.push_back(Factory::createRectangle({255, 0, 0, 255}, {300, SCREEN_HEIGHT/2.f, SCREEN_WIDTH/2.f, 100}, true, 100000.f, 0.8));
+    rectangles.push_back(Factory::createRectangle({255, 0, 255, 255}, {1000, 100, 100, 100}, false, 1.f, 0.8));
+
+    MoveBetween2Points m(100.f, 400.f, LEFT, 2);
 
     // Launching basic systems of Shade Engine
-    Gravity gravity(0, 9.8);
+    Gravity gravity(0, 1.0);
     Collision collision;
-    KeyMovement key_movement(10, 10);
+    KeyMovement key_movement(300, 300);
 
     //  init timer
     Timer fpsTimer;
@@ -49,6 +58,20 @@ int main(int argc, char *argv[]) {
         //modify the game world here
 
         SDL_FPoint direction = getKeyPress();
+        key_movement.calculate(*rectangles[0], direction);
+
+        // gravity.calculate(*rectangles[0]);
+        gravity.calculate(*rectangles[1]);
+
+        collision.calculate(*rectangles[1], rectangles);
+        collision.calculate(*rectangles[0], rectangles);
+
+        m.moveBetween2Points(*rectangles[2]);
+
+        for (const auto &rectangle: rectangles) {
+            rectangle->update(deltaTime);
+            rectangle->draw();
+        }
 
 
         //Present the resulting scene
