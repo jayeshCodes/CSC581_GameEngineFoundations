@@ -6,6 +6,7 @@
 #define PHYSICS_HPP
 
 #include <SDL.h>
+#include <memory>
 #include <vector>
 
 #include "../../objects/object.hpp"

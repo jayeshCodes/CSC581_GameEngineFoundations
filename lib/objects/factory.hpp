@@ -4,6 +4,7 @@
 #ifndef FACTORY_HPP
 #define FACTORY_HPP
 #include "shapes/rectangle.hpp"
+#include <memory>
 
 /**
  * This is a factory to create shapes. Any and all types of objects will be created using this factory
