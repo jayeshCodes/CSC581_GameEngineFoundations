@@ -11,18 +11,18 @@ MoveBetween2Points::MoveBetween2Points(float point1, float point2, bool movingLe
 }
 
 void MoveBetween2Points::moveBetween2Points(Object &object) {
-    float currentX = object.rect.x;
+    float currentX = object.rect.y;
     if (movingLeft) {
         if (currentX <= left) {
             movingLeft = false;
             return;
         }
-        object.velocity.x = -100;
+        object.velocity.y = -100;
     } else {
         if (currentX >= right) {
             movingLeft = true;
             return;
         }
-        object.velocity.x = 100;
+        object.velocity.y = 100;
     }
 };

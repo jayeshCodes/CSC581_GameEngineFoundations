@@ -8,25 +8,25 @@
 		},
 		"paths" : 
 		{
-			"cmake" : "/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin/cmake",
-			"cpack" : "/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin/cpack",
-			"ctest" : "/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin/ctest",
-			"root" : "/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.29"
+			"cmake" : "/opt/homebrew/Cellar/cmake/3.30.2/bin/cmake",
+			"cpack" : "/opt/homebrew/Cellar/cmake/3.30.2/bin/cpack",
+			"ctest" : "/opt/homebrew/Cellar/cmake/3.30.2/bin/ctest",
+			"root" : "/opt/homebrew/Cellar/cmake/3.30.2/share/cmake"
 		},
 		"version" : 
 		{
 			"isDirty" : false,
 			"major" : 3,
-			"minor" : 29,
-			"patch" : 6,
-			"string" : "3.29.6",
+			"minor" : 30,
+			"patch" : 2,
+			"string" : "3.30.2",
 			"suffix" : ""
 		}
 	},
 	"objects" : 
 	[
 		{
-			"jsonFile" : "codemodel-v2-f8ab358734beffa25044.json",
+			"jsonFile" : "codemodel-v2-bda3d408e77ecfe04add.json",
 			"kind" : "codemodel",
 			"version" : 
 			{
@@ -35,7 +35,7 @@
 			}
 		},
 		{
-			"jsonFile" : "cache-v2-4f8170ea4d1b2df2fbd0.json",
+			"jsonFile" : "cache-v2-546a9628cfaa40f92630.json",
 			"kind" : "cache",
 			"version" : 
 			{
@@ -44,12 +44,12 @@
 			}
 		},
 		{
-			"jsonFile" : "cmakeFiles-v1-2ac818d26b9318b3f972.json",
+			"jsonFile" : "cmakeFiles-v1-fc0cec8f33ac2b41272f.json",
 			"kind" : "cmakeFiles",
 			"version" : 
 			{
 				"major" : 1,
-				"minor" : 0
+				"minor" : 1
 			}
 		},
 		{
@@ -66,7 +66,7 @@
 	{
 		"cache-v2" : 
 		{
-			"jsonFile" : "cache-v2-4f8170ea4d1b2df2fbd0.json",
+			"jsonFile" : "cache-v2-546a9628cfaa40f92630.json",
 			"kind" : "cache",
 			"version" : 
 			{
@@ -76,17 +76,17 @@
 		},
 		"cmakeFiles-v1" : 
 		{
-			"jsonFile" : "cmakeFiles-v1-2ac818d26b9318b3f972.json",
+			"jsonFile" : "cmakeFiles-v1-fc0cec8f33ac2b41272f.json",
 			"kind" : "cmakeFiles",
 			"version" : 
 			{
 				"major" : 1,
-				"minor" : 0
+				"minor" : 1
 			}
 		},
 		"codemodel-v2" : 
 		{
-			"jsonFile" : "codemodel-v2-f8ab358734beffa25044.json",
+			"jsonFile" : "codemodel-v2-bda3d408e77ecfe04add.json",
 			"kind" : "codemodel",
 			"version" : 
 			{
