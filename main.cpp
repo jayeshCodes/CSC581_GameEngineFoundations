@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     MoveBetween2Points m(100.f, 400.f, LEFT, 2);
 
     // Launching basic systems of Shade Engine
-    Gravity gravity(0, 1.0);
+    Gravity gravity(0, 100);
     Collision collision;
     KeyMovement key_movement(300, 300);
 
