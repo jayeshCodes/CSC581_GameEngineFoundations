@@ -16,13 +16,15 @@ draw has the functions to apply the window color, clear the renderer, and render
 
 - SDL2 Library
 - C++14 and above
+- Cmake
 
 ## How to run
 
-1. To compile the code, run the following command in the terminal:``make``
-2. It should create an executable named ``shade_engine``
-3. To run the executable, run the following command in the terminal:``./shade_engine``
-4. To delete the executable, run the following command:``make clean``
+1. To generate a Makefile, run the following command: ``cmake .``
+2. To compile the code, run the following command in the terminal:``make``
+3. It should create an executable named ``shade_engine``
+4. To run the executable, run the following command in the terminal:``./shade_engine``
+5. To delete the executable, run the following command:``make clean``
 
 ## Expected Output
 
