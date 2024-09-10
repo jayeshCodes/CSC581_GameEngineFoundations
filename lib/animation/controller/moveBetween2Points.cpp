@@ -21,8 +21,8 @@ void MoveBetween2Points::moveBetween2Points(Object &object) {
                 object.velocity.x = 0;
                 return;
             }
-            object.velocity.x = -200;
-            break;
+        object.velocity.x = -200;
+        break;
         case RIGHT:
             if (currentX >= right) {
                 state = STOP;
@@ -30,17 +30,17 @@ void MoveBetween2Points::moveBetween2Points(Object &object) {
                 object.velocity.x = 0;
                 return;
             }
-            object.velocity.x = 200;
-            break;
+        object.velocity.x = 200;
+        break;
         case STOP:
             Uint32 passedTime = SDL_GetTicks();
-            if ((passedTime - currTime) / 1000.f > waitTime) {
-                if (currentX <= left) {
-                    state = RIGHT;
-                } else {
-                    state = LEFT;
-                }
+        if ((passedTime - currTime) / 1000.f > waitTime) {
+            if (currentX <= left) {
+                state = RIGHT;
+            } else {
+                state = LEFT;
             }
-            break;
+        }
+        break;
     }
 }

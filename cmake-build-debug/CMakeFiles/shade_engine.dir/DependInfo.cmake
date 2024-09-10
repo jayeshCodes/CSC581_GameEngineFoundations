@@ -1,0 +1,38 @@
+
+# Consider dependencies only in project.
+set(CMAKE_DEPENDS_IN_PROJECT_ONLY OFF)
+
+# The set of languages for which implicit dependencies are needed:
+set(CMAKE_DEPENDS_LANGUAGES
+  )
+
+# The set of dependency files which are needed:
+set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/animation/controller/moveBetween2Points.cpp" "CMakeFiles/shade_engine.dir/lib/animation/controller/moveBetween2Points.cpp.o" "gcc" "CMakeFiles/shade_engine.dir/lib/animation/controller/moveBetween2Points.cpp.o.d"
+  "/Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/draw.cpp" "CMakeFiles/shade_engine.dir/lib/core/draw.cpp.o" "gcc" "CMakeFiles/shade_engine.dir/lib/core/draw.cpp.o.d"
+  "/Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/init.cpp" "CMakeFiles/shade_engine.dir/lib/core/init.cpp.o" "gcc" "CMakeFiles/shade_engine.dir/lib/core/init.cpp.o.d"
+  "/Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/input.cpp" "CMakeFiles/shade_engine.dir/lib/core/input.cpp.o" "gcc" "CMakeFiles/shade_engine.dir/lib/core/input.cpp.o.d"
+  "/Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/physics/collision.cpp" "CMakeFiles/shade_engine.dir/lib/core/physics/collision.cpp.o" "gcc" "CMakeFiles/shade_engine.dir/lib/core/physics/collision.cpp.o.d"
+  "/Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/physics/gravity.cpp" "CMakeFiles/shade_engine.dir/lib/core/physics/gravity.cpp.o" "gcc" "CMakeFiles/shade_engine.dir/lib/core/physics/gravity.cpp.o.d"
+  "/Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/physics/keyMovement.cpp" "CMakeFiles/shade_engine.dir/lib/core/physics/keyMovement.cpp.o" "gcc" "CMakeFiles/shade_engine.dir/lib/core/physics/keyMovement.cpp.o.d"
+  "/Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/physics/physics.cpp" "CMakeFiles/shade_engine.dir/lib/core/physics/physics.cpp.o" "gcc" "CMakeFiles/shade_engine.dir/lib/core/physics/physics.cpp.o.d"
+  "/Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/structs.cpp" "CMakeFiles/shade_engine.dir/lib/core/structs.cpp.o" "gcc" "CMakeFiles/shade_engine.dir/lib/core/structs.cpp.o.d"
+  "/Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/timer.cpp" "CMakeFiles/shade_engine.dir/lib/core/timer.cpp.o" "gcc" "CMakeFiles/shade_engine.dir/lib/core/timer.cpp.o.d"
+  "/Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/game/GameManager.cpp" "CMakeFiles/shade_engine.dir/lib/game/GameManager.cpp.o" "gcc" "CMakeFiles/shade_engine.dir/lib/game/GameManager.cpp.o.d"
+  "/Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/generic/singleton.cpp" "CMakeFiles/shade_engine.dir/lib/generic/singleton.cpp.o" "gcc" "CMakeFiles/shade_engine.dir/lib/generic/singleton.cpp.o.d"
+  "/Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/objects/factory.cpp" "CMakeFiles/shade_engine.dir/lib/objects/factory.cpp.o" "gcc" "CMakeFiles/shade_engine.dir/lib/objects/factory.cpp.o.d"
+  "/Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/objects/object.cpp" "CMakeFiles/shade_engine.dir/lib/objects/object.cpp.o" "gcc" "CMakeFiles/shade_engine.dir/lib/objects/object.cpp.o.d"
+  "/Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/objects/shapes/rectangle.cpp" "CMakeFiles/shade_engine.dir/lib/objects/shapes/rectangle.cpp.o" "gcc" "CMakeFiles/shade_engine.dir/lib/objects/shapes/rectangle.cpp.o.d"
+  "/Users/jayeshgajbhar/CSC581_GameEngineFoundations/main.cpp" "CMakeFiles/shade_engine.dir/main.cpp.o" "gcc" "CMakeFiles/shade_engine.dir/main.cpp.o.d"
+  )
+
+# Targets to which this target links which contain Fortran sources.
+set(CMAKE_Fortran_TARGET_LINKED_INFO_FILES
+  )
+
+# Targets to which this target links which contain Fortran sources.
+set(CMAKE_Fortran_TARGET_FORWARD_LINKED_INFO_FILES
+  )
+
+# Fortran module output directory.
+set(CMAKE_Fortran_TARGET_MODULE_DIR "")
