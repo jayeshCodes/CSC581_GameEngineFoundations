@@ -25,13 +25,13 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 39,
+				"line" : 41,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 42,
+				"line" : 44,
 				"parent" : 0
 			}
 		]
@@ -79,7 +79,8 @@
 				21,
 				22,
 				24,
-				26
+				26,
+				29
 			]
 		}
 	],
@@ -141,7 +142,8 @@
 				21,
 				22,
 				24,
-				26
+				26,
+				29
 			]
 		},
 		{
@@ -159,7 +161,8 @@
 				20,
 				23,
 				25,
-				27
+				27,
+				28
 			]
 		}
 	],
@@ -320,6 +323,17 @@
 			"backtrace" : 1,
 			"path" : "lib/animation/controller/moveBetween2Points.hpp",
 			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "lib/core/timeline.hpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "lib/core/timeline.cpp",
+			"sourceGroupIndex" : 0
 		}
 	],
 	"type" : "EXECUTABLE"

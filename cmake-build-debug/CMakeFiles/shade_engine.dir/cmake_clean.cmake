@@ -17,6 +17,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/shade_engine.dir/lib/core/physics/physics.cpp.o.d"
   "CMakeFiles/shade_engine.dir/lib/core/structs.cpp.o"
   "CMakeFiles/shade_engine.dir/lib/core/structs.cpp.o.d"
+  "CMakeFiles/shade_engine.dir/lib/core/timeline.cpp.o"
+  "CMakeFiles/shade_engine.dir/lib/core/timeline.cpp.o.d"
   "CMakeFiles/shade_engine.dir/lib/core/timer.cpp.o"
   "CMakeFiles/shade_engine.dir/lib/core/timer.cpp.o.d"
   "CMakeFiles/shade_engine.dir/lib/game/GameManager.cpp.o"
