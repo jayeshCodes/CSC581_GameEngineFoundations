@@ -1,11 +1,47 @@
-File Structure: 
+# Shade Engine
 
-Main contains the main update loop and calls other functions to handle engine subsystems.
+Built by: Utsav Lal and Jayesh Gajbhar \
+Library: SDL2 and C++ 20
 
-structs contains the application struct, which includes the SDL Renderer and SDL Window pointers.
+# Introduction
 
-init initializes the SDL components
+The engine was started from the template shared by Dr. Alexander Card in moodle
+and grew from the same template. Current capabilities include:
 
-input handles HID Input
+1. A rectangle generator
+2. Keyboard movement using WASD
+3. Constant pixel scaling mode and Window Size Scaling mode
+4. Physics with customizable gravity in x and y directions
+5. Collisions between objects with conservation of kinetic energy
+6. A simple state machine animation controller
 
-draw has the functions to apply the window color, clear the renderer, and render the updated scene.
+# Instructions to build the code
+
+## Since we used CLion CMake is required to build the project
+
+1. If there is an existing `build` folder run `rm -r build` to clear and remove the folder
+2. Run `mkdir build && cd build` from the root to create a new build folder and change directory to it
+3. Run `cmake ..` to generate required make files in build folder
+4. Run `make all` to compile the binaries
+5. Run `./shade_engine` to start the game engine
+
+PS: Another way to build the project would be to simply open it in CLion IDE.
+
+# Clean Up
+
+To clean up
+
+1. Run `cd ..` to come back to parent directory
+2. Run `rm -r build` to remove build folder
+
+# Project Structure
+
+- `main.cpp`: This is the main entry point to the code
+- `CMakeLists.cpp`: This is the build file which helps run Cmake and build the project
+- `lib/`: This contains all the source code for the project.
+    - `animation/`: Contains the code for pattern movement
+    - `core/`: The core elements of the game engine like setting up screen, physics, drawing, etc
+    - `game/`: This contains game specific code. One such is a `GameManager` which is a singleton containing variables
+      shared between the engine
+    - `generic/`: This contains generic classes which might be used by us in the future
+    - `objects/`: This contains the code to generate in game objects like a rectangle in our case
