@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <mutex>
 
-
+// Taken from slides presented in class
 class Timeline {
 public:
     Timeline(Timeline *anchor, int64_t tic);
