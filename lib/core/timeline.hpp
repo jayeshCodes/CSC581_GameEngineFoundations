@@ -6,15 +6,21 @@
 #define TIMELINE_HPP
 #include <cstdint>
 #include <mutex>
+#include <chrono>
 
 // Taken from slides presented in class
 class Timeline {
 public:
+    // constructor
     Timeline(Timeline *anchor, int64_t tic);
 
     // for local time
     Timeline(): start_time(0), elapsed_paused_time(0), paused(false) {
     };
+
+    int64_t currentSystemTime();
+
+    void start();
 
     int64_t getTime();
 

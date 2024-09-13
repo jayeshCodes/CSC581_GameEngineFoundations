@@ -9,6 +9,24 @@ Timeline::Timeline(Timeline *anchor, int64_t tic)
       elapsed_paused_time(0), paused(false), anchor(anchor), tic(tic) {
 }
 
+int64_t Timeline::currentSystemTime() {
+    using namespace std::chrono;
+    // get current system time
+    auto now = system_clock::now();
+    // convert it to milliseconds
+    auto now_ms = duration_cast<milliseconds>(now.time_since_epoch());
+    return now_ms.count();
+}
+
+
+void Timeline::start() {
+    std::lock_guard<std::mutex> lock(m);
+    start_time = currentSystemTime();
+    elapsed_paused_time = 0;
+    paused = false;
+}
+
+
 int64_t Timeline::getTime() {
     std::lock_guard<std::mutex> lock(m);
 
