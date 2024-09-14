@@ -2793,6 +2793,7 @@ CMakeFiles/shade_engine.dir/lib/core/input.cpp.o: /Users/jayeshgajbhar/CSC581_Ga
   /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/init.hpp \
   /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/input.hpp \
   /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/structs.hpp \
+  /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/timeline.hpp \
   /opt/homebrew/Cellar/sdl2/2.30.6/include/SDL2/SDL.h \
   /opt/homebrew/Cellar/sdl2/2.30.6/include/SDL2/SDL_assert.h \
   /opt/homebrew/Cellar/sdl2/2.30.6/include/SDL2/SDL_atomic.h \
@@ -11492,8 +11493,6 @@ CMakeFiles/shade_engine.dir/main.cpp.o: /Users/jayeshgajbhar/CSC581_GameEngineFo
 
 /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/timer.cpp:
 
-/Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/timeline.hpp:
-
 /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/timeline.cpp:
 
 /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/structs.cpp:
@@ -11507,6 +11506,8 @@ CMakeFiles/shade_engine.dir/main.cpp.o: /Users/jayeshgajbhar/CSC581_GameEngineFo
 /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/physics/gravity.cpp:
 
 /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/physics/physics.hpp:
+
+/Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/timeline.hpp:
 
 /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/input.cpp:
 

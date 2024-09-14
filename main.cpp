@@ -14,6 +14,7 @@
 
 bool gameRunning = false;
 
+Timeline anchorTimeline(nullptr, 1); // normal tic value of 1
 
 int main(int argc, char *argv[]) {
     //Call the initialization functions
@@ -24,12 +25,14 @@ int main(int argc, char *argv[]) {
     gameRunning = true;
 
     // creating global game clock
-    Timeline anchorTimeline(nullptr, 1); // normal tic value of 1
     anchorTimeline.start();
+    std::cout << "anchor timeline: " << anchorTimeline.getTime();
 
     // creating a timeline linked to the anchor
     Timeline gameTimeline(&anchorTimeline, 1); // normal tic value of 1
     gameTimeline.start();
+    std::cout << "game timeline: " << gameTimeline.getTime();
+
 
     // Create Rectangle instance
     std::vector<std::unique_ptr<Rectangle> > rectangles;
@@ -52,18 +55,12 @@ int main(int argc, char *argv[]) {
     float deltaTime = 0;
 
     while (gameRunning) {
-        // Uint32 currentTime = SDL_GetTicks();
-        // deltaTime = (currentTime - lastTime) / 1000.0f;
-        // lastTime = currentTime;
-
         // timeline implementation
         int64_t currentTime = gameTimeline.getTime(); // init current time in ticks
+        std::cout << "Game timeline time: " << gameTimeline.getTime() << std::endl;
         deltaTime = (currentTime - lastTime) / 1000.0f; // convert into seconds for smooth movement animations
         lastTime = currentTime;
 
-        std::cout << "current time: " << currentTime << std::endl;
-        std::cout << "last time: " << lastTime << std::endl;
-        std::cout << "delta time: " << deltaTime << std::endl;
 
         //Prep the scene
         prepareScene();
@@ -71,8 +68,14 @@ int main(int argc, char *argv[]) {
         //Process input
         doInput();
 
-        //modify the game world here
+        // process temporal input
+        // TODO: fix temporalInput() in input.cpp
+        // temporalInput(gameTimeline);
 
+        // Event handling for input
+        SDL_Event event;
+
+        //modify the game world here
         SDL_FPoint direction = getKeyPress();
         key_movement.calculate(*rectangles[0], direction);
 
@@ -84,9 +87,11 @@ int main(int argc, char *argv[]) {
 
         m.moveBetween2Points(*rectangles[2]);
 
-        for (const auto &rectangle: rectangles) {
-            rectangle->update(deltaTime);
-            rectangle->draw();
+        if (!gameTimeline.isPaused()) {
+            for (const auto &rectangle: rectangles) {
+                rectangle->update(deltaTime);
+                rectangle->draw();
+            }
         }
 
 

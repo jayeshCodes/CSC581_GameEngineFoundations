@@ -21,11 +21,11 @@ int64_t Timeline::currentSystemTime() {
 
 void Timeline::start() {
     std::lock_guard<std::mutex> lock(m);
-    start_time = currentSystemTime();
+    // Use anchor's current time, not its start time
+    start_time = anchor ? anchor->getTime() : currentSystemTime();
     elapsed_paused_time = 0;
     paused = false;
 }
-
 
 int64_t Timeline::getTime() {
     std::lock_guard<std::mutex> lock(m);
@@ -34,8 +34,12 @@ int64_t Timeline::getTime() {
         return last_paused_time; // If paused, return the time when it was last paused
     }
 
-    int64_t current_time = anchor ? anchor->getTime() : 0; //Get the time from the anchor if it exists
-    return (current_time - elapsed_paused_time) * tic; // Adjust for paused time and tic
+    // Get the time from the anchor if it exists, otherwise use the system time
+    int64_t current_time = anchor ? anchor->getTime() : currentSystemTime();
+
+    // Return the adjusted time based on start time and tic
+    if (tic == 0) tic = 1;  // Ensure tic is never zero
+    return (current_time - start_time - elapsed_paused_time) / tic;
 }
 
 void Timeline::pause() {
@@ -57,7 +61,7 @@ void Timeline::unpause() {
     }
 }
 
-void Timeline::changeTic(int new_tic) {
+void Timeline::changeTic(float new_tic) {
     std::lock_guard<std::mutex> lock(m);
 
     // Update current time according to old tic before changing
@@ -73,3 +77,6 @@ bool Timeline::isPaused() {
     return paused;
 }
 
+float Timeline::getTic() {
+    return tic;
+}

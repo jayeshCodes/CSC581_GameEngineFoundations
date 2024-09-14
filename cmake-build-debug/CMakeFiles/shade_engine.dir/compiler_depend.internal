@@ -2797,6 +2797,7 @@ CMakeFiles/shade_engine.dir/lib/core/input.cpp.o
  /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/init.hpp
  /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/input.hpp
  /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/structs.hpp
+ /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/timeline.hpp
  /opt/homebrew/Cellar/sdl2/2.30.6/include/SDL2/SDL.h
  /opt/homebrew/Cellar/sdl2/2.30.6/include/SDL2/SDL_assert.h
  /opt/homebrew/Cellar/sdl2/2.30.6/include/SDL2/SDL_atomic.h

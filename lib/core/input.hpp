@@ -1,8 +1,11 @@
 #pragma once
 #include <SDL.h>
+#include "timeline.hpp"
 
 extern bool gameRunning;
 
-void doInput(void);
+void doInput();
 
 SDL_FPoint getKeyPress();
+
+void temporalInput(Timeline &gameTimeline);

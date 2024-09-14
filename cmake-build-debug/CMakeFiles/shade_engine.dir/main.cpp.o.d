@@ -858,6 +858,7 @@ CMakeFiles/shade_engine.dir/main.cpp.o: \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/cstdarg \
   /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/draw.hpp \
   /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/input.hpp \
+  /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/timeline.hpp \
   /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/timer.hpp \
   /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/physics/collision.hpp \
   /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/physics/physics.hpp \
@@ -875,5 +876,4 @@ CMakeFiles/shade_engine.dir/main.cpp.o: \
   /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/objects/factory.hpp \
   /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/objects/shapes/rectangle.hpp \
   /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/animation/controller/moveBetween2Points.hpp \
-  /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/animation/controller/../../objects/object.hpp \
-  /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/core/timeline.hpp
+  /Users/jayeshgajbhar/CSC581_GameEngineFoundations/lib/animation/controller/../../objects/object.hpp
