@@ -33,6 +33,8 @@ set(SOURCES
         lib/game/GameManager.hpp
         lib/animation/controller/moveBetween2Points.cpp
         lib/animation/controller/moveBetween2Points.hpp
+        lib/core/timeline.hpp
+        lib/core/timeline.cpp
 )
 
 

@@ -345,6 +345,30 @@ lib/core/structs.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/shade_engine.dir/build.make CMakeFiles/shade_engine.dir/lib/core/structs.cpp.s
 .PHONY : lib/core/structs.cpp.s
 
+lib/core/timeline.o: lib/core/timeline.cpp.o
+.PHONY : lib/core/timeline.o
+
+# target to build an object file
+lib/core/timeline.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/shade_engine.dir/build.make CMakeFiles/shade_engine.dir/lib/core/timeline.cpp.o
+.PHONY : lib/core/timeline.cpp.o
+
+lib/core/timeline.i: lib/core/timeline.cpp.i
+.PHONY : lib/core/timeline.i
+
+# target to preprocess a source file
+lib/core/timeline.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/shade_engine.dir/build.make CMakeFiles/shade_engine.dir/lib/core/timeline.cpp.i
+.PHONY : lib/core/timeline.cpp.i
+
+lib/core/timeline.s: lib/core/timeline.cpp.s
+.PHONY : lib/core/timeline.s
+
+# target to generate assembly for a file
+lib/core/timeline.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/shade_engine.dir/build.make CMakeFiles/shade_engine.dir/lib/core/timeline.cpp.s
+.PHONY : lib/core/timeline.cpp.s
+
 lib/core/timer.o: lib/core/timer.cpp.o
 .PHONY : lib/core/timer.o
 
@@ -549,6 +573,9 @@ help:
 	@echo "... lib/core/structs.o"
 	@echo "... lib/core/structs.i"
 	@echo "... lib/core/structs.s"
+	@echo "... lib/core/timeline.o"
+	@echo "... lib/core/timeline.i"
+	@echo "... lib/core/timeline.s"
 	@echo "... lib/core/timer.o"
 	@echo "... lib/core/timer.i"
 	@echo "... lib/core/timer.s"

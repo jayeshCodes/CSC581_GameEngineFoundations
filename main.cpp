@@ -10,9 +10,11 @@
 #include "lib/objects/factory.hpp"
 #include "lib/objects/shapes/rectangle.hpp"
 #include "lib/animation/controller/moveBetween2Points.hpp"
+#include "lib/core/timeline.hpp"
 
 bool gameRunning = false;
 
+Timeline anchorTimeline(nullptr, 1); // normal tic value of 1
 
 int main(int argc, char *argv[]) {
     //Call the initialization functions
@@ -22,12 +24,22 @@ int main(int argc, char *argv[]) {
     initSDL();
     gameRunning = true;
 
+    // creating global game clock
+    anchorTimeline.start();
+    std::cout << "anchor timeline: " << anchorTimeline.getTime();
+
+    // creating a timeline linked to the anchor
+    Timeline gameTimeline(&anchorTimeline, 1); // normal tic value of 1
+    gameTimeline.start();
+    std::cout << "game timeline: " << gameTimeline.getTime();
+
 
     // Create Rectangle instance
     std::vector<std::unique_ptr<Rectangle> > rectangles;
     rectangles.push_back(Factory::createRectangle({0, 255, 255, 255}, {100, 100, 100, 100}, true, 0.1, 0.8));
     rectangles.push_back(Factory::createRectangle({255, 255, 0, 255}, {300, 100, 100, 100}, true, 0.001, 0.8));
-    rectangles.push_back(Factory::createRectangle({255, 0, 0, 255}, {300, SCREEN_HEIGHT/2.f, SCREEN_WIDTH/2.f, 100}, true, 100000.f, 0.8));
+    rectangles.push_back(Factory::createRectangle({255, 0, 0, 255}, {300, SCREEN_HEIGHT / 2.f, SCREEN_WIDTH / 2.f, 100},
+                                                  true, 100000.f, 0.8));
     rectangles.push_back(Factory::createRectangle({255, 0, 255, 255}, {1000, 100, 100, 100}, false, 1.f, 0.8));
 
     MoveBetween2Points m(100.f, 400.f, LEFT, 2);
@@ -37,17 +49,18 @@ int main(int argc, char *argv[]) {
     Collision collision;
     KeyMovement key_movement(300, 300);
 
-    //  init timer
-    Timer fpsTimer;
-    fpsTimer.start();
 
-    Uint32 lastTime = SDL_GetTicks();
-    float deltaTime;
+    // Uint32 lastTime = SDL_GetTicks();
+    int64_t lastTime = gameTimeline.getTime();
+    float deltaTime = 0;
 
     while (gameRunning) {
-        Uint32 currentTime = SDL_GetTicks();
-        deltaTime = (currentTime - lastTime) / 1000.0f;
+        // timeline implementation
+        int64_t currentTime = gameTimeline.getTime(); // init current time in ticks
+        std::cout << "Game timeline time: " << gameTimeline.getTime() << std::endl;
+        deltaTime = (currentTime - lastTime) / 1000.0f; // convert into seconds for smooth movement animations
         lastTime = currentTime;
+
 
         //Prep the scene
         prepareScene();
@@ -55,8 +68,14 @@ int main(int argc, char *argv[]) {
         //Process input
         doInput();
 
-        //modify the game world here
+        // process temporal input
+        // TODO: fix temporalInput() in input.cpp
+        // temporalInput(gameTimeline);
 
+        // Event handling for input
+        SDL_Event event;
+
+        //modify the game world here
         SDL_FPoint direction = getKeyPress();
         key_movement.calculate(*rectangles[0], direction);
 
@@ -68,16 +87,16 @@ int main(int argc, char *argv[]) {
 
         m.moveBetween2Points(*rectangles[2]);
 
-        for (const auto &rectangle: rectangles) {
-            rectangle->update(deltaTime);
-            rectangle->draw();
+        if (!gameTimeline.isPaused()) {
+            for (const auto &rectangle: rectangles) {
+                rectangle->update(deltaTime);
+                rectangle->draw();
+            }
         }
 
 
         //Present the resulting scene
         presentScene();
-
-        fpsTimer.start();
     }
 
     cleanupSDL();
