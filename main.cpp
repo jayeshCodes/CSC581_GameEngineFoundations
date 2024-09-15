@@ -86,11 +86,11 @@ int main(int argc, char *argv[]) {
 
         m.moveBetween2Points(*rectangles[2]);
 
-        if (!gameTimeline.isPaused()) {
-            for (const auto &rectangle: rectangles) {
+
+        for (const auto &rectangle: rectangles) {
+            if (!anchorTimeline.isPaused())
                 rectangle->update(deltaTime);
-                rectangle->draw();
-            }
+            rectangle->draw();
         }
 
 
