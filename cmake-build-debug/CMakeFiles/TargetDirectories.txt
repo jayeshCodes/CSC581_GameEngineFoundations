@@ -1,3 +1,0 @@
-/Users/jayeshgajbhar/CSC581_GameEngineFoundations/cmake-build-debug/CMakeFiles/shade_engine.dir
-/Users/jayeshgajbhar/CSC581_GameEngineFoundations/cmake-build-debug/CMakeFiles/edit_cache.dir
-/Users/jayeshgajbhar/CSC581_GameEngineFoundations/cmake-build-debug/CMakeFiles/rebuild_cache.dir
