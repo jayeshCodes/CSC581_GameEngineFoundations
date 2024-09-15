@@ -1,48 +1,43 @@
-//
-// Created by Jayesh Gajbhar on 9/10/24.
-//
+#ifndef TIMELINE_H
+#define TIMELINE_H
 
-#ifndef TIMELINE_HPP
-#define TIMELINE_HPP
-#include <cstdint>
 #include <mutex>
+#include <cstdint>
 #include <chrono>
 
-// Taken from slides presented in class
 class Timeline {
+private:
+    std::mutex m; // Mutex for thread safety
+    int64_t start_time; // Time when the anchor was created
+    int64_t elapsed_paused_time; // Total time spent paused
+    int64_t last_paused_time; // Time when the timeline was last paused
+    double tic; // Units of anchor timeline per step
+    bool paused; // Is the timeline currently paused?
+    Timeline* anchor; // Pointer to another timeline (e.g., system time or another timeline)
+
+    // Get current system time (or anchor time if anchored)
+    int64_t getCurrentTime();
+
 public:
-    // constructor
-    Timeline(Timeline *anchor, int64_t tic);
+    // Constructor
+    explicit Timeline(Timeline* anchor_timeline = nullptr, double tic_interval = 1);
 
-    // for local time
-    Timeline(): start_time(0), elapsed_paused_time(0), paused(false) {
-    };
+    // Destructor
+    ~Timeline();
 
-    int64_t currentSystemTime();
-
+    // Starts or resumes the timeline
     void start();
 
-    int64_t getTime();
-
+    // Pauses the timeline
     void pause();
 
-    void unpause();
+    // Resets the timeline
+    void reset();
 
-    void changeTic(float tic);
+    // Get the time since the timeline started, minus the paused time
+    int64_t getElapsedTime();
 
     bool isPaused();
-
-    float getTic(); // for debugging purposes
-
-private:
-    std::mutex m; //if tics can change size and the game is multithreaded
-    int64_t start_time; //the time of the *anchor when created
-    int64_t elapsed_paused_time;
-    int64_t last_paused_time;
-    float tic; //units of anchor timeline per step
-    bool paused;
-    Timeline *anchor; //for most general game time, system library pointer
 };
 
-
-#endif //TIMELINE_HPP
+#endif // TIMELINE_H
