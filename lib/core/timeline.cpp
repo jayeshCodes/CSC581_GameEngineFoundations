@@ -70,3 +70,18 @@ int64_t Timeline::getCurrentTime() {
 bool Timeline::isPaused() {
     return paused;
 }
+
+void Timeline::changeTic(double new_tic) {
+
+    // Calculate the current elapsed time using the current tic value
+    int64_t currentElapsedTime = getElapsedTime();
+
+    std::lock_guard<std::mutex> lock(m);
+    // Update the tic value
+    tic = new_tic;
+
+    // Adjust start_time so that the total elapsed time stays the same
+    // under the new tic value.
+    start_time = (int64_t)(getCurrentTime() - (currentElapsedTime * tic));
+}
+

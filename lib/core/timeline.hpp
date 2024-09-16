@@ -38,6 +38,8 @@ public:
     int64_t getElapsedTime();
 
     bool isPaused();
+
+    void changeTic(double new_tic);
 };
 
 #endif // TIMELINE_H
