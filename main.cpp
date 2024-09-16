@@ -16,7 +16,7 @@ bool gameRunning = false;
 const float TARGET_FRAME_TIME = 1000.f / 60.f; // 60 fps
 
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
-Timeline anchorTimeline(nullptr, 1000); // normal tic value of 1
+Timeline anchorTimeline(nullptr, 1); // normal tic value of 1
 
 int main(int argc, char *argv[]) {
     //Call the initialization functions
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
     while (gameRunning) {
         // timeline implementation
         int64_t currentTime = gameTimeline.getElapsedTime(); // init current time in ticks
-        deltaTime = (currentTime - lastTime) / 1000.f; // convert into seconds for smooth movement animations
+        deltaTime = (currentTime - lastTime) / 1000000.0f; // convert into seconds for smooth movement animations
         lastTime = currentTime;
 
         //Prep the scene
@@ -67,6 +67,8 @@ int main(int argc, char *argv[]) {
         //Process input
         doInput();
 
+        // time manipulation using keyboard
+        temporalInput(gameTimeline);
 
         // Event handling for input
         SDL_Event event;

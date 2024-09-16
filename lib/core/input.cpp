@@ -1,6 +1,7 @@
 #include "input.hpp"
 #include "init.hpp"
 #include "../game/GameManager.hpp"
+#include <thread>
 
 
 extern Timeline anchorTimeline;
@@ -39,17 +40,6 @@ SDL_FPoint getKeyPress() {
         return {0, 0};
     }
 
-    if(state[SDL_SCANCODE_ESCAPE]) {
-        if(anchorTimeline.isPaused()) {
-            anchorTimeline.start();
-        }
-        else {
-            anchorTimeline.pause();
-            std::cout << "Game paused" << std::endl;
-        }
-        SDL_Delay(200);
-    }
-
 
     // Only process movement if the game is not paused
     if (state[SDL_SCANCODE_A]) return {-1, 0};
@@ -62,25 +52,26 @@ SDL_FPoint getKeyPress() {
 
 
 // TODO : implement temporalInput properly, game crashes in the current implementation
-// void temporalInput(Timeline &gameTimeline) {
-//     const Uint8 *state = SDL_GetKeyboardState(nullptr);
-//     if (state[SDL_SCANCODE_P]) {
-//         if (gameTimeline.isPaused()) {
-//             gameTimeline.unpause();
-//             std::cout << "Game resumed" << std::endl;
-//         } else {
-//             gameTimeline.pause();
-//             std::cout << "Game paused" << std::endl;
-//         }
-//     }
-//
-//     if (state[SDL_SCANCODE_1]) {
-//         gameTimeline.changeTic(1.0f);
-//     }
-//     if (state[SDL_SCANCODE_2]) {
-//         gameTimeline.changeTic(2.0f);
-//     }
-//     if (state[SDL_SCANCODE_3]) {
-//         gameTimeline.changeTic(0.5f);
-//     }
-// }
+void temporalInput(Timeline &gameTimeline) {
+    const Uint8 *state = SDL_GetKeyboardState(nullptr);
+    if (state[SDL_SCANCODE_ESCAPE]) {
+        if (gameTimeline.isPaused()) {
+            gameTimeline.start();
+            std::cout << "Game resumed" << std::endl;
+        } else {
+            gameTimeline.pause();
+            std::cout << "Game paused" << std::endl;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(200)));
+    }
+
+    if (state[SDL_SCANCODE_1]) {
+        gameTimeline.changeTic(1.0f);
+    }
+    if (state[SDL_SCANCODE_2]) {
+        gameTimeline.changeTic(2.0f);
+    }
+    if (state[SDL_SCANCODE_3]) {
+        gameTimeline.changeTic(0.5f);
+    }
+}
