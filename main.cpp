@@ -15,7 +15,7 @@
 bool gameRunning = false;
 const float TARGET_FRAME_TIME = 1000.f / 60.f; // 60 fps
 
-// Since no anchor this will be global time. The TimeLine class caluclate microseconds and hence tic_interval of 1000 ensures this class calculates in milliseconds
+// Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
 Timeline anchorTimeline(nullptr, 1000); // normal tic value of 1
 
 int main(int argc, char *argv[]) {
@@ -67,9 +67,6 @@ int main(int argc, char *argv[]) {
         //Process input
         doInput();
 
-        // process temporal input
-        // TODO: fix temporalInput() in input.cpp
-        // temporalInput(gameTimeline);
 
         // Event handling for input
         SDL_Event event;
