@@ -13,8 +13,10 @@
 #include "lib/core/timeline.hpp"
 
 bool gameRunning = false;
+const float TARGET_FRAME_TIME = 1000.f / 60.f; // 60 fps
 
-Timeline anchorTimeline(nullptr, 1); // normal tic value of 1
+// Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
+Timeline anchorTimeline(nullptr, 1000); // normal tic value of 1
 
 int main(int argc, char *argv[]) {
     //Call the initialization functions
@@ -26,12 +28,11 @@ int main(int argc, char *argv[]) {
 
     // creating global game clock
     anchorTimeline.start();
-    std::cout << "anchor timeline: " << anchorTimeline.getTime();
 
-    // creating a timeline linked to the anchor
+    // creating a timeline linked to the anchor, with a tic value of 1 (1 millisecond)
+    // If we reduce it to 0.1, the game will run 10 times faster
     Timeline gameTimeline(&anchorTimeline, 1); // normal tic value of 1
     gameTimeline.start();
-    std::cout << "game timeline: " << gameTimeline.getTime();
 
 
     // Create Rectangle instance
@@ -51,16 +52,14 @@ int main(int argc, char *argv[]) {
 
 
     // Uint32 lastTime = SDL_GetTicks();
-    int64_t lastTime = gameTimeline.getTime();
+    int64_t lastTime = gameTimeline.getElapsedTime();
     float deltaTime = 0;
 
     while (gameRunning) {
         // timeline implementation
-        int64_t currentTime = gameTimeline.getTime(); // init current time in ticks
-        std::cout << "Game timeline time: " << gameTimeline.getTime() << std::endl;
-        deltaTime = (currentTime - lastTime) / 1000.0f; // convert into seconds for smooth movement animations
+        int64_t currentTime = gameTimeline.getElapsedTime(); // init current time in ticks
+        deltaTime = (currentTime - lastTime) / 1000.f; // convert into seconds for smooth movement animations
         lastTime = currentTime;
-
 
         //Prep the scene
         prepareScene();
@@ -68,9 +67,6 @@ int main(int argc, char *argv[]) {
         //Process input
         doInput();
 
-        // process temporal input
-        // TODO: fix temporalInput() in input.cpp
-        // temporalInput(gameTimeline);
 
         // Event handling for input
         SDL_Event event;
@@ -87,11 +83,11 @@ int main(int argc, char *argv[]) {
 
         m.moveBetween2Points(*rectangles[2]);
 
-        if (!gameTimeline.isPaused()) {
-            for (const auto &rectangle: rectangles) {
+
+        for (const auto &rectangle: rectangles) {
+            if (!anchorTimeline.isPaused())
                 rectangle->update(deltaTime);
-                rectangle->draw();
-            }
+            rectangle->draw();
         }
 
 

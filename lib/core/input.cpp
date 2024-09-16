@@ -39,14 +39,23 @@ SDL_FPoint getKeyPress() {
         return {0, 0};
     }
 
+    if(state[SDL_SCANCODE_ESCAPE]) {
+        if(anchorTimeline.isPaused()) {
+            anchorTimeline.start();
+        }
+        else {
+            anchorTimeline.pause();
+            std::cout << "Game paused" << std::endl;
+        }
+        SDL_Delay(200);
+    }
+
 
     // Only process movement if the game is not paused
-    if (!anchorTimeline.isPaused()) {
-        if (state[SDL_SCANCODE_A]) return {-1, 0};
-        if (state[SDL_SCANCODE_D]) return {1, 0};
-        if (state[SDL_SCANCODE_W]) return {0, -1};
-        if (state[SDL_SCANCODE_S]) return {0, 1};
-    }
+    if (state[SDL_SCANCODE_A]) return {-1, 0};
+    if (state[SDL_SCANCODE_D]) return {1, 0};
+    if (state[SDL_SCANCODE_W]) return {0, -1};
+    if (state[SDL_SCANCODE_S]) return {0, 1};
 
     return {0, 0};
 }
