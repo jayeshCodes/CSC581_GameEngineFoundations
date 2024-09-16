@@ -51,7 +51,6 @@ SDL_FPoint getKeyPress() {
 }
 
 
-// TODO : implement temporalInput properly, game crashes in the current implementation
 void temporalInput(Timeline &gameTimeline) {
     const Uint8 *state = SDL_GetKeyboardState(nullptr);
     if (state[SDL_SCANCODE_ESCAPE]) {
