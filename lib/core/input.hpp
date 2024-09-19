@@ -1,8 +1,10 @@
 #pragma once
 #include <SDL.h>
 #include "timeline.hpp"
+#include <mutex>
 
 extern bool gameRunning;
+extern std::mutex runningMutex;
 
 void doInput();
 

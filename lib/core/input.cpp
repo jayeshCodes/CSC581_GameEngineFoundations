@@ -4,13 +4,10 @@
 #include <thread>
 
 
+std::mutex runningMutex;
+
 extern Timeline anchorTimeline;
 
-
-/*
-* This function is boilerplate, and the contents currently read the events thrown by SDL and look for the SDL quit event, terminating the program.
-* This file is where code to read the keyboard state and determine which keys are pressed should sit.
-*/
 void doInput() {
     SDL_Event event;
 
@@ -18,7 +15,7 @@ void doInput() {
         switch (event.type) {
             case SDL_QUIT:
                 gameRunning = false;
-                break;
+            break;
 
             default:
                 break;
@@ -26,10 +23,6 @@ void doInput() {
     }
 }
 
-/**
- * This function will detect key press. WASD for movement. O for changing the scaling mode
- * @return SDL_Point
- */
 SDL_FPoint getKeyPress() {
     const Uint8 *state = SDL_GetKeyboardState(nullptr);
 
@@ -40,7 +33,6 @@ SDL_FPoint getKeyPress() {
         return {0, 0};
     }
 
-
     // Only process movement if the game is not paused
     if (state[SDL_SCANCODE_A]) return {-1, 0};
     if (state[SDL_SCANCODE_D]) return {1, 0};
@@ -49,7 +41,6 @@ SDL_FPoint getKeyPress() {
 
     return {0, 0};
 }
-
 
 void temporalInput(Timeline &gameTimeline) {
     const Uint8 *state = SDL_GetKeyboardState(nullptr);
