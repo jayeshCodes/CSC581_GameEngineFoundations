@@ -8,4 +8,6 @@
 // SDL render and window context
 extern App* app;
 
+bool gameRunning = false;
+
 int main(int argc, char* argv[]);

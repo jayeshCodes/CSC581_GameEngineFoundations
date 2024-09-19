@@ -3,7 +3,7 @@
 #include "../game/GameManager.hpp"
 #include <thread>
 
-bool gameRunning = false;
+
 std::mutex runningMutex;
 
 extern Timeline anchorTimeline;
@@ -14,7 +14,7 @@ void doInput() {
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
             case SDL_QUIT:
-                setGameRunning(false);
+                gameRunning = false;
             break;
 
             default:
@@ -64,14 +64,4 @@ void temporalInput(Timeline &gameTimeline) {
     if (state[SDL_SCANCODE_3]) {
         gameTimeline.changeTic(0.5f);
     }
-}
-
-bool isGameRunning() {
-    std::lock_guard<std::mutex> lock(runningMutex);
-    return gameRunning;
-}
-
-void setGameRunning(bool running) {
-    std::lock_guard<std::mutex> lock(runningMutex);
-    gameRunning = running;
 }

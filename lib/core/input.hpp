@@ -11,6 +11,3 @@ void doInput();
 SDL_FPoint getKeyPress();
 
 void temporalInput(Timeline &gameTimeline);
-
-extern bool isGameRunning();
-extern void setGameRunning(bool running);

@@ -17,11 +17,9 @@
 
 const float TARGET_FRAME_TIME = 1000.f / 60.f; // 60 fps
 
+// Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
 Timeline anchorTimeline(nullptr, 1);
 Timeline gameTimeline(&anchorTimeline, 1);
-
-std::mutex gameMutex;
-std::condition_variable gameCV;
 
 std::vector<std::unique_ptr<Rectangle>> rectangles;
 MoveBetween2Points m(100.f, 400.f, LEFT, 2);
@@ -30,17 +28,15 @@ Collision collision;
 KeyMovement key_movement(300, 300);
 
 void gameLogicThread() {
+    // Initialize game timeline
     int64_t lastTime = gameTimeline.getElapsedTime();
     float deltaTime = 0;
 
-    while (isGameRunning()) {
+    while (gameRunning) {
         int64_t currentTime = gameTimeline.getElapsedTime();
         deltaTime = (currentTime - lastTime) / 1000000.0f;
         lastTime = currentTime;
-
         {
-            std::unique_lock<std::mutex> lock(gameMutex);
-
             // Game logic
             SDL_FPoint direction = getKeyPress();
             key_movement.calculate(*rectangles[0], direction);
@@ -54,18 +50,11 @@ void gameLogicThread() {
                     rectangle->update(deltaTime);
             }
         }
-
-        gameCV.notify_one();
-        std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(TARGET_FRAME_TIME)));
     }
 }
 
 void renderThread() {
-    while (isGameRunning()) {
-        std::unique_lock<std::mutex> lock(gameMutex);
-        gameCV.wait(lock);
-
-        if (!isGameRunning()) break; // Exit the thread if the game is no longer running
+    while (gameRunning) {
 
         prepareScene();
 
@@ -77,12 +66,16 @@ void renderThread() {
     }
 }
 
+void inputThread() {
+
+}
+
 int main(int argc, char *argv[]) {
     std::cout << ENGINE_NAME << " v" << ENGINE_VERSION << " initializing" << std::endl;
     std::cout << "Created by Utsav and Jayesh" << std::endl;
     std::cout << std::endl;
     initSDL();
-    setGameRunning(true);
+    gameRunning = true;
 
     anchorTimeline.start();
     gameTimeline.start();
@@ -96,17 +89,10 @@ int main(int argc, char *argv[]) {
     std::thread logicThread(gameLogicThread);
     std::thread renderingThread(renderThread);
 
-    while (isGameRunning()) {
+    // Do not multithread this functionality. Causes exception
+    while (gameRunning) {
         doInput();
         temporalInput(gameTimeline);
-
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                setGameRunning(false);
-                gameCV.notify_one(); // This will wake the render thread if it's waiting
-            }
-        }
     }
 
 
