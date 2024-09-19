@@ -65,6 +65,8 @@ void renderThread() {
         std::unique_lock<std::mutex> lock(gameMutex);
         gameCV.wait(lock);
 
+        if (!isGameRunning()) break; // Exit the thread if the game is no longer running
+
         prepareScene();
 
         for (const auto &rectangle : rectangles) {
@@ -102,9 +104,11 @@ int main(int argc, char *argv[]) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 setGameRunning(false);
+                gameCV.notify_one(); // This will wake the render thread if it's waiting
             }
         }
     }
+
 
     logicThread.join();
     renderingThread.join();
