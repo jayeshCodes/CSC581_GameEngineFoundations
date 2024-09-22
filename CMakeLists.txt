@@ -38,6 +38,7 @@ set(SOURCES
         lib/network/publisher.cpp
         lib/network/publisher.hpp
         lib/generic/safe_queue.hpp
+        lib/enum/message_type.hpp
 )
 
 add_executable(shade_engine ${SOURCES} main.cpp)

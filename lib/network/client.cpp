@@ -10,6 +10,7 @@
 #include "../core/timer.hpp"
 #include "../core/physics/collision.hpp"
 #include "../core/physics/keyMovement.hpp"
+#include "../enum/message_type.hpp"
 #include "../generic/safe_queue.hpp"
 #include "../objects/factory.hpp"
 #include "../objects/shapes/rectangle.hpp"
@@ -18,13 +19,13 @@
 const SDL_Color blueColor = {0, 0, 255, 255};
 
 Timeline anchorTimeline(nullptr, 1000); // normal tic value of 1
-SafeQueue<std::array<float, 2> > messageQueue;
+SafeQueue<std::array<float, 3> > messageQueue;
 
 void sendPosition(zmq::socket_t &socket) {
     while (gameRunning) {
         if (messageQueue.notEmpty()) {
-            std::array<float, 2> message = messageQueue.dequeue();
-            socket.send(zmq::buffer(message, sizeof(message)), zmq::send_flags::none);
+            std::array<float, 3> position = messageQueue.dequeue();
+            socket.send(zmq::buffer(position, sizeof(position)), zmq::send_flags::none);
         }
     }
 }
@@ -84,7 +85,7 @@ int main(int argc, char *argv[]) {
 
         // std::string message = std::to_string(movementRect->rect.x) + " " + std::to_string(movementRect->rect.y);
         std::array<float, 2> positions = {movementRect->rect.x, movementRect->rect.y};
-        messageQueue.enqueue(positions);
+        messageQueue.enqueue({MessageType::CHARACTER, positions[0], positions[1]});
 
         movementRect->draw();
 

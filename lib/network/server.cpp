@@ -14,15 +14,22 @@
 
 Timeline globalServerTimeline(nullptr, 1000);
 
-const float FRAME_RATE = 1000.f / 240.f;
-SafeQueue<std::array<float, 2> > messageQueue;
+constexpr float FRAME_RATE = 1000.f / 240.f;
+SafeQueue<std::array<float, 3>> messageQueue;
 std::atomic<bool> running{false};
 
+/**
+ * This will switch the game boolean to false killing the game and stopping all threads
+ * @param signal - signal to be handled
+ */
 void signal_handler(int signal) {
     running = false;
     std::cout << "Stopping server..." << std::endl;
 }
 
+/**
+ * Registering interrupts helps to kill all the threads and closing the server gracefully
+ */
 void register_interrupts() {
     std::signal(SIGINT, signal_handler);
     std::signal(SIGTERM, signal_handler);
@@ -38,20 +45,28 @@ void initialize_server(zmq::socket_t &pull_socket, zmq::socket_t &pub_socket) {
     std::cout << "Server initialized and sockets bound" << std::endl;
 }
 
+/**
+ * This function will pull the message from the client and add it to the message queue
+ * @param pull_socket - socket to pull the message from
+ */
 void pull_message(zmq::socket_t &pull_socket) {
     while (running) {
-        std::array<float, 2> positions;
-        if (pull_socket.recv(zmq::buffer(positions, sizeof(float) * 2), zmq::recv_flags::dontwait)) {
-            messageQueue.enqueue(positions);
+        std::array<float, 3> position{};
+        if (pull_socket.recv(zmq::buffer(position, sizeof(position)), zmq::recv_flags::dontwait)) {
+            messageQueue.enqueue(position);
         }
     }
     std::cout << "Kill pull thread" << std::endl;
 }
 
+/**
+ * This function will broadcast the message to all the clients
+ * @param pub_socket - socket to publish the message
+ */
 void broadcast(zmq::socket_t &pub_socket) {
     while (running) {
         if (messageQueue.notEmpty()) {
-            std::array<float, 2> latestPos = messageQueue.dequeue();
+            std::array<float, 3> latestPos = messageQueue.dequeue();
             pub_socket.send(zmq::buffer(latestPos, sizeof(latestPos)), zmq::send_flags::none);
         }
     }
@@ -75,7 +90,7 @@ int main() {
     int64_t lastTime = globalServerTimeline.getElapsedTime();
     running = true;
 
-    //Start threads for sending and receiving messages
+    //Start separate threads for sending and receiving messages so that it doesnt block the main game loop
     std::thread pull_thread(pull_message, std::ref(listener));
     std::thread broadcast_thread(broadcast, std::ref(publisher));
 

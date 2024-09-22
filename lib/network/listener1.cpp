@@ -11,12 +11,18 @@
 #include <sstream>
 #include <csignal>
 
+#include "../enum/message_type.hpp"
+#include "../generic/safe_queue.hpp"
+
 const SDL_Color blueColor = {0, 0, 255, 255};
 const SDL_Color redColor = {255, 0, 0, 255};
 const SDL_Color greenColor = {0, 255, 0, 255};
 
 Timeline anchorTimeline(nullptr, 1000); // normal tic value of 1
 std::atomic<bool> running{false};
+
+SafeQueue<std::array<float, 2> > characterMessageQueue;
+SafeQueue<std::array<float, 2> > platformMessageQueue;
 
 void signal_handler(int signal) {
     running = false;
@@ -31,12 +37,33 @@ void register_interrupts() {
     std::signal(SIGKILL, signal_handler);
 }
 
-void networkThread(zmq::socket_t &socket, float *positions) {
+void receive_messages(zmq::socket_t &socket) {
     while (running) {
-        socket.recv(zmq::buffer(positions, sizeof(float) * 2), zmq::recv_flags::dontwait);
+        std::array<float, 3> position{};
+        if (socket.recv(zmq::buffer(position, sizeof(position)), zmq::recv_flags::dontwait)) {
+            switch (static_cast<MessageType>(position[0])) {
+                case MessageType::CHARACTER:
+                    characterMessageQueue.enqueue({position[1], position[2]});
+                    break;
+                case MessageType::PLATFORM:
+                    platformMessageQueue.enqueue({position[1], position[2]});
+                    break;
+            }
+        }
     }
     std::cout << "Stopping network thread" << std::endl;
 }
+
+void process_messages(const std::unique_ptr<Rectangle> &character) {
+    while (running) {
+        if (characterMessageQueue.notEmpty()) {
+            const std::array<float, 2> pos = characterMessageQueue.dequeue();
+            character->rect.x = pos[0];
+            character->rect.y = pos[1];
+        }
+    }
+}
+
 
 int main(int argc, char *argv[]) {
     // Call the initialization functions
@@ -50,7 +77,8 @@ int main(int argc, char *argv[]) {
     register_interrupts();
 
     // Create Rectangle instance
-    auto movementRect = Factory::createRectangle(blueColor, {SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 100, 100}, false, 1, 1);
+    auto movementRect = Factory::createRectangle(blueColor, {SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 100, 100}, false,
+                                                 1, 1);
 
     // Initialize networking
     zmq::context_t context(1);
@@ -60,7 +88,8 @@ int main(int argc, char *argv[]) {
 
     float positions[2] = {0, 0};
     running = true;
-    std::thread netThread(networkThread, std::ref(socket), positions);
+    std::thread netThread(receive_messages, std::ref(socket));
+    std::thread movementThread(process_messages, std::ref(movementRect));
 
     const float FRAME_RATE_LIMIT = 1000.f / 120.0f;
     Timeline gameTimeline(&anchorTimeline, 1); // normal tic value of 1
@@ -84,10 +113,6 @@ int main(int argc, char *argv[]) {
 
         SDL_FPoint direction = getKeyPress();
 
-        // Update object position
-        movementRect->rect.x = positions[0];
-        movementRect->rect.y = positions[1];
-
         movementRect->draw();
         movementRect->update(deltaTime);
 
@@ -100,6 +125,7 @@ int main(int argc, char *argv[]) {
     }
 
     netThread.join();
+    movementThread.join();
     cleanupSDL();
     std::cout << "Closing " << ENGINE_NAME << " Engine" << std::endl;
     return 0;
