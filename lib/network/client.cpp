@@ -1,9 +1,6 @@
 //
 // Created by Utsav Lal on 9/2/24.
 //
-//
-// Created by Utsav Lal on 9/1/24.
-//
 #include <SDL_pixels.h>
 #include <thread>
 #include <zmq.hpp>
@@ -13,16 +10,24 @@
 #include "../core/timer.hpp"
 #include "../core/physics/collision.hpp"
 #include "../core/physics/keyMovement.hpp"
+#include "../generic/safe_queue.hpp"
 #include "../objects/factory.hpp"
 #include "../objects/shapes/rectangle.hpp"
 
-bool gameRunning = false;
 
 const SDL_Color blueColor = {0, 0, 255, 255};
-const SDL_Color redColor = {255, 0, 0, 255};
-const SDL_Color greenColor = {0, 255, 0, 255};
 
 Timeline anchorTimeline(nullptr, 1000); // normal tic value of 1
+SafeQueue<std::array<float, 2> > messageQueue;
+
+void sendPosition(zmq::socket_t &socket) {
+    while (gameRunning) {
+        if (messageQueue.notEmpty()) {
+            std::array<float, 2> message = messageQueue.dequeue();
+            socket.send(zmq::buffer(message, sizeof(message)), zmq::send_flags::none);
+        }
+    }
+}
 
 
 int main(int argc, char *argv[]) {
@@ -55,12 +60,15 @@ int main(int argc, char *argv[]) {
 
     const float FRAME_RATE_LIMIT = 1000.f / 120.0f;
 
+    // Start thread for sending position
+    std::thread netThread(sendPosition, std::ref(socket));
+
     while (gameRunning) {
         Uint32 currentTime = gameTimeline.getElapsedTime();
         float deltaTime = (currentTime - lastTime) / 1000.0f; // Convert to seconds
         lastTime = currentTime;
 
-        if(deltaTime > FRAME_RATE_LIMIT) {
+        if (deltaTime > FRAME_RATE_LIMIT) {
             deltaTime = FRAME_RATE_LIMIT;
         }
 
@@ -75,8 +83,8 @@ int main(int argc, char *argv[]) {
         key_movement.calculate(*movementRect, direction);
 
         // std::string message = std::to_string(movementRect->rect.x) + " " + std::to_string(movementRect->rect.y);
-        float positions[2] = {movementRect->rect.x, movementRect->rect.y};
-        socket.send(zmq::buffer(positions, sizeof(positions)), zmq::send_flags::none);
+        std::array<float, 2> positions = {movementRect->rect.x, movementRect->rect.y};
+        messageQueue.enqueue(positions);
 
         movementRect->draw();
 
@@ -88,7 +96,7 @@ int main(int argc, char *argv[]) {
             std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(FRAME_RATE_LIMIT - deltaTime)));
         }
     }
-
+    netThread.join();
     cleanupSDL();
     std::cout << "Closing " << ENGINE_NAME << " Engine" << std::endl;
     return 0;

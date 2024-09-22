@@ -37,6 +37,7 @@ set(SOURCES
         lib/core/timeline.cpp
         lib/network/publisher.cpp
         lib/network/publisher.hpp
+        lib/generic/safe_queue.hpp
 )
 
 add_executable(shade_engine ${SOURCES} main.cpp)
@@ -45,7 +46,6 @@ add_executable(zmq_client ${SOURCES} lib/network/client.cpp)
 add_executable(zmq_listener_1 ${SOURCES} lib/network/listener1.cpp)
 
 find_package(SDL2 REQUIRED)
-
 find_package(cppzmq REQUIRED)
 
 target_link_libraries(shade_engine SDL2::SDL2)
