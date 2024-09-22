@@ -18,11 +18,11 @@
 const float TARGET_FRAME_TIME = 1000.f / 60.f; // 60 fps
 
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
-Timeline anchorTimeline(nullptr, 1);
+Timeline anchorTimeline(nullptr, 1000);
 Timeline gameTimeline(&anchorTimeline, 1);
 
 std::vector<std::unique_ptr<Rectangle>> rectangles;
-MoveBetween2Points m(100.f, 400.f, LEFT, 2);
+MoveBetween2Points m(100.f, 400.f, LEFT, 2, gameTimeline);
 Gravity gravity(0, 1.0);
 Collision collision;
 KeyMovement key_movement(300, 300);
@@ -34,7 +34,7 @@ void gameLogicThread() {
 
     while (gameRunning) {
         int64_t currentTime = gameTimeline.getElapsedTime();
-        deltaTime = (currentTime - lastTime) / 1000000.0f;
+        deltaTime = (currentTime - lastTime) / 1000.0f;
         lastTime = currentTime;
         {
             // Game logic

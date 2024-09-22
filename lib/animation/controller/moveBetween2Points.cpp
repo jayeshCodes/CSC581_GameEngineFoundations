@@ -6,9 +6,9 @@
 
 #include <SDL_timer.h>
 
-MoveBetween2Points::MoveBetween2Points(float point1, float point2, MovementState moveState, int waitTime): left(point1),
-    right(point2), state(moveState), waitTime(waitTime) {
-    currTime = SDL_GetTicks();
+MoveBetween2Points::MoveBetween2Points(float point1, float point2, MovementState moveState, int waitTime, Timeline &timeline): left(point1),
+    right(point2), state(moveState), waitTime(waitTime), timeline(timeline) {
+    currTime = timeline.getElapsedTime();
 }
 
 void MoveBetween2Points::moveBetween2Points(Object &object) {
@@ -17,7 +17,7 @@ void MoveBetween2Points::moveBetween2Points(Object &object) {
         case LEFT:
             if (currentX <= left) {
                 state = STOP;
-                currTime = SDL_GetTicks();
+                currTime = timeline.getElapsedTime();
                 object.velocity.x = 0;
                 return;
             }
@@ -26,14 +26,14 @@ void MoveBetween2Points::moveBetween2Points(Object &object) {
         case RIGHT:
             if (currentX >= right) {
                 state = STOP;
-                currTime = SDL_GetTicks();
+                currTime = timeline.getElapsedTime();
                 object.velocity.x = 0;
                 return;
             }
         object.velocity.x = 200;
         break;
         case STOP:
-            Uint32 passedTime = SDL_GetTicks();
+            Uint32 passedTime = timeline.getElapsedTime();
         if ((passedTime - currTime) / 1000.f > waitTime) {
             if (currentX <= left) {
                 state = RIGHT;

@@ -8,14 +8,19 @@
 #include <csignal>
 
 #include "constants.hpp"
+#include "../animation/controller/moveBetween2Points.hpp"
 #include "../core/timeline.hpp"
+#include "../enum/message_type.hpp"
 #include "../generic/safe_queue.hpp"
+#include "../objects/factory.hpp"
+#include "../../main.hpp"
+#include "../objects/shapes/rectangle.hpp"
 
 
 Timeline globalServerTimeline(nullptr, 1000);
 
 constexpr float FRAME_RATE = 1000.f / 240.f;
-SafeQueue<std::array<float, 3>> messageQueue;
+SafeQueue<std::array<float, 3> > messageQueue;
 std::atomic<bool> running{false};
 
 /**
@@ -73,7 +78,32 @@ void broadcast(zmq::socket_t &pub_socket) {
     std::cout << "Kill broadcast thread" << std::endl;
 }
 
-int main() {
+void platform_movement(std::unique_ptr<Rectangle> &platform) {
+    Timeline platformTimeline(&globalServerTimeline, 1);
+    int64_t lastTime = platformTimeline.getElapsedTime();
+    MoveBetween2Points m(100.f, 400.f, LEFT, 2, platformTimeline);
+    while (running) {
+        int64_t currentTime = platformTimeline.getElapsedTime();
+        float dT = (currentTime - lastTime) / 1000.f;
+        lastTime = currentTime;
+
+        if(dT > FRAME_RATE) {
+            dT = FRAME_RATE;
+        }
+
+        m.moveBetween2Points(*platform);
+        platform->update(dT);
+        messageQueue.enqueue({MessageType::PLATFORM, platform->rect.x, platform->rect.y});
+
+        if (dT < FRAME_RATE) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(FRAME_RATE - dT)));
+        }
+    }
+
+    std::cout << "Kill platform thread" << std::endl;
+}
+
+int main(int argc, char* argv[]) {
     using namespace std::chrono_literals;
     register_interrupts();
 
@@ -90,9 +120,13 @@ int main() {
     int64_t lastTime = globalServerTimeline.getElapsedTime();
     running = true;
 
-    //Start separate threads for sending and receiving messages so that it doesnt block the main game loop
+    auto platform = Factory::createRectangle({255, 0, 0, 255}, {300, SCREEN_HEIGHT / 2.f, SCREEN_WIDTH / 2.f, 100},
+                                             true, 100000.f, 0.8);
+
+    //Start separate threads for sending and receiving messages so that it doesn't block the main game loop
     std::thread pull_thread(pull_message, std::ref(listener));
     std::thread broadcast_thread(broadcast, std::ref(publisher));
+    std::thread platform_thread(platform_movement, std::ref(platform));
 
     while (running) {
         int64_t currentTime = globalServerTimeline.getElapsedTime();
@@ -102,6 +136,7 @@ int main() {
 
     pull_thread.join();
     broadcast_thread.join();
+    platform_thread.join();
 
     std::cout << "Server has shut down!!!" << std::endl;
     return 0;

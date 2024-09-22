@@ -42,16 +42,16 @@ set(SOURCES
 )
 
 add_executable(shade_engine ${SOURCES} main.cpp)
-add_executable(zmq_server lib/network/server.cpp lib/core/timeline.hpp lib/core/timeline.cpp)
+add_executable(zmq_server ${SOURCES} lib/network/server.cpp)
 add_executable(zmq_client ${SOURCES} lib/network/client.cpp)
 add_executable(zmq_listener_1 ${SOURCES} lib/network/listener1.cpp)
+add_executable(zmq_listener_2 ${SOURCES} lib/network/listener2.cpp)
 
 find_package(SDL2 REQUIRED)
 find_package(cppzmq REQUIRED)
 
-target_link_libraries(shade_engine SDL2::SDL2)
-target_link_libraries(shade_engine cppzmq)
-
-target_link_libraries(zmq_server cppzmq)
+target_link_libraries(shade_engine cppzmq SDL2::SDL2)
+target_link_libraries(zmq_server cppzmq SDL2::SDL2)
 target_link_libraries(zmq_client cppzmq SDL2::SDL2)
 target_link_libraries(zmq_listener_1 cppzmq SDL2::SDL2)
+target_link_libraries(zmq_listener_2 cppzmq SDL2::SDL2)
