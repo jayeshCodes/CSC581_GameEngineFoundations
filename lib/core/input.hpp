@@ -3,7 +3,7 @@
 #include "timeline.hpp"
 #include <mutex>
 
-extern bool gameRunning;
+extern std::atomic<bool> gameRunning;
 extern std::mutex runningMutex;
 
 void doInput();

@@ -20,13 +20,12 @@ const SDL_Color redColor = {255, 0, 0, 255};
 const SDL_Color greenColor = {0, 255, 0, 255};
 
 Timeline anchorTimeline(nullptr, 1000); // normal tic value of 1
-std::atomic<bool> running{false};
 
 SafeQueue<std::array<float, 2> > characterMessageQueue;
 SafeQueue<std::array<float, 2> > platformMessageQueue;
 
 void signal_handler(int signal) {
-    running = false;
+    gameRunning = false;
     std::cout << "Stopping game..." << std::endl;
 }
 
@@ -39,7 +38,7 @@ void register_interrupts() {
 }
 
 void receive_messages(zmq::socket_t &socket) {
-    while (running) {
+    while (gameRunning) {
         std::array<float, 3> position{};
         if (socket.recv(zmq::buffer(position, sizeof(position)), zmq::recv_flags::dontwait)) {
             switch (static_cast<MessageType>(position[0])) {
@@ -56,7 +55,7 @@ void receive_messages(zmq::socket_t &socket) {
 }
 
 void process_messages(const std::unique_ptr<Rectangle> &character, const std::unique_ptr<Rectangle> &platform) {
-    while (running) {
+    while (gameRunning) {
         if (characterMessageQueue.notEmpty()) {
             const std::array<float, 2> pos = characterMessageQueue.dequeue();
             character->rect.x = pos[0];
@@ -80,7 +79,7 @@ int main(int argc, char *argv[]) {
     anchorTimeline.start();
     Timeline gameTimeline(&anchorTimeline, 1); // normal tic value of 1
     gameTimeline.start();
-    running = true;
+    gameRunning = true;
 
     register_interrupts();
 
@@ -101,7 +100,7 @@ int main(int argc, char *argv[]) {
     socket.set(zmq::sockopt::subscribe, "");
 
     float positions[2] = {0, 0};
-    running = true;
+    gameRunning = true;
     std::thread netThread(receive_messages, std::ref(socket));
     std::thread movementThread(process_messages, std::ref(movementRect), std::ref(platform));
 
@@ -109,7 +108,7 @@ int main(int argc, char *argv[]) {
 
     int64_t lastTime = gameTimeline.getElapsedTime();
 
-    while (running) {
+    while (gameRunning) {
         Uint32 currentTime = gameTimeline.getElapsedTime();
         float deltaTime = (currentTime - lastTime) / 1000.0f; // Convert to seconds
         lastTime = currentTime;

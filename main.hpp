@@ -6,8 +6,8 @@
 #include <memory>
 
 // SDL render and window context
-extern App* app;
+extern App *app;
 
-bool gameRunning = false;
+std::atomic<bool> gameRunning{false};
 
-int main(int argc, char* argv[]);
+int main(int argc, char *argv[]);

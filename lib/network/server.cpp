@@ -21,14 +21,13 @@ Timeline globalServerTimeline(nullptr, 1000);
 
 constexpr float FRAME_RATE = 1000.f / 240.f;
 SafeQueue<std::array<float, 3> > messageQueue;
-std::atomic<bool> running{false};
 
 /**
  * This will switch the game boolean to false killing the game and stopping all threads
  * @param signal - signal to be handled
  */
 void signal_handler(int signal) {
-    running = false;
+    gameRunning = false;
     std::cout << "Stopping server..." << std::endl;
 }
 
@@ -55,7 +54,7 @@ void initialize_server(zmq::socket_t &pull_socket, zmq::socket_t &pub_socket) {
  * @param pull_socket - socket to pull the message from
  */
 void pull_message(zmq::socket_t &pull_socket) {
-    while (running) {
+    while (gameRunning) {
         std::array<float, 3> position{};
         if (pull_socket.recv(zmq::buffer(position, sizeof(position)), zmq::recv_flags::dontwait)) {
             messageQueue.enqueue(position);
@@ -69,7 +68,7 @@ void pull_message(zmq::socket_t &pull_socket) {
  * @param pub_socket - socket to publish the message
  */
 void broadcast(zmq::socket_t &pub_socket) {
-    while (running) {
+    while (gameRunning) {
         if (messageQueue.notEmpty()) {
             std::array<float, 3> latestPos = messageQueue.dequeue();
             pub_socket.send(zmq::buffer(latestPos, sizeof(latestPos)), zmq::send_flags::none);
@@ -82,7 +81,7 @@ void platform_movement(std::unique_ptr<Rectangle> &platform) {
     Timeline platformTimeline(&globalServerTimeline, 1);
     int64_t lastTime = platformTimeline.getElapsedTime();
     MoveBetween2Points m(100.f, 400.f, LEFT, 2, platformTimeline);
-    while (running) {
+    while (gameRunning) {
         int64_t currentTime = platformTimeline.getElapsedTime();
         float dT = (currentTime - lastTime) / 1000.f;
         lastTime = currentTime;
@@ -118,7 +117,7 @@ int main(int argc, char* argv[]) {
     globalServerTimeline.start();
 
     int64_t lastTime = globalServerTimeline.getElapsedTime();
-    running = true;
+    gameRunning = true;
 
     auto platform = Factory::createRectangle({255, 0, 0, 255}, {300, SCREEN_HEIGHT / 2.f, SCREEN_WIDTH / 2.f, 100},
                                              true, 100000.f, 0.8);
@@ -128,7 +127,7 @@ int main(int argc, char* argv[]) {
     std::thread broadcast_thread(broadcast, std::ref(publisher));
     std::thread platform_thread(platform_movement, std::ref(platform));
 
-    while (running) {
+    while (gameRunning) {
         int64_t currentTime = globalServerTimeline.getElapsedTime();
         float deltaTime = (currentTime - lastTime) / 1000.f; // convert into seconds
         lastTime = currentTime;
