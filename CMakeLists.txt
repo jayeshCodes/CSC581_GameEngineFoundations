@@ -41,6 +41,8 @@ set(SOURCES
         lib/enum/message_type.hpp
         lib/p2p/server.hpp
         lib/p2p/constants.hpp
+        lib/p2p/client1.hpp
+        lib/p2p/client2.hpp
 )
 
 add_executable(shade_engine ${SOURCES} main.cpp)
@@ -49,6 +51,10 @@ add_executable(zmq_client ${SOURCES} lib/network/client.cpp)
 add_executable(zmq_listener_1 ${SOURCES} lib/network/listener1.cpp)
 add_executable(zmq_listener_2 ${SOURCES} lib/network/listener2.cpp)
 add_executable(p2p_server ${SOURCES} lib/p2p/server.cpp)
+add_executable(p2p_client_1 ${SOURCES} lib/p2p/client1.cpp)
+add_executable(p2p_client_2 ${SOURCES} lib/p2p/client2.hpp
+        lib/p2p/client2.cpp)
+
 
 find_package(SDL2 REQUIRED)
 find_package(cppzmq REQUIRED)
@@ -59,3 +65,7 @@ target_link_libraries(zmq_client cppzmq SDL2::SDL2)
 target_link_libraries(zmq_listener_1 cppzmq SDL2::SDL2)
 target_link_libraries(zmq_listener_2 cppzmq SDL2::SDL2)
 target_link_libraries(p2p_server cppzmq SDL2::SDL2)
+target_link_libraries(p2p_client_1 cppzmq SDL2::SDL2)
+target_link_libraries(p2p_client_2 cppzmq SDL2::SDL2)
+
+

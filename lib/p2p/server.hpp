@@ -11,11 +11,13 @@
 #include <vector>
 #include <mutex>
 #include "constants.hpp"
+#include "../../main.hpp"
 #include "../animation/controller/moveBetween2Points.hpp"
 #include "../core/timeline.hpp"
 #include "../objects/shapes/rectangle.hpp"
 #include "../core/physics/keyMovement.hpp"
 #include "../objects/factory.hpp"
+#include "../generic/safe_queue.hpp"
 
 
 std::atomic<bool> running{true};
@@ -23,6 +25,7 @@ std::vector<std::string> connectedPeers;
 std::mutex peersMutex;
 
 Timeline globalServerTimeline(nullptr,1000.f);
+SafeQueue<std::array<float, 3>> messageQueue;
 
 
 void handle_platform_movement(zmq::socket_t& pub_socket) {
@@ -66,6 +69,32 @@ void handle_peer_discovery(zmq::socket_t& rep_socket) {
         }
         rep_socket.send(zmq::buffer(peer_list), zmq::send_flags::none);
     }
+}
+
+void platform_movement(std::unique_ptr<Rectangle> &platform) {
+    Timeline platformTimeline(&globalServerTimeline, 1);
+    int64_t lastTime = platformTimeline.getElapsedTime();
+    MoveBetween2Points m(100.f, 400.f, LEFT, 2, platformTimeline);
+    // std::cout<<"Game running: "<<gameRunning<<std::endl;
+    while (running) {
+        int64_t currentTime = platformTimeline.getElapsedTime();
+        float dT = (currentTime - lastTime) / 1000.f;
+        lastTime = currentTime;
+
+        if(dT > FRAME_RATE) {
+            dT = FRAME_RATE;
+        }
+
+        m.moveBetween2Points(*platform);
+        platform->update(dT);
+        messageQueue.enqueue({MessageType::PLATFORM, platform->rect.x, platform->rect.y});
+
+        if (dT < FRAME_RATE) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(FRAME_RATE - dT)));
+        }
+    }
+
+    std::cout << "Kill platform thread" << std::endl;
 }
 
 

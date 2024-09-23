@@ -22,6 +22,7 @@
 
 // New socket ports for peer-to-peer networking
 #define PEER_PUB_PORT 5557
+#define PEER_PUB_PORT_2 5559
 #define REP_REQ_SOCKET 5558
 
 // New message types for peer-to-peer communication

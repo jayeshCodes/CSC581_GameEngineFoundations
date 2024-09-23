@@ -4,13 +4,17 @@
 
 #include "server.hpp"
 
-#include "../../../../../opt/homebrew/include/zmq.hpp"
 
-
-int main() {
+int main(int argc, char *argv[]) {
     zmq::context_t context(1);
     zmq::socket_t pub_socket(context, ZMQ_PUB);
     zmq::socket_t rep_socket(context, ZMQ_REP);
+    auto platform = Factory::createRectangle({255, 0, 0, 255}, {300, SCREEN_HEIGHT / 2.f, SCREEN_WIDTH / 2.f, 100},
+                                             true, 100000.f, 0.8);
+
+
+    std::thread platform_thread(platform_movement, std::ref(platform));
+    std::thread discovery_thread(handle_peer_discovery, std::ref(rep_socket));
 
     pub_socket.bind("tcp://*:" + std::to_string(PUB_SUB_SOCKET));
     rep_socket.bind("tcp://*:" + std::to_string(REP_REQ_SOCKET));
