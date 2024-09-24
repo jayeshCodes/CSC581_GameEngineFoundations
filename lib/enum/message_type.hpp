@@ -10,4 +10,11 @@ enum MessageType {
     PLATFORM
 };
 
+enum P2PMessageType {
+    P2P_CHARACTER_1,
+    P2P_CHARACTER_2,
+    P2P_CHARACTER_3,
+    P2P_PLATFORM
+};
+
 #endif //MESSAGE_TYPE_HPP

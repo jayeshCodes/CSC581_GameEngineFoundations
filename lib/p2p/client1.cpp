@@ -1,21 +1,30 @@
 //
-// Created by Jayesh Gajbhar on 9/23/24.
+// Created by Utsav Lal on 9/23/24.
 //
+#include <thread>
+#include <zmq.hpp>
 
-#include "client1.hpp"
+#include "host.hpp"
+#include "../core/physics/keyMovement.hpp"
+#include "../enum/message_type.hpp"
+#include "../game/GameManager.hpp"
+#include "../helpers/colors.hpp"
+#include "../helpers/constants.hpp"
+#include "../helpers/network_constants.hpp"
+#include "../objects/factory.hpp"
+#include "../../main.hpp"
+#include "../objects/shapes/rectangle.hpp"
 
-const SDL_Color blueColor = {0, 0, 255, 255};
-const SDL_Color redColor = {255, 0, 0, 255};
-
+Timeline anchorTimeline(nullptr, 1000.f);
 
 int main(int argc, char *argv[]) {
-    //Call the initialization functions
     std::cout << ENGINE_NAME << " v" << ENGINE_VERSION << " initializing" << std::endl;
     std::cout << "Created by Utsav and Jayesh" << std::endl;
     std::cout << std::endl;
     initSDL();
     anchorTimeline.start();
-    gameRunning = true;
+    GameManager::getInstance()->gameRunning = true;
+    GameManager::getInstance()->isServer = true;
 
     // Create Rectangle instance
 
@@ -26,44 +35,38 @@ int main(int argc, char *argv[]) {
     Timeline gameTimeline(&anchorTimeline, 1); // normal tic value of 1
     gameTimeline.start();
 
-    int64_t lastTime = gameTimeline.getElapsedTime();
 
+    auto char1 = Factory::createRectangle(shade_color::Blue,
+                                          {SCREEN_WIDTH / 3.f - 250.f, SCREEN_HEIGHT / 2.f, 100, 100}, false,
+                                          1, 1);
+    auto char2 = Factory::createRectangle(shade_color::Green,
+                                          {SCREEN_WIDTH * 2 / 3.f - 250.f, SCREEN_HEIGHT / 2.f, 100, 100},
+                                          false,
+                                          1, 1);
+    auto char3 = Factory::createRectangle(shade_color::Red,
+                                          {SCREEN_WIDTH * 3 / 3.f - 250.f, SCREEN_HEIGHT / 2.f, 100, 100},
+                                          false,
+                                          1, 1);
+
+    auto platform = Factory::createRectangle(shade_color::Yellow,
+                                             {SCREEN_WIDTH / 2.f, SCREEN_HEIGHT * 3 / 4.f, 100, 50}, false,
+                                             1, 1);
+
+    //initialize networking
     zmq::context_t context(1);
-    zmq::socket_t server_sub_socket(context, ZMQ_SUB);
-    zmq::socket_t peer_pub_socket(context, ZMQ_PUB);
-    zmq::socket_t peer_sub_socket(context, ZMQ_SUB);
-    zmq::socket_t discovery_req_socket(context, ZMQ_REQ);
 
-    server_sub_socket.connect("tcp://localhost:" + std::to_string(PUB_SUB_SOCKET));
-    server_sub_socket.set(zmq::sockopt::subscribe, "");
-
-    std::string own_address = "tcp://*:" + std::to_string(PEER_PUB_PORT);
-    peer_pub_socket.bind(own_address);
-    // peer_pub_socket.connect("tcp://localhost:" + std::to_string(PUB_SUB_SOCKET));  // Connect to the server's PUB socket
+    Host host(std::to_string(SERVER), std::to_string(CHAR2), std::to_string(CHAR3), context, std::to_string((CHAR1)));
+    host.start(char2, char3, char1, platform, anchorTimeline);
 
 
-    auto player = Factory::createRectangle(blueColor, {SCREEN_WIDTH / 3.f, SCREEN_HEIGHT / 3.f, 100, 100}, false,
-                                           1, 1);
-    auto platform = Factory::createRectangle(redColor, {300, SCREEN_HEIGHT / 2.f, SCREEN_WIDTH / 2.f, 100}, true,
-                                             100000.f, 0.8);
-
-    // other players if any
-    std::vector<std::unique_ptr<Rectangle>> otherPlayers;
-
-    std::thread server_receive_thread(receive_server_messages, std::ref(server_sub_socket), std::ref(platform));
-    std::thread player_send_thread(send_player_position, std::ref(peer_pub_socket), std::ref(player));
-    std::thread peer_receive_thread(receive_peer_messages, std::ref(peer_sub_socket), std::ref(otherPlayers));
-
-    const float FRAME_RATE_LIMIT = 1000.f / 120.0f;
-
-
-    while (gameRunning) {
+    int64_t lastTime = gameTimeline.getElapsedTime();
+    while (GameManager::getInstance()->gameRunning) {
         Uint32 currentTime = gameTimeline.getElapsedTime();
         float deltaTime = (currentTime - lastTime) / 1000.0f; // Convert to seconds
         lastTime = currentTime;
 
-        if (deltaTime > FRAME_RATE_LIMIT) {
-            deltaTime = FRAME_RATE_LIMIT;
+        if (deltaTime > engine_constants::FRAME_RATE) {
+            deltaTime = engine_constants::FRAME_RATE;
         }
 
         //Prep the scene
@@ -71,33 +74,33 @@ int main(int argc, char *argv[]) {
 
         //Process input
         doInput();
+        temporalInput(gameTimeline);
+
 
         SDL_FPoint direction = getKeyPress();
 
-        key_movement.calculate(*player, direction);
+        key_movement.calculate(*char1, direction);
 
-        // std::string message = std::to_string(movementRect->rect.x) + " " + std::to_string(movementRect->rect.y);
-        std::array<float, 2> positions = {player->rect.x, player->rect.y};
-        // messageQueue.enqueue({MessageType::CHARACTER, positions[0], positions[1]});
+        std::array<float, 2> positions = {char1->rect.x, char1->rect.y};
+        host.send_queue.enqueue({P2PMessageType::P2P_CHARACTER_1, positions[0], positions[1]});
 
-        player->draw();
+        char1->draw();
+        char2->draw();
+        char3->draw();
         platform->draw();
-        for (const auto &otherPlayer : otherPlayers) {
-            otherPlayer->draw();
-        }
 
-        player->update(deltaTime);
+        char1->update(deltaTime);
+
+
         //Present the resulting scene
         presentScene();
 
-        if (deltaTime < FRAME_RATE_LIMIT) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(FRAME_RATE_LIMIT - deltaTime)));
+        // Wait till we achieve desired frame rate
+        if (deltaTime < engine_constants::FRAME_RATE) {
+            std::this_thread::sleep_for(
+                std::chrono::milliseconds(static_cast<int>(engine_constants::FRAME_RATE - deltaTime)));
         }
     }
-    // netThread.join();
-    server_receive_thread.join();
-    player_send_thread.join();
-    peer_receive_thread.join();
 
     cleanupSDL();
     std::cout << "Closing " << ENGINE_NAME << " Engine" << std::endl;

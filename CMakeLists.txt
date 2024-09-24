@@ -32,17 +32,17 @@ set(SOURCES
         lib/animation/controller/moveBetween2Points.cpp
         lib/animation/controller/moveBetween2Points.hpp
         lib/helpers/random.hpp
-        lib/network/constants.hpp
+        lib/helpers/network_constants.hpp
         lib/core/timeline.hpp
         lib/core/timeline.cpp
         lib/network/publisher.cpp
         lib/network/publisher.hpp
         lib/generic/safe_queue.hpp
         lib/enum/message_type.hpp
-        lib/p2p/server.hpp
-        lib/p2p/constants.hpp
-        lib/p2p/client1.hpp
-        lib/p2p/client2.hpp
+        lib/helpers/colors.hpp
+        lib/helpers/constants.hpp
+        lib/p2p/host.cpp
+        lib/p2p/host.hpp
 )
 
 add_executable(shade_engine ${SOURCES} main.cpp)
@@ -50,10 +50,9 @@ add_executable(zmq_server ${SOURCES} lib/network/server.cpp)
 add_executable(zmq_client ${SOURCES} lib/network/client.cpp)
 add_executable(zmq_listener_1 ${SOURCES} lib/network/listener1.cpp)
 add_executable(zmq_listener_2 ${SOURCES} lib/network/listener2.cpp)
-add_executable(p2p_server ${SOURCES} lib/p2p/server.cpp)
 add_executable(p2p_client_1 ${SOURCES} lib/p2p/client1.cpp)
-add_executable(p2p_client_2 ${SOURCES} lib/p2p/client2.hpp
-        lib/p2p/client2.cpp)
+add_executable(p2p_client_2 ${SOURCES} lib/p2p/client2.cpp)
+add_executable(p2p_client_3 ${SOURCES} lib/p2p/client3.cpp)
 
 
 find_package(SDL2 REQUIRED)
@@ -64,8 +63,9 @@ target_link_libraries(zmq_server cppzmq SDL2::SDL2)
 target_link_libraries(zmq_client cppzmq SDL2::SDL2)
 target_link_libraries(zmq_listener_1 cppzmq SDL2::SDL2)
 target_link_libraries(zmq_listener_2 cppzmq SDL2::SDL2)
-target_link_libraries(p2p_server cppzmq SDL2::SDL2)
 target_link_libraries(p2p_client_1 cppzmq SDL2::SDL2)
 target_link_libraries(p2p_client_2 cppzmq SDL2::SDL2)
+target_link_libraries(p2p_client_3 cppzmq SDL2::SDL2)
+
 
 

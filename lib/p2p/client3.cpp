@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 
     //initialize networking
     zmq::context_t context(1);
-    Host host(std::to_string(SERVER), std::to_string(CHAR1), std::to_string(CHAR3), context, std::to_string((CHAR2)));
+    Host host(std::to_string(SERVER), std::to_string(CHAR1), std::to_string(CHAR2), context, std::to_string((CHAR3)));
     host.start(char2, char3, char1, platform, anchorTimeline);
 
 
@@ -83,17 +83,17 @@ int main(int argc, char *argv[]) {
 
         SDL_FPoint direction = getKeyPress();
 
-        key_movement.calculate(*char2, direction);
+        key_movement.calculate(*char3, direction);
 
-        std::array<float, 2> positions = {char2->rect.x, char2->rect.y};
-        host.send_queue.enqueue({P2PMessageType::P2P_CHARACTER_2, positions[0], positions[1]});
+        std::array<float, 2> positions = {char3->rect.x, char3->rect.y};
+        host.send_queue.enqueue({P2PMessageType::P2P_CHARACTER_3, positions[0], positions[1]});
 
         char1->draw();
         char2->draw();
         char3->draw();
         platform->draw();
 
-        char2->update(deltaTime);
+        char3->update(deltaTime);
 
 
         //Present the resulting scene
@@ -105,6 +105,7 @@ int main(int argc, char *argv[]) {
                 std::chrono::milliseconds(static_cast<int>(engine_constants::FRAME_RATE - deltaTime)));
         }
     }
+
     cleanupSDL();
     std::cout << "Closing " << ENGINE_NAME << " Engine" << std::endl;
     return 0;

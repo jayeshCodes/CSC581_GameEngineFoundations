@@ -5,18 +5,17 @@
 #include <thread>
 #include <zmq.hpp>
 
-#include "constants.hpp"
+#include "../helpers/network_constants.hpp"
 #include "../../main.hpp"
 #include "../core/timer.hpp"
 #include "../core/physics/collision.hpp"
 #include "../core/physics/keyMovement.hpp"
 #include "../enum/message_type.hpp"
 #include "../generic/safe_queue.hpp"
+#include "../helpers/colors.hpp"
 #include "../objects/factory.hpp"
 #include "../objects/shapes/rectangle.hpp"
 
-
-const SDL_Color blueColor = {0, 0, 255, 255};
 
 Timeline anchorTimeline(nullptr, 1000); // normal tic value of 1
 SafeQueue<std::array<float, 3> > messageQueue;
@@ -51,7 +50,7 @@ int main(int argc, char *argv[]) {
 
     int64_t lastTime = gameTimeline.getElapsedTime();
 
-    auto movementRect = Factory::createRectangle(blueColor, {SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 100, 100}, false,
+    auto movementRect = Factory::createRectangle(shade_color::Blue, {SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 100, 100}, false,
                                                  1, 1);
 
     //initialize networking

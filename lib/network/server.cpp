@@ -7,7 +7,7 @@
 #include <atomic>
 #include <csignal>
 
-#include "constants.hpp"
+#include "../helpers/network_constants.hpp"
 #include "../animation/controller/moveBetween2Points.hpp"
 #include "../core/timeline.hpp"
 #include "../enum/message_type.hpp"

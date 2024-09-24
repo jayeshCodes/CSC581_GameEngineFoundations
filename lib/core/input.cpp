@@ -15,6 +15,7 @@ void doInput() {
         switch (event.type) {
             case SDL_QUIT:
                 gameRunning = false;
+                GameManager::getInstance()->gameRunning = false;
             break;
 
             default:

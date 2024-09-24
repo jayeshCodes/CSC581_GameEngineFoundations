@@ -1,7 +1,7 @@
 #include <SDL_pixels.h>
 #include <thread>
 #include <zmq.hpp>
-#include "constants.hpp"
+#include "../helpers/network_constants.hpp"
 #include "../../main.hpp"
 #include "../core/timer.hpp"
 #include "../core/physics/collision.hpp"
@@ -14,10 +14,8 @@
 #include "../animation/controller/moveBetween2Points.hpp"
 #include "../enum/message_type.hpp"
 #include "../generic/safe_queue.hpp"
+#include "../helpers/colors.hpp"
 
-const SDL_Color blueColor = {0, 0, 255, 255};
-const SDL_Color redColor = {255, 0, 0, 255};
-const SDL_Color greenColor = {0, 255, 0, 255};
 
 Timeline anchorTimeline(nullptr, 1000); // normal tic value of 1
 
@@ -84,12 +82,12 @@ int main(int argc, char *argv[]) {
     register_interrupts();
 
     // Create Rectangle instance
-    auto movementRect = Factory::createRectangle(blueColor, {SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 100, 100}, false,
+    auto movementRect = Factory::createRectangle(shade_color::Blue, {SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 100, 100}, false,
                                                  1, 1);
-    auto platform = Factory::createRectangle({255, 0, 0, 255}, {300, SCREEN_HEIGHT / 2.f, SCREEN_WIDTH / 2.f, 100},
+    auto platform = Factory::createRectangle(shade_color::Red, {300, SCREEN_HEIGHT / 2.f, SCREEN_WIDTH / 2.f, 100},
                                              true, 100000.f, 0.8);
 
-    auto notNetworkPlatform = Factory::createRectangle({0, 255, 0, 255}, {200, SCREEN_HEIGHT / 4.f, SCREEN_WIDTH / 2.f, 20},
+    auto notNetworkPlatform = Factory::createRectangle(shade_color::Green, {200, SCREEN_HEIGHT / 4.f, SCREEN_WIDTH / 2.f, 20},
                                              true, 100000.f, 0.8);
     MoveBetween2Points m(100.f, 400.f, LEFT, 2, gameTimeline);
 
