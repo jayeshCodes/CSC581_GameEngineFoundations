@@ -35,8 +35,6 @@ set(SOURCES
         lib/helpers/network_constants.hpp
         lib/core/timeline.hpp
         lib/core/timeline.cpp
-        lib/network/publisher.cpp
-        lib/network/publisher.hpp
         lib/generic/safe_queue.hpp
         lib/enum/message_type.hpp
         lib/helpers/colors.hpp
