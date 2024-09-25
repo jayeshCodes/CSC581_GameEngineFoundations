@@ -27,18 +27,18 @@ public:
 
     void send_message();
 
-    explicit Host(const std::string &server_socket, const std::string &p2_socket,
+    explicit Host(const std::string &p2_socket,
                   const std::string &p3_socket, zmq::context_t &context, const std::string &publisher_socket);
 
-    void start(std::unique_ptr<Rectangle> &c2, std::unique_ptr<Rectangle> &c3, std::unique_ptr<Rectangle> &c1, std::unique_ptr<
-               Rectangle> &platform, Timeline &anchorTimeline);
+    void start(std::unique_ptr<Rectangle> &c2, std::unique_ptr<Rectangle> &c3, std::unique_ptr<Rectangle> &c1,
+               std::unique_ptr<
+                   Rectangle> &platform, Timeline &anchorTimeline);
 
     void move_platform(std::unique_ptr<Rectangle> &platform, Timeline &anchorTimeline);
 
     SafeQueue<std::array<float, 3> > send_queue;
 
 private:
-    zmq::socket_t server_listener;
     zmq::socket_t p2_receiver;
     zmq::socket_t p3_receiver;
     zmq::socket_t publisher;

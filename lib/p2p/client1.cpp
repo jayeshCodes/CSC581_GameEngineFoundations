@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
     //initialize networking
     zmq::context_t context(1);
 
-    Host host(std::to_string(SERVER), std::to_string(CHAR2), std::to_string(CHAR3), context, std::to_string((CHAR1)));
+    Host host(std::to_string(CHAR2), std::to_string(CHAR3), context, std::to_string((CHAR1)));
     host.start(char2, char3, char1, platform, anchorTimeline);
 
 

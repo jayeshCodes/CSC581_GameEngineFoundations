@@ -54,9 +54,6 @@ void Host::process_message(std::unique_ptr<Rectangle> &c2, std::unique_ptr<Recta
 void Host::receive_message() {
     while (GameManager::getInstance()->gameRunning) {
         std::array<float, 3> position{};
-        if (server_listener.recv(zmq::buffer(position, sizeof(position)), zmq::recv_flags::dontwait)) {
-            receive_queue.enqueue(position);
-        }
         if (p2_receiver.recv(zmq::buffer(position, sizeof(position)), zmq::recv_flags::dontwait)) {
             receive_queue.enqueue(position);
         }
@@ -88,21 +85,18 @@ void Host::send_message() {
  * @param context - ZeroMQ context
  * @param publisher_socket - Port to publish messages
  */
-Host::Host(const std::string &server_socket, const std::string &p2_socket,
+Host::Host(const std::string &p2_socket,
            const std::string &p3_socket, zmq::context_t &context,
            const std::string &publisher_socket) {
     try {
-        this->server_listener = zmq::socket_t(context, ZMQ_SUB);
         this->p2_receiver = zmq::socket_t(context, ZMQ_SUB);
         this->p3_receiver = zmq::socket_t(context, ZMQ_SUB);
         this->publisher = zmq::socket_t(context, ZMQ_PUB);
 
         this->p2_receiver.connect("tcp://localhost:" + p2_socket);
         this->p3_receiver.connect("tcp://localhost:" + p3_socket);
-        this->server_listener.connect("tcp://localhost:" + server_socket);
         this->publisher.bind("tcp://*:" + publisher_socket);
 
-        this->server_listener.set(zmq::sockopt::subscribe, "");
         this->p2_receiver.set(zmq::sockopt::subscribe, "");
         this->p3_receiver.set(zmq::sockopt::subscribe, "");
     } catch (const zmq::error_t &e) {
