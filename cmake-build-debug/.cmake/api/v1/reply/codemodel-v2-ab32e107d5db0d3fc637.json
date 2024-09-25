@@ -1,0 +1,123 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.29"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "shade_engine",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "p2p_client_1::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-p2p_client_1-Debug-739a03e9d8e9b21092ae.json",
+					"name" : "p2p_client_1",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "p2p_client_2::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-p2p_client_2-Debug-dd0886d94213886e537c.json",
+					"name" : "p2p_client_2",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "p2p_client_3::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-p2p_client_3-Debug-2d4c23d0337873dfe1f4.json",
+					"name" : "p2p_client_3",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "shade_engine::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-shade_engine-Debug-1f10619ee3d83736309f.json",
+					"name" : "shade_engine",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "zmq_client::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-zmq_client-Debug-07c94c5c5f13e79b5970.json",
+					"name" : "zmq_client",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "zmq_listener_1::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-zmq_listener_1-Debug-16e1ef8ff7fd482f1f65.json",
+					"name" : "zmq_listener_1",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "zmq_listener_2::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-zmq_listener_2-Debug-3bc39cd05d694fdd8391.json",
+					"name" : "zmq_listener_2",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "zmq_server::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-zmq_server-Debug-e1e9fec942dcacdc1926.json",
+					"name" : "zmq_server",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/Users/jayeshgajbhar/CSC581_GameEngineFoundations/cmake-build-debug",
+		"source" : "/Users/jayeshgajbhar/CSC581_GameEngineFoundations"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 7
+	}
+}
