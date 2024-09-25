@@ -6,7 +6,7 @@
 #include <thread>
 #include <zmq.hpp>
 
-#include "host.hpp"
+#include "../network/p2p/host.hpp"
 #include "../core/defs.hpp"
 #include "../core/draw.hpp"
 #include "../core/init.hpp"

@@ -8,10 +8,10 @@
 #include <zmq.hpp>
 #include <thread>
 
-#include "../core/timeline.hpp"
-#include "../enum/message_type.hpp"
-#include "../generic/safe_queue.hpp"
-#include "../objects/shapes/rectangle.hpp"
+#include "../../core/timeline.hpp"
+#include "../../enum/message_type.hpp"
+#include "../../generic/safe_queue.hpp"
+#include "../../objects/shapes/rectangle.hpp"
 
 /**
  * This is the general Host class which enables P2P communication between the clients

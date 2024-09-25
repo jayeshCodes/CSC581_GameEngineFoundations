@@ -5,8 +5,13 @@
 #ifndef NETWORK_CONSTANTS_HPP
 #define NETWORK_CONSTANTS_HPP
 
-#define PUSH_PULL_SOCKET 5555
-#define PUB_SUB_SOCKET 5556
+#define SUB_1 5555
+#define PUB_1 5556
+#define SUB_2 5557
+#define PUB_2 5558
+#define SUB_3 5559
+#define PUB_3 5560
+#define PUB_COMMON 5561
 
 #define SERVER 6000
 #define CHAR1 6001

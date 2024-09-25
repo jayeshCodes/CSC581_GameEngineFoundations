@@ -6,7 +6,9 @@
 #define MESSAGE_TYPE_HPP
 
 enum MessageType {
-    CHARACTER,
+    CHAR_1,
+    CHAR_2,
+    CHAR_3,
     PLATFORM
 };
 

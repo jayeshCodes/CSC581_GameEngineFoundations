@@ -6,10 +6,10 @@
 
 #include <iostream>
 
-#include "../animation/controller/moveBetween2Points.hpp"
-#include "../enum/message_type.hpp"
-#include "../game/GameManager.hpp"
-#include "../helpers/constants.hpp"
+#include "../../animation/controller/moveBetween2Points.hpp"
+#include "../../enum/message_type.hpp"
+#include "../../game/GameManager.hpp"
+#include "../../helpers/constants.hpp"
 
 /**
  * Function to process messages received from the clients

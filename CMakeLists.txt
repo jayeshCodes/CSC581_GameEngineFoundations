@@ -39,15 +39,19 @@ set(SOURCES
         lib/enum/message_type.hpp
         lib/helpers/colors.hpp
         lib/helpers/constants.hpp
-        lib/p2p/host.cpp
-        lib/p2p/host.hpp
+        lib/network/p2p/host.cpp
+        lib/network/p2p/host.hpp
+        lib/network/client_server/client.cpp
+        lib/network/client_server/client.hpp
+        lib/network/client_server/server.cpp
+        lib/network/client_server/server.hpp
 )
 
 add_executable(shade_engine ${SOURCES} main.cpp)
-add_executable(zmq_server ${SOURCES} lib/network/server.cpp)
-add_executable(zmq_client ${SOURCES} lib/network/client.cpp)
-add_executable(zmq_listener_1 ${SOURCES} lib/network/listener1.cpp)
-add_executable(zmq_listener_2 ${SOURCES} lib/network/listener2.cpp)
+add_executable(zmq_server ${SOURCES} lib/client_server/server.cpp)
+add_executable(zmq_client ${SOURCES} lib/client_server/client_1.cpp)
+add_executable(zmq_listener_1 ${SOURCES} lib/client_server/client_2.cpp)
+add_executable(zmq_listener_2 ${SOURCES} lib/client_server/client_3.cpp)
 add_executable(p2p_client_1 ${SOURCES} lib/p2p/client1.cpp)
 add_executable(p2p_client_2 ${SOURCES} lib/p2p/client2.cpp)
 add_executable(p2p_client_3 ${SOURCES} lib/p2p/client3.cpp)
