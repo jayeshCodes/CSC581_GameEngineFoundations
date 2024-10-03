@@ -14,6 +14,9 @@ and grew from the same template. Current capabilities include:
 4. Physics with customizable gravity in x and y directions
 5. Collisions between objects with conservation of kinetic energy
 6. A simple state machine animation controller
+7. Fully multithreaded engine
+8. Custom timeline class with ability to pause, play and increase decrease speed.
+9. Asynchronous networking capabilities using ZMQ for client server and peer to peer between 3 clients.
 
 # Instructions to build the code
 
@@ -41,7 +44,10 @@ To clean up
 - `lib/`: This contains all the source code for the project.
     - `animation/`: Contains the code for pattern movement
     - `core/`: The core elements of the game engine like setting up screen, physics, drawing, etc
+    - `enum/`: Contains all the enums used in the project
     - `game/`: This contains game specific code. One such is a `GameManager` which is a singleton containing variables
       shared between the engine
     - `generic/`: This contains generic classes which might be used by us in the future
+    - `helpers/`: This contains helper functions like random, constants, etc
+    - `network/`: This contains the networking code
     - `objects/`: This contains the code to generate in game objects like a rectangle in our case

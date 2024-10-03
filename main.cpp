@@ -1,88 +1,22 @@
 #include <thread>
-#include <mutex>
-#include <condition_variable>
 #include <memory>
 
 #include "main.hpp"
 #include "lib/core/physics/collision.hpp"
-#include "lib/core/physics/gravity.hpp"
-#include "lib/core/physics/keyMovement.hpp"
 #include "lib/game/GameManager.hpp"
-#include "lib/objects/factory.hpp"
-#include "lib/objects/shapes/rectangle.hpp"
-#include "lib/animation/controller/moveBetween2Points.hpp"
+#include "lib/components/components.hpp"
 #include "lib/core/timeline.hpp"
-#include "lib/core/input.hpp"  // Make sure this is included
+#include "lib/ECS/coordinator.hpp"
+#include "lib/systems/kinematic.cpp"
+#include "lib/systems/render.cpp"
+#include "lib/systems/gravity.cpp"
 
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
 Timeline anchorTimeline(nullptr, 1000);
 Timeline gameTimeline(&anchorTimeline, 1);
 
-std::vector<std::unique_ptr<Rectangle> > rectangles;
-MoveBetween2Points m(100.f, 400.f, LEFT, 2, gameTimeline);
-Gravity gravity(0, 1.0);
-Collision collision;
-KeyMovement key_movement(300, 300);
+Coordinator gCoordinator;
 
-void physics_thread() {
-    // Initialize game timeline
-    int64_t lastTime = gameTimeline.getElapsedTime();
-    float deltaTime = 0;
-
-    while (GameManager::getInstance()->gameRunning) {
-        int64_t currentTime = gameTimeline.getElapsedTime();
-        deltaTime = (currentTime - lastTime) / 1000.0f;
-        lastTime = currentTime; {
-            // Game logic
-            gravity.calculate(*rectangles[1]);
-            collision.calculate(*rectangles[1], rectangles);
-            collision.calculate(*rectangles[0], rectangles);
-
-            for (const auto &rectangle: rectangles) {
-                if (!anchorTimeline.isPaused())
-                    rectangle->update(deltaTime);
-            }
-        }
-    }
-}
-
-void keyboard_movement() {
-    int64_t lastTime = gameTimeline.getElapsedTime();
-    float deltaTime = 0;
-
-    while (GameManager::getInstance()->gameRunning) {
-        int64_t currentTime = gameTimeline.getElapsedTime();
-        deltaTime = (currentTime - lastTime) / 1000.0f;
-        lastTime = currentTime;
-        // Game logic
-        SDL_FPoint direction = getKeyPress();
-        key_movement.calculate(*rectangles[0], direction);
-
-        for (const auto &rectangle: rectangles) {
-            if (!anchorTimeline.isPaused())
-                rectangle->update(deltaTime);
-        }
-    }
-}
-
-void platform_movement() {
-    int64_t lastTime = gameTimeline.getElapsedTime();
-    float deltaTime = 0;
-
-    while (GameManager::getInstance()->gameRunning) {
-        int64_t currentTime = gameTimeline.getElapsedTime();
-        deltaTime = (currentTime - lastTime) / 1000.0f;
-        lastTime = currentTime; {
-            // Game logic
-            m.moveBetween2Points(*rectangles[2]);
-
-            for (const auto &rectangle: rectangles) {
-                if (!anchorTimeline.isPaused())
-                    rectangle->update(deltaTime);
-            }
-        }
-    }
-}
 
 int main(int argc, char *argv[]) {
     std::cout << ENGINE_NAME << " v" << ENGINE_VERSION << " initializing" << std::endl;
@@ -94,34 +28,51 @@ int main(int argc, char *argv[]) {
     anchorTimeline.start();
     gameTimeline.start();
 
-    // Create 4 Rectangle instances
-    rectangles.push_back(Factory::createRectangle({0, 255, 255, 255}, {100, 100, 100, 100}, true, 0.1, 0.8));
-    rectangles.push_back(Factory::createRectangle({255, 255, 0, 255}, {300, 100, 100, 100}, true, 0.001, 0.8));
-    rectangles.push_back(Factory::createRectangle({255, 0, 0, 255}, {300, SCREEN_HEIGHT / 2.f, SCREEN_WIDTH / 2.f, 100},
-                                                  true, 100000.f, 0.8));
-    rectangles.push_back(Factory::createRectangle({255, 0, 255, 255}, {1000, 100, 100, 100}, false, 1.f, 0.8));
+    gCoordinator.init();
+    gCoordinator.registerComponent<Transform>();
+    gCoordinator.registerComponent<Color>();
+    gCoordinator.registerComponent<CKinematic>();
 
-    std::thread logicThread(physics_thread);
-    std::thread keyboardThread(keyboard_movement);
-    std::thread platformThread(platform_movement);
+    auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
+    auto kinematicSystem = gCoordinator.registerSystem<KinematicSystem>();
+    auto gravitySystem = gCoordinator.registerSystem<GravitySystem>();
 
-    // Do not multithread this functionality. Causes exception because SDL_Event is not thread safe and needs to run in the main thread
+    Signature signature;
+    signature.set(gCoordinator.getComponentType<Transform>());
+    signature.set(gCoordinator.getComponentType<Color>());
+    signature.set(gCoordinator.getComponentType<CKinematic>());
+    gCoordinator.setSystemSignature<RenderSystem>(signature);
+    gCoordinator.setSystemSignature<KinematicSystem>(signature);
+    gCoordinator.setSystemSignature<GravitySystem>(signature);
+
+    std::vector<Entity> entities(1);
+
+    for (auto &entity: entities) {
+        entity = gCoordinator.createEntity();
+        gCoordinator.addComponent(entity, Transform{100, 100, 32, 32, 0});
+        gCoordinator.addComponent(entity, Color{255, 0, 0, 255});
+        gCoordinator.addComponent(entity, CKinematic{});
+    }
+
+    auto last_time = gameTimeline.getElapsedTime();
+
     while (GameManager::getInstance()->gameRunning) {
         doInput();
-        temporalInput(gameTimeline);
-
         prepareScene();
 
-        for (const auto &rectangle: rectangles) {
-            rectangle->draw();
-        }
+        auto current_time = gameTimeline.getElapsedTime();
+        auto dt = (current_time - last_time) / 1000.f;
+        last_time = current_time;
+
+        gravitySystem->update(dt);
+        kinematicSystem->update(dt);
+        renderSystem->update();
 
         presentScene();
     }
 
-    logicThread.join();
-    keyboardThread.join();
-    platformThread.join();
+    // Create 4 Rectangle instances
+
 
     cleanupSDL();
     std::cout << "Closing " << ENGINE_NAME << " Engine" << std::endl;

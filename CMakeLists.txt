@@ -45,29 +45,25 @@ set(SOURCES
         lib/network/client_server/client.hpp
         lib/network/client_server/server.cpp
         lib/network/client_server/server.hpp
+        lib/ECS/types.hpp
+        lib/ECS/entity_manager.hpp
+        lib/ECS/component_manager.hpp
+        lib/ECS/component_array.hpp
+        lib/ECS/system.hpp
+        lib/ECS/system_manager.hpp
+        lib/ECS/coordinator.hpp
+        lib/systems/gravity.cpp
+        lib/components/components.hpp
+        lib/systems/render.cpp
+        lib/systems/kinematic.cpp
 )
 
 add_executable(shade_engine ${SOURCES} main.cpp)
-add_executable(zmq_server ${SOURCES} lib/client_server/server.cpp)
-add_executable(zmq_client ${SOURCES} lib/client_server/client_1.cpp)
-add_executable(zmq_listener_1 ${SOURCES} lib/client_server/client_2.cpp)
-add_executable(zmq_listener_2 ${SOURCES} lib/client_server/client_3.cpp)
-add_executable(p2p_client_1 ${SOURCES} lib/p2p/client1.cpp)
-add_executable(p2p_client_2 ${SOURCES} lib/p2p/client2.cpp)
-add_executable(p2p_client_3 ${SOURCES} lib/p2p/client3.cpp)
 
 
 find_package(SDL2 REQUIRED)
 find_package(cppzmq REQUIRED)
 
 target_link_libraries(shade_engine cppzmq SDL2::SDL2)
-target_link_libraries(zmq_server cppzmq SDL2::SDL2)
-target_link_libraries(zmq_client cppzmq SDL2::SDL2)
-target_link_libraries(zmq_listener_1 cppzmq SDL2::SDL2)
-target_link_libraries(zmq_listener_2 cppzmq SDL2::SDL2)
-target_link_libraries(p2p_client_1 cppzmq SDL2::SDL2)
-target_link_libraries(p2p_client_2 cppzmq SDL2::SDL2)
-target_link_libraries(p2p_client_3 cppzmq SDL2::SDL2)
-
 
 
