@@ -13,6 +13,25 @@ extern Coordinator gCoordinator;
 
 class RenderSystem : public System {
 public:
+    // Funtion overload to accept camera system
+    void update(const Camera &camera) const {
+        for (const Entity entity: entities) {
+            const auto &transform = gCoordinator.getComponent<Transform>(entity);
+            const auto &color = gCoordinator.getComponent<Color>(entity);
+
+            SDL_SetRenderDrawColor(app->renderer, color.color.r, color.color.g, color.color.b, color.color.a);
+
+            // Convert world coordinates to screen coordinates
+            float screenX, screenY;
+            worldToScreen(transform.x, transform.y, screenX, screenY, camera);
+
+            SDL_FRect tRect = {screenX, screenY, transform.w * camera.zoom, transform.h * camera.zoom};
+
+            SDL_RenderDrawRectF(app->renderer, &tRect);
+            SDL_RenderFillRectF(app->renderer, &tRect);
+        }
+    }
+
     void update() const {
         for (const Entity entity: entities) {
             const auto &transform = gCoordinator.getComponent<Transform>(entity);
@@ -27,5 +46,25 @@ public:
             SDL_RenderDrawRectF(app->renderer, &tRect);
             SDL_RenderFillRectF(app->renderer, &tRect);
         }
+    }
+
+private:
+    // Helper function to convert world coordinates to screen coordinates (moved from camera.cpp)
+    void worldToScreen(float worldX, float worldY, float &screenX, float &screenY, const Camera& camera) const {
+        // Translate
+        float translatedX = worldX - camera.x;
+        float translatedY = worldY - camera.y;
+
+        // Rotate
+        float rotatedX = translatedX * std::cos(-camera.rotation) - translatedY * std::sin(-camera.rotation);
+        float rotatedY = translatedX * std::sin(-camera.rotation) + translatedY * std::cos(-camera.rotation);
+
+        // Scale
+        float scaledX = rotatedX * camera.zoom;
+        float scaledY = rotatedY * camera.zoom;
+
+        // Convert to screen coordinates
+        screenX = (scaledX + camera.viewport_width / 2);
+        screenY = (scaledY + camera.viewport_height / 2);
     }
 };

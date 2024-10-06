@@ -56,9 +56,11 @@ set(SOURCES
         lib/components/components.hpp
         lib/systems/render.cpp
         lib/systems/kinematic.cpp
+        lib/systems/camera.cpp
 )
 
-add_executable(shade_engine ${SOURCES} main.cpp)
+add_executable(shade_engine ${SOURCES} main.cpp
+        lib/systems/camera.cpp)
 
 
 find_package(SDL2 REQUIRED)
