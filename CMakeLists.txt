@@ -58,6 +58,8 @@ set(SOURCES
         lib/systems/kinematic.cpp
         lib/systems/camera.cpp
         lib/systems/keyboard_movement.cpp
+        lib/thread_pool/thread_pool.cpp
+        lib/thread_pool/thread_pool.hpp
 )
 
 add_executable(shade_engine ${SOURCES} main.cpp

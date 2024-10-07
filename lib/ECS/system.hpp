@@ -12,4 +12,5 @@
 class System {
 public:
     std::set<Entity> entities;
+    std::mutex update_mutex;
 };

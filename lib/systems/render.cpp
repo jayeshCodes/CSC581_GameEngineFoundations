@@ -16,7 +16,7 @@ extern Coordinator gCoordinator;
 class RenderSystem : public System {
 public:
     // Funtion overload to accept camera system
-    void update(const Camera &camera, float x, float y) const {
+    void update(const Camera &camera, float x, float y) {
         for (const Entity entity: entities) {
             const auto &transform = gCoordinator.getComponent<Transform>(entity);
             const auto &color = gCoordinator.getComponent<Color>(entity);

@@ -11,6 +11,7 @@ extern Coordinator gCoordinator;
 class KinematicSystem : public System {
 public:
     void update(float dt) {
+        std::lock_guard<std::mutex> lock(update_mutex);
         for(const auto entity: entities) {
             auto& transform = gCoordinator.getComponent<Transform>(entity);
             auto& kinematic = gCoordinator.getComponent<CKinematic>(entity);

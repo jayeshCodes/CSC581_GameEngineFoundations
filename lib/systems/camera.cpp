@@ -11,6 +11,7 @@ extern Coordinator gCoordinator;
 class CameraSystem : public System {
 public:
     void update(float dt) {
+        std::lock_guard<std::mutex> lock(update_mutex);
         for (auto const &entity: entities) {
             auto &camera = gCoordinator.getComponent<Camera>(entity);
         }

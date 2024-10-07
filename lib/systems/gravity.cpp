@@ -11,6 +11,7 @@ extern Coordinator gCoordinator;
 class GravitySystem : public System {
 public:
     void update(float dt) {
+        std::lock_guard<std::mutex> lock(update_mutex);
         for (auto entity: entities) {
             auto &kinematic = gCoordinator.getComponent<CKinematic>(entity);
             auto &gravity = gCoordinator.getComponent<Gravity>(entity);

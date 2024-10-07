@@ -13,6 +13,7 @@
 #include "lib/systems/gravity.cpp"
 #include "lib/systems/camera.cpp"
 #include "lib/systems/keyboard_movement.cpp"
+#include "lib/thread_pool/thread_pool.hpp"
 
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
 Timeline anchorTimeline(nullptr, 1000);
@@ -27,6 +28,7 @@ int main(int argc, char *argv[]) {
     std::cout << std::endl;
     initSDL();
     GameManager::getInstance()->gameRunning = true;
+    ThreadPool threadPool(std::thread::hardware_concurrency());
 
     anchorTimeline.start();
     gameTimeline.start();
@@ -72,7 +74,9 @@ int main(int argc, char *argv[]) {
 
 
     Entity mainCamera = gCoordinator.createEntity();
-    gCoordinator.addComponent(mainCamera, Camera{SCREEN_WIDTH/2.f, SCREEN_HEIGHT/2.f, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT});
+    gCoordinator.addComponent(mainCamera, Camera{
+                                  SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT
+                              });
     // temporary values for viewport width and height
 
     std::vector<Entity> entities(1);
@@ -104,9 +108,9 @@ int main(int argc, char *argv[]) {
         auto dt = (current_time - last_time) / 1000.f;
         last_time = current_time;
 
-        gravitySystem->update(dt);
-        kinematicSystem->update(dt);
-        keyboardMovementSystem->update(dt);
+        threadPool.enqueue([&] { gravitySystem->update(dt); });
+        threadPool.enqueue([&] { kinematicSystem->update(dt); });
+        threadPool.enqueue([&] { keyboardMovementSystem->update(dt); });
         cameraSystem->update(dt);
 
         auto main_camera = cameraSystem->getMainCamera();
