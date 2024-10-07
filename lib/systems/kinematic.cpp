@@ -33,13 +33,13 @@ public:
                 transform.y = SCREEN_HEIGHT - transform.h;
                 kinematic.velocity.y = 0; // Stop vertical movement if at the bottom
             }
-            if (transform.x < 0) {
-                transform.x = 0;
-                kinematic.velocity.x = 0;
-            } else if (transform.x + transform.w > SCREEN_WIDTH) {
-                transform.x = SCREEN_WIDTH - transform.w;
-                kinematic.velocity.x = 0;
-            }
+            // if (transform.x < 0) {
+            //     transform.x = 0;
+            //     kinematic.velocity.x = 0;
+            // } else if (transform.x + transform.w > SCREEN_WIDTH) {
+            //     transform.x = SCREEN_WIDTH - transform.w;
+            //     kinematic.velocity.x = 0;
+            // }
         }
     }
 };

@@ -57,6 +57,7 @@ set(SOURCES
         lib/systems/render.cpp
         lib/systems/kinematic.cpp
         lib/systems/camera.cpp
+        lib/systems/keyboard_movement.cpp
 )
 
 add_executable(shade_engine ${SOURCES} main.cpp

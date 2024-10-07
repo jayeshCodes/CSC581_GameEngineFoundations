@@ -13,6 +13,7 @@ public:
     void update(float dt) {
         for (auto entity: entities) {
             auto &kinematic = gCoordinator.getComponent<CKinematic>(entity);
+            auto &gravity = gCoordinator.getComponent<Gravity>(entity);
 
             kinematic.acceleration.y += 9.8f * dt;
         }

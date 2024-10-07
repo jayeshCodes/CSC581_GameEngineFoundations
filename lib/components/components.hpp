@@ -32,16 +32,12 @@ struct Camera {
     float rotation;
     float viewport_width;
     float viewport_height;
+};
 
-    // constructor
-    // explicit Camera(
-    // float x = 0.f,
-    // float y = 0.f,
-    // float zoom = 1.f,
-    // float rotation = 0.f,
-    // float viewport_width = SCREEN_WIDTH,
-    // float viewport_height = SCREEN_HEIGHT
-    // ) : x(x), y(y), zoom(zoom), rotation(rotation), viewport_width(viewport_width), viewport_height(viewport_height) {}
+struct Gravity {};
+
+struct KeyboardMovement {
+    float speed;
 };
 
 #endif //TRANSFORM_HPP

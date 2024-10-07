@@ -7,10 +7,12 @@
 #include "lib/components/components.hpp"
 #include "lib/core/timeline.hpp"
 #include "lib/ECS/coordinator.hpp"
+#include "lib/helpers/colors.hpp"
 #include "lib/systems/kinematic.cpp"
 #include "lib/systems/render.cpp"
 #include "lib/systems/gravity.cpp"
 #include "lib/systems/camera.cpp"
+#include "lib/systems/keyboard_movement.cpp"
 
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
 Timeline anchorTimeline(nullptr, 1000);
@@ -34,37 +36,63 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Color>();
     gCoordinator.registerComponent<CKinematic>();
     gCoordinator.registerComponent<Camera>();
+    gCoordinator.registerComponent<Gravity>();
+    gCoordinator.registerComponent<KeyboardMovement>();
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
     auto kinematicSystem = gCoordinator.registerSystem<KinematicSystem>();
     auto gravitySystem = gCoordinator.registerSystem<GravitySystem>();
     auto cameraSystem = gCoordinator.registerSystem<CameraSystem>();
+    auto keyboardMovementSystem = gCoordinator.registerSystem<KeyboardMovementSystem>();
 
-    Signature signature;
-    signature.set(gCoordinator.getComponentType<Transform>());
-    signature.set(gCoordinator.getComponentType<Color>());
-    signature.set(gCoordinator.getComponentType<CKinematic>());
-    gCoordinator.setSystemSignature<RenderSystem>(signature);
-    gCoordinator.setSystemSignature<KinematicSystem>(signature);
-    gCoordinator.setSystemSignature<GravitySystem>(signature);
+    Signature renderSignature;
+    renderSignature.set(gCoordinator.getComponentType<Transform>());
+    renderSignature.set(gCoordinator.getComponentType<Color>());
+    gCoordinator.setSystemSignature<RenderSystem>(renderSignature);
 
-    // Set up the signature for the camera system
+    Signature kinematicSignature;
+    kinematicSignature.set(gCoordinator.getComponentType<Transform>());
+    kinematicSignature.set(gCoordinator.getComponentType<CKinematic>());
+    gCoordinator.setSystemSignature<KinematicSystem>(kinematicSignature);
+
+    Signature gravitySignature;
+    gravitySignature.set(gCoordinator.getComponentType<Transform>());
+    gravitySignature.set(gCoordinator.getComponentType<Gravity>());
+    gCoordinator.setSystemSignature<GravitySystem>(gravitySignature);
+
     Signature cameraSignature;
     cameraSignature.set(gCoordinator.getComponentType<Camera>());
     gCoordinator.setSystemSignature<CameraSystem>(cameraSignature);
 
-    std::vector<Entity> entities(1);
+    Signature keyboardMovementSignature;
+    keyboardMovementSignature.set(gCoordinator.getComponentType<Transform>());
+    keyboardMovementSignature.set(gCoordinator.getComponentType<CKinematic>());
+    keyboardMovementSignature.set(gCoordinator.getComponentType<KeyboardMovement>());
+    gCoordinator.setSystemSignature<KeyboardMovementSystem>(keyboardMovementSignature);
 
-    for (auto &entity: entities) {
-        entity = gCoordinator.createEntity();
-        gCoordinator.addComponent(entity, Transform{SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 32, 32, 0});
-        gCoordinator.addComponent(entity, Color{255, 0, 0, 255});
-        gCoordinator.addComponent(entity, CKinematic{});
-    }
 
     Entity mainCamera = gCoordinator.createEntity();
     gCoordinator.addComponent(mainCamera, Camera{SCREEN_WIDTH/2.f, SCREEN_HEIGHT/2.f, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT});
     // temporary values for viewport width and height
+
+    std::vector<Entity> entities(1);
+    for (auto &entity: entities) {
+        entity = gCoordinator.createEntity();
+        gCoordinator.addComponent(entity, Transform{300, 200, 32, 32, 0});
+        gCoordinator.addComponent(entity, Color{shade_color::Red});
+        gCoordinator.addComponent(entity, CKinematic{});
+        gCoordinator.addComponent(entity, Gravity{});
+    }
+
+    auto mainChar = gCoordinator.createEntity();
+    gCoordinator.addComponent(mainChar, Transform{SCREEN_WIDTH / 2.f, SCREEN_HEIGHT * 3 / 4.f, 32, 32, 0});
+    gCoordinator.addComponent(mainChar, Color{shade_color::Blue});
+    gCoordinator.addComponent(mainChar, CKinematic{});
+    gCoordinator.addComponent(mainChar, KeyboardMovement{300.f});
+
+    auto entity2 = gCoordinator.createEntity();
+    gCoordinator.addComponent(entity2, Transform{300, SCREEN_HEIGHT, 32, SCREEN_WIDTH * 5, 0});
+    gCoordinator.addComponent(entity2, Color{shade_color::Black});
 
     auto last_time = gameTimeline.getElapsedTime();
 
@@ -78,14 +106,12 @@ int main(int argc, char *argv[]) {
 
         gravitySystem->update(dt);
         kinematicSystem->update(dt);
+        keyboardMovementSystem->update(dt);
         cameraSystem->update(dt);
 
-        Camera *mainCam = cameraSystem->getMainCamera();
-        if (mainCam) {
-            renderSystem->update(*mainCam);
-        } else {
-            renderSystem->update();
-        }
+        auto main_camera = cameraSystem->getMainCamera();
+        auto transform = gCoordinator.getComponent<Transform>(mainChar);
+        renderSystem->update(*main_camera, transform.x, transform.y);
 
         presentScene();
     }

@@ -3,10 +3,12 @@
 //
 
 #include <SDL_render.h>
+#include <iostream>
 
 #include "../components/components.hpp"
 #include "../ECS/coordinator.hpp"
 #include "../ECS/system.hpp"
+
 #include "../objects/shapes/rectangle.hpp"
 
 extern Coordinator gCoordinator;
@@ -14,7 +16,7 @@ extern Coordinator gCoordinator;
 class RenderSystem : public System {
 public:
     // Funtion overload to accept camera system
-    void update(const Camera &camera) const {
+    void update(const Camera &camera, float x, float y) const {
         for (const Entity entity: entities) {
             const auto &transform = gCoordinator.getComponent<Transform>(entity);
             const auto &color = gCoordinator.getComponent<Color>(entity);
@@ -25,7 +27,12 @@ public:
             float screenX, screenY;
             worldToScreen(transform.x, transform.y, screenX, screenY, camera);
 
-            SDL_FRect tRect = {screenX, screenY, transform.w * camera.zoom, transform.h * camera.zoom};
+            SDL_FRect tRect;
+            tRect = {
+                screenX - x + camera.viewport_width / 2 - 300, screenY - y + camera.viewport_height * 3 / 4,
+                transform.w * camera.zoom, transform.h * camera.zoom
+            };
+
 
             SDL_RenderDrawRectF(app->renderer, &tRect);
             SDL_RenderFillRectF(app->renderer, &tRect);
@@ -50,7 +57,7 @@ public:
 
 private:
     // Helper function to convert world coordinates to screen coordinates (moved from camera.cpp)
-    void worldToScreen(float worldX, float worldY, float &screenX, float &screenY, const Camera& camera) const {
+    void worldToScreen(float worldX, float worldY, float &screenX, float &screenY, const Camera &camera) const {
         // Translate
         float translatedX = worldX - camera.x;
         float translatedY = worldY - camera.y;
