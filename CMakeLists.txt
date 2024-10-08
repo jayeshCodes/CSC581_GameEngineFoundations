@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.29)
 project(shade_engine)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 20)
 
 set(SOURCES
         lib/core/draw.cpp
@@ -58,17 +58,23 @@ set(SOURCES
         lib/systems/kinematic.cpp
         lib/systems/camera.cpp
         lib/systems/keyboard_movement.cpp
-        lib/thread_pool/thread_pool.cpp
-        lib/thread_pool/thread_pool.hpp
+        lib/systems/server.hpp
+        lib/systems/camera.cpp
 )
 
 add_executable(shade_engine ${SOURCES} main.cpp
-        lib/systems/camera.cpp)
+        lib/systems/client.hpp
+        lib/generic/packed_map.hpp
+        lib/systems/move_between_2_point_system.hpp
+)
+
+add_executable(shade_engine_server ${SOURCES} server.cpp)
 
 
 find_package(SDL2 REQUIRED)
 find_package(cppzmq REQUIRED)
+find_package(nlohmann_json 3.2.0 REQUIRED)
 
-target_link_libraries(shade_engine cppzmq SDL2::SDL2)
-
+target_link_libraries(shade_engine cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
+target_link_libraries(shade_engine_server cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
 

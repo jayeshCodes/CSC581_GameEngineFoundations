@@ -5,6 +5,8 @@
 #ifndef TRANSFORM_HPP
 #define TRANSFORM_HPP
 #include <SDL.h>
+
+#include "../animation/controller/moveBetween2Points.hpp"
 #include "../core/defs.hpp"
 
 struct Transform {
@@ -38,6 +40,23 @@ struct Gravity {};
 
 struct KeyboardMovement {
     float speed;
+};
+
+struct Server {
+    int listen_port;
+    int publish_port;
+};
+
+struct Client {
+    int listen_port;
+    int publish_port;
+};
+
+struct MovingPlatform {
+    float p1;
+    float p2;
+    MovementState state;
+    int wait_time;
 };
 
 #endif //TRANSFORM_HPP

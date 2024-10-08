@@ -19,4 +19,13 @@ enum P2PMessageType {
     P2P_PLATFORM
 };
 
+enum Message {
+    CONNECT,
+    DISCONNECT,
+    CREATE,
+    DESTROY,
+    ATTACH,
+    POSITION
+};
+
 #endif //MESSAGE_TYPE_HPP

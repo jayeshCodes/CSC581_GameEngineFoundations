@@ -12,9 +12,9 @@
 #include "lib/systems/render.cpp"
 #include "lib/systems/gravity.cpp"
 #include "lib/systems/camera.cpp"
+#include "lib/systems/client.hpp"
 #include "lib/systems/keyboard_movement.cpp"
-#include "lib/thread_pool/thread_pool.hpp"
-
+#include "lib/systems/move_between_2_point_system.hpp"
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
 Timeline anchorTimeline(nullptr, 1000);
 Timeline gameTimeline(&anchorTimeline, 1);
@@ -28,7 +28,6 @@ int main(int argc, char *argv[]) {
     std::cout << std::endl;
     initSDL();
     GameManager::getInstance()->gameRunning = true;
-    ThreadPool threadPool(std::thread::hardware_concurrency());
 
     anchorTimeline.start();
     gameTimeline.start();
@@ -40,12 +39,16 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Camera>();
     gCoordinator.registerComponent<Gravity>();
     gCoordinator.registerComponent<KeyboardMovement>();
+    gCoordinator.registerComponent<Client>();
+    gCoordinator.registerComponent<MovingPlatform>();
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
     auto kinematicSystem = gCoordinator.registerSystem<KinematicSystem>();
     auto gravitySystem = gCoordinator.registerSystem<GravitySystem>();
     auto cameraSystem = gCoordinator.registerSystem<CameraSystem>();
     auto keyboardMovementSystem = gCoordinator.registerSystem<KeyboardMovementSystem>();
+    auto clientSystem = gCoordinator.registerSystem<ClientSystem>();
+    auto moveBetween2PointsSystem = gCoordinator.registerSystem<MoveBetween2PointsSystem>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
@@ -71,6 +74,16 @@ int main(int argc, char *argv[]) {
     keyboardMovementSignature.set(gCoordinator.getComponentType<CKinematic>());
     keyboardMovementSignature.set(gCoordinator.getComponentType<KeyboardMovement>());
     gCoordinator.setSystemSignature<KeyboardMovementSystem>(keyboardMovementSignature);
+
+    Signature clientSignature;
+    clientSignature.set(gCoordinator.getComponentType<Client>());
+    gCoordinator.setSystemSignature<ClientSystem>(clientSignature);
+
+    Signature movingPlatformSignature;
+    movingPlatformSignature.set(gCoordinator.getComponentType<Transform>());
+    movingPlatformSignature.set(gCoordinator.getComponentType<MovingPlatform>());
+    movingPlatformSignature.set(gCoordinator.getComponentType<CKinematic>());
+    gCoordinator.setSystemSignature<MoveBetween2PointsSystem>(movingPlatformSignature);
 
 
     Entity mainCamera = gCoordinator.createEntity();
@@ -98,7 +111,27 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(entity2, Transform{300, SCREEN_HEIGHT, 32, SCREEN_WIDTH * 5, 0});
     gCoordinator.addComponent(entity2, Color{shade_color::Black});
 
+    auto clientEntity = gCoordinator.createEntity();
+    gCoordinator.addComponent(clientEntity, Client{7000, 7001});
+
+    zmq::context_t context(1);
+    clientSystem->initialize(context);
+
+    std::thread send_msg_thread([&clientSystem]() {
+        while (GameManager::getInstance()->gameRunning) { clientSystem->receive_message(); }
+    });
+
     auto last_time = gameTimeline.getElapsedTime();
+    for (int i = 0; i < argc; ++i) {
+        std::cout << "Argument " << i << ": " << argv[i] << std::endl;
+    }
+    clientSystem->connect_server(std::stof(argv[1]));
+
+    auto movingPlatformEntity = gCoordinator.createEntity();
+    gCoordinator.addComponent(movingPlatformEntity, Transform{100, 100, 64, 64, 0});
+    gCoordinator.addComponent(movingPlatformEntity, MovingPlatform{100, 500, MovementState::LEFT, 2});
+    gCoordinator.addComponent(movingPlatformEntity, CKinematic{});
+    gCoordinator.addComponent(movingPlatformEntity, Color{shade_color::Brown});
 
     while (GameManager::getInstance()->gameRunning) {
         doInput();
@@ -108,10 +141,11 @@ int main(int argc, char *argv[]) {
         auto dt = (current_time - last_time) / 1000.f;
         last_time = current_time;
 
-        threadPool.enqueue([&] { gravitySystem->update(dt); });
-        threadPool.enqueue([&] { kinematicSystem->update(dt); });
-        threadPool.enqueue([&] { keyboardMovementSystem->update(dt); });
+        gravitySystem->update(dt);
+        kinematicSystem->update(dt);
+        keyboardMovementSystem->update(dt);
         cameraSystem->update(dt);
+        moveBetween2PointsSystem->update(dt, gameTimeline);
 
         auto main_camera = cameraSystem->getMainCamera();
         auto transform = gCoordinator.getComponent<Transform>(mainChar);
@@ -120,9 +154,10 @@ int main(int argc, char *argv[]) {
         presentScene();
     }
 
+    send_msg_thread.join();
+
     // Create 4 Rectangle instances
-
-
+    clientSystem->disconnect();
     cleanupSDL();
     std::cout << "Closing " << ENGINE_NAME << " Engine" << std::endl;
     return 0;
