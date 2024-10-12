@@ -65,6 +65,10 @@ public:
         return component_array[entity_to_index_map[entity]];
     }
 
+    bool hasData(Entity entity) {
+        return entity_to_index_map.find(entity) != entity_to_index_map.end();
+    }
+
     void entityDestroyed(Entity entity) override {
         if (entity_to_index_map.find(entity) != entity_to_index_map.end()) {
             removeData(entity);

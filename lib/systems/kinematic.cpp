@@ -2,7 +2,7 @@
 // Created by Utsav Lal on 10/2/24.
 //
 
-#include "../components/components.hpp"
+#include "../model/components.hpp"
 #include "../core/defs.hpp"
 #include "../ECS/coordinator.hpp"
 #include "../ECS/system.hpp"

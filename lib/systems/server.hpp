@@ -10,6 +10,8 @@
 #include "../generic/safe_queue.hpp"
 #include <shared_mutex>
 
+#include "../helpers/ecs_helpers.hpp"
+
 #define Q_SIZE 100000
 #define SERVER_PORT 8000
 
@@ -17,12 +19,13 @@ template<typename T>
 class ServerSystem : public System {
 private:
     zmq::socket_t connect_socket;
-    PackedMap<int, std::shared_ptr<zmq::socket_t>> client_map;
+    PackedMap<int, std::shared_ptr<zmq::socket_t> > client_map;
     mutable std::shared_mutex map_mutex; // Shared mutex for concurrent reads
 
 public:
     // Constructor initialization for PackedMap
-    ServerSystem() : client_map(10, nullptr) {}
+    ServerSystem() : client_map(10, nullptr) {
+    }
 
     void initialize(zmq::context_t &context) {
         connect_socket = zmq::socket_t(context, ZMQ_REP);
@@ -47,9 +50,7 @@ public:
         }
 
         if (request[0] == Message::DISCONNECT) {
-            int slot = static_cast<int>(request[1]);
-
-            {
+            int slot = static_cast<int>(request[1]); {
                 // Exclusive lock for write operation (removing client)
                 std::unique_lock<std::shared_mutex> lock(map_mutex);
                 if (client_map[slot]) {
@@ -66,13 +67,17 @@ public:
 
     // Thread-safe send_message function with shared lock for reads
     void send_message() {
-        zmq::message_t message("message", 7);
+        nlohmann::json j = ECS::constructGameState(gCoordinator);
+        std::string data = j.dump();
 
         // Shared lock for concurrent reads
-        std::shared_lock<std::shared_mutex> lock(map_mutex);
-        for (int i = 0; i < client_map.size(); i++) {
+        const int map_size = client_map.size();
+        zmq::message_t msg(data.begin(), data.end());
+
+        std::shared_lock lock(map_mutex);
+        for (int i = 0; i < map_size; i++) {
             if (client_map[i] != nullptr) {
-                client_map[i]->send(message, zmq::send_flags::dontwait);
+                client_map[i]->send(msg, zmq::send_flags::dontwait);
             }
         }
     }

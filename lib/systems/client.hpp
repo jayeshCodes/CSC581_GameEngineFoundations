@@ -21,11 +21,10 @@ public:
         connect_socket.connect("tcp://localhost:8000");
 
         listen_socket = zmq::socket_t(context, ZMQ_SUB);
-
     }
 
     void connect_server(float socket_number) {
-        std::cout << "connecting to server" << std::endl;
+        std::cout << "connecting to server: " << socket_number << std::endl;
         listen_socket.bind("tcp://*:" + std::to_string(socket_number));
         listen_socket.set(zmq::sockopt::subscribe, "");
 
@@ -39,10 +38,12 @@ public:
         slot = static_cast<int>(reply[0]);
     }
 
-    void receive_message() {
+    void receive_message(Coordinator &gCoordinator) {
         zmq::message_t message;
-        listen_socket.recv(message, zmq::recv_flags::none);
-        std::string msg = std::string(static_cast<char *>(message.data()), message.size());
+        if (auto res = listen_socket.recv(message, zmq::recv_flags::none)) {
+            nlohmann::json j = nlohmann::json::parse(message.to_string());
+            ECS::parseGameState(gCoordinator, j);
+        }
     }
 
     void disconnect() {

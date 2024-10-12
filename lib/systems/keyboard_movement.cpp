@@ -4,7 +4,7 @@
 
 #include "../ECS/coordinator.hpp"
 #include "../ECS/system.hpp"
-#include "../components/components.hpp"
+#include "../model/components.hpp"
 
 extern Coordinator gCoordinator;
 

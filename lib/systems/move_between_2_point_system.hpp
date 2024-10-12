@@ -5,7 +5,7 @@
 #ifndef MOVE_BETWEEN_2_POINT_SYSTEM_HPP
 #define MOVE_BETWEEN_2_POINT_SYSTEM_HPP
 #include "../ECS/system.hpp"
-#include "../components/components.hpp"
+#include "../model/components.hpp"
 #include "../ECS/coordinator.hpp"
 
 extern Coordinator gCoordinator;

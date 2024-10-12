@@ -4,10 +4,12 @@
 #include "main.hpp"
 #include "lib/core/physics/collision.hpp"
 #include "lib/game/GameManager.hpp"
-#include "lib/components/components.hpp"
+#include "lib/model/components.hpp"
 #include "lib/core/timeline.hpp"
 #include "lib/ECS/coordinator.hpp"
 #include "lib/helpers/colors.hpp"
+#include "lib/helpers/constants.hpp"
+#include "lib/helpers/ecs_helpers.hpp"
 #include "lib/systems/kinematic.cpp"
 #include "lib/systems/render.cpp"
 #include "lib/systems/gravity.cpp"
@@ -32,6 +34,9 @@ int main(int argc, char *argv[]) {
     anchorTimeline.start();
     gameTimeline.start();
 
+    std::vector<std::string> component_names{MAX_COMPONENTS};
+    std::vector<std::string> entity_names{MAX_ENTITIES};
+
     gCoordinator.init();
     gCoordinator.registerComponent<Transform>();
     gCoordinator.registerComponent<Color>();
@@ -41,6 +46,8 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<KeyboardMovement>();
     gCoordinator.registerComponent<Client>();
     gCoordinator.registerComponent<MovingPlatform>();
+
+
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
     auto kinematicSystem = gCoordinator.registerSystem<KinematicSystem>();
@@ -86,52 +93,31 @@ int main(int argc, char *argv[]) {
     gCoordinator.setSystemSignature<MoveBetween2PointsSystem>(movingPlatformSignature);
 
 
-    Entity mainCamera = gCoordinator.createEntity();
+    Entity mainCamera = gCoordinator.createEntity("CAMERA");
     gCoordinator.addComponent(mainCamera, Camera{
                                   SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT
                               });
     // temporary values for viewport width and height
 
-    std::vector<Entity> entities(1);
-    for (auto &entity: entities) {
-        entity = gCoordinator.createEntity();
-        gCoordinator.addComponent(entity, Transform{300, 200, 32, 32, 0});
-        gCoordinator.addComponent(entity, Color{shade_color::Red});
-        gCoordinator.addComponent(entity, CKinematic{});
-        gCoordinator.addComponent(entity, Gravity{});
-    }
-
-    auto mainChar = gCoordinator.createEntity();
+    auto mainChar = gCoordinator.createEntity("CHAR");
     gCoordinator.addComponent(mainChar, Transform{SCREEN_WIDTH / 2.f, SCREEN_HEIGHT * 3 / 4.f, 32, 32, 0});
     gCoordinator.addComponent(mainChar, Color{shade_color::Blue});
     gCoordinator.addComponent(mainChar, CKinematic{});
     gCoordinator.addComponent(mainChar, KeyboardMovement{300.f});
 
-    auto entity2 = gCoordinator.createEntity();
-    gCoordinator.addComponent(entity2, Transform{300, SCREEN_HEIGHT, 32, SCREEN_WIDTH * 5, 0});
-    gCoordinator.addComponent(entity2, Color{shade_color::Black});
-
-    auto clientEntity = gCoordinator.createEntity();
+    auto clientEntity = gCoordinator.createEntity("CLIENT");
     gCoordinator.addComponent(clientEntity, Client{7000, 7001});
 
     zmq::context_t context(1);
     clientSystem->initialize(context);
 
     std::thread send_msg_thread([&clientSystem]() {
-        while (GameManager::getInstance()->gameRunning) { clientSystem->receive_message(); }
+        while (GameManager::getInstance()->gameRunning) { clientSystem->receive_message(gCoordinator); }
     });
 
     auto last_time = gameTimeline.getElapsedTime();
-    for (int i = 0; i < argc; ++i) {
-        std::cout << "Argument " << i << ": " << argv[i] << std::endl;
-    }
+    std::cout << "Connecting to server on port: " << argv[1] << std::endl;
     clientSystem->connect_server(std::stof(argv[1]));
-
-    auto movingPlatformEntity = gCoordinator.createEntity();
-    gCoordinator.addComponent(movingPlatformEntity, Transform{100, 100, 64, 64, 0});
-    gCoordinator.addComponent(movingPlatformEntity, MovingPlatform{100, 500, MovementState::LEFT, 2});
-    gCoordinator.addComponent(movingPlatformEntity, CKinematic{});
-    gCoordinator.addComponent(movingPlatformEntity, Color{shade_color::Brown});
 
     while (GameManager::getInstance()->gameRunning) {
         doInput();
@@ -139,13 +125,13 @@ int main(int argc, char *argv[]) {
 
         auto current_time = gameTimeline.getElapsedTime();
         auto dt = (current_time - last_time) / 1000.f;
+
         last_time = current_time;
 
         gravitySystem->update(dt);
         kinematicSystem->update(dt);
         keyboardMovementSystem->update(dt);
         cameraSystem->update(dt);
-        moveBetween2PointsSystem->update(dt, gameTimeline);
 
         auto main_camera = cameraSystem->getMainCamera();
         auto transform = gCoordinator.getComponent<Transform>(mainChar);

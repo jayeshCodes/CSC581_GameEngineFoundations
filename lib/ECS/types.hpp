@@ -20,5 +20,7 @@ constexpr ComponentType MAX_COMPONENTS = 32;
 // For example if an entity has components 0, 1, 2 then Signature will be 0000000000000000000000000000111
 using Signature = std::bitset<MAX_COMPONENTS>;
 
+constexpr Entity EntityNotCreated = -1;
+
 
 #endif //TYPES_HPP

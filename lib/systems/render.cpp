@@ -5,7 +5,7 @@
 #include <SDL_render.h>
 #include <iostream>
 
-#include "../components/components.hpp"
+#include "../model/components.hpp"
 #include "../ECS/coordinator.hpp"
 #include "../ECS/system.hpp"
 
