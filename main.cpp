@@ -12,6 +12,8 @@
 #include "lib/model/components.hpp"
 #include "lib/systems/camera.cpp"
 #include "lib/systems/client.hpp"
+#include "lib/systems/client_entity_system.hpp"
+#include "lib/systems/destroy.hpp"
 #include "lib/systems/gravity.cpp"
 #include "lib/systems/keyboard_movement.cpp"
 #include "lib/systems/kinematic.cpp"
@@ -45,6 +47,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Client>();
     gCoordinator.registerComponent<MovingPlatform>();
     gCoordinator.registerComponent<ClientEntity>();
+    gCoordinator.registerComponent<Destroy>();
 
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
@@ -54,6 +57,8 @@ int main(int argc, char *argv[]) {
     auto keyboardMovementSystem = gCoordinator.registerSystem<KeyboardMovementSystem>();
     auto clientSystem = gCoordinator.registerSystem<ClientSystem>();
     auto moveBetween2PointsSystem = gCoordinator.registerSystem<MoveBetween2PointsSystem>();
+    auto clientEntitySystem = gCoordinator.registerSystem<ClientEntitySystem>();
+    auto destroySystem = gCoordinator.registerSystem<DestroySystem>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
@@ -90,6 +95,17 @@ int main(int argc, char *argv[]) {
     movingPlatformSignature.set(gCoordinator.getComponentType<CKinematic>());
     gCoordinator.setSystemSignature<MoveBetween2PointsSystem>(movingPlatformSignature);
 
+    Signature clientEntitySignature;
+    clientEntitySignature.set(gCoordinator.getComponentType<ClientEntity>());
+    clientEntitySignature.set(gCoordinator.getComponentType<Transform>());
+    clientEntitySignature.set(gCoordinator.getComponentType<Color>());
+    clientEntitySignature.set(gCoordinator.getComponentType<Destroy>());
+    gCoordinator.setSystemSignature<ClientEntitySystem>(clientEntitySignature);
+
+    Signature destroySig;
+    destroySig.set(gCoordinator.getComponentType<Destroy>());
+    gCoordinator.setSystemSignature<DestroySystem>(destroySig);
+
 
     Entity mainCamera = gCoordinator.createEntity("CAMERA");
     gCoordinator.addComponent(mainCamera, Camera{
@@ -102,6 +118,8 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(mainChar, Color{shade_color::Blue});
     gCoordinator.addComponent(mainChar, CKinematic{});
     gCoordinator.addComponent(mainChar, KeyboardMovement{300.f});
+    gCoordinator.addComponent(mainChar, ClientEntity{});
+    gCoordinator.addComponent(mainChar, Destroy{});
 
     auto clientEntity = gCoordinator.createEntity("CLIENT");
     gCoordinator.addComponent(clientEntity, Client{7000, 7001});
@@ -120,11 +138,24 @@ int main(int argc, char *argv[]) {
     connect_socket.connect("tcp://localhost:" + std::to_string(engine_constants::SERVER_CONNECT_PORT));
 
     int pub_port = std::stoi(argv[1]);
-    clientSystem->connect(connect_socket, pub_socket, pub_port);
+    int slot = std::stoi(argv[2]);
+    clientSystem->connect(connect_socket, pub_socket, pub_port, slot);
 
-    std::thread client_thread([&clientSystem, &socket]() {
+    std::thread listen_from_server_thread([&clientSystem, &socket, slot]() {
         while (GameManager::getInstance()->gameRunning) {
-            clientSystem->update(socket);
+            clientSystem->update(socket, slot);
+        }
+    });
+
+    std::thread send_to_server_thread([&clientEntitySystem, &pub_socket, slot]() {
+        while (GameManager::getInstance()->gameRunning) {
+            clientEntitySystem->update(pub_socket, slot);
+        }
+    });
+
+    std::thread delete_thread([&destroySystem, slot]() {
+        while (GameManager::getInstance()->gameRunning) {
+            destroySystem->update();
         }
     });
 
@@ -145,13 +176,25 @@ int main(int argc, char *argv[]) {
         auto main_camera = cameraSystem->getMainCamera();
         auto transform = gCoordinator.getComponent<Transform>(mainChar);
         renderSystem->update(*main_camera, transform.x, transform.y);
-
         presentScene();
     }
 
-    // Create 4 Rectangle instances
-    client_thread.join();
-    clientSystem->disconnect(connect_socket);
+    /**
+     * This is the cleanup code. The order is very important here since otherwise the program will crash.
+     * The order is as follows:
+     * 1. Destroy the main character
+     * 2. Update the client entity system to send the destroy message to the server
+     * 3. Join the send_to_server_thread
+     * 4. Disconnect the client from the server
+     * 5. Join the listen_from_server_thread
+     */
+    send_to_server_thread.join();
+    clientSystem->disconnect(connect_socket, pub_socket, slot);
+    listen_from_server_thread.join();
+
+    connect_socket.close();
+    pub_socket.close();
+    delete_thread.join();
     cleanupSDL();
     std::cout << "Closing " << ENGINE_NAME << " Engine" << std::endl;
     return 0;

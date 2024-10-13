@@ -91,4 +91,10 @@ struct ServerEntity {
 struct ClientEntity {
 };
 
+struct Destroy {
+    int slot = -1;
+    bool destroy = false;
+    bool isSent = false;
+};
+
 #endif //TRANSFORM_HPP

@@ -19,6 +19,7 @@
 #include "lib/systems/render.cpp"
 #include "lib/systems/gravity.cpp"
 #include "lib/systems/camera.cpp"
+#include "lib/systems/destroy.hpp"
 #include "lib/systems/keyboard_movement.cpp"
 
 #include "lib/systems/move_between_2_point_system.hpp"
@@ -64,6 +65,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Server>();
     gCoordinator.registerComponent<MovingPlatform>();
     gCoordinator.registerComponent<ServerEntity>();
+    gCoordinator.registerComponent<Destroy>();
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
     auto kinematicSystem = gCoordinator.registerSystem<KinematicSystem>();
@@ -73,6 +75,7 @@ int main(int argc, char *argv[]) {
     auto moveBetween2PointsSystem = gCoordinator.registerSystem<MoveBetween2PointsSystem>();
     auto severEntitySystem = gCoordinator.registerSystem<ServerEntitySystem>();
     auto serverSystem = gCoordinator.registerSystem<ServerSystem>();
+    auto destroySystem = gCoordinator.registerSystem<DestroySystem>();
 
     Signature movingPlatformSignature;
     movingPlatformSignature.set(gCoordinator.getComponentType<Transform>());
@@ -94,7 +97,12 @@ int main(int argc, char *argv[]) {
 
     Signature serverSig;
     serverSig.set(gCoordinator.getComponentType<Server>());
+    serverSig.set(gCoordinator.getComponentType<Destroy>());
     gCoordinator.setSystemSignature<ServerSystem>(serverSig);
+
+    Signature destroySig;
+    destroySig.set(gCoordinator.getComponentType<Destroy>());
+    gCoordinator.setSystemSignature<DestroySystem>(destroySig);
 
     zmq::context_t context(1);
     Entity server = gCoordinator.createEntity();
@@ -113,6 +121,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(platform, Color{255, 0, 0, 255});
     gCoordinator.addComponent(platform, CKinematic{0, 0, 0, 0});
     gCoordinator.addComponent(platform, MovingPlatform{200, 800, LEFT, 2});
+    gCoordinator.addComponent(platform, Destroy{});
     gCoordinator.addComponent(platform, ServerEntity{});
 
     Entity platform2 = gCoordinator.createEntity();
@@ -120,11 +129,13 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(platform2, Color{255, 255, 0, 255});
     gCoordinator.addComponent(platform2, CKinematic{0, 0, 0, 0});
     gCoordinator.addComponent(platform2, MovingPlatform{200, 800, RIGHT, 2});
+    gCoordinator.addComponent(platform2, Destroy{});
     gCoordinator.addComponent(platform2, ServerEntity{});
 
     auto entity2 = gCoordinator.createEntity();
     gCoordinator.addComponent(entity2, Transform{300, SCREEN_HEIGHT, 32, SCREEN_WIDTH * 5, 0});
     gCoordinator.addComponent(entity2, Color{shade_color::Black});
+    gCoordinator.addComponent(entity2, Destroy{});
     gCoordinator.addComponent(entity2, ServerEntity{});
 
 
@@ -144,6 +155,12 @@ int main(int argc, char *argv[]) {
         }
     });
 
+    std::thread delete_thread([&destroySystem]() {
+        while (GameManager::getInstance()->gameRunning) {
+            destroySystem->update();
+        }
+    });
+
 
     while (GameManager::getInstance()->gameRunning) {
         auto current_time = gameTimeline.getElapsedTime();
@@ -157,6 +174,7 @@ int main(int argc, char *argv[]) {
     platform_thread.join();
     network_thread.join();
     socket.close();
+    delete_thread.join();
 
     std::cout << "Closing " << ENGINE_NAME << " Engine" << std::endl;
     return 0;

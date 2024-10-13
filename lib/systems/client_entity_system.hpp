@@ -12,34 +12,30 @@
 
 extern Coordinator gCoordinator;
 
-class ClientEntitySystem : System {
-public:
-    void update(zmq::socket_t &socket) {
-        zmq::message_t message;
-        if (socket.recv(message, zmq::recv_flags::none)) {
-            const std::vector<float> received_msg(static_cast<float *>(message.data()),
-                                                  static_cast<float *>(message.data()) + message.size() / sizeof(
-                                                      float));
+class ClientEntitySystem : public System {
+    const int MESSAGE_SIZE = 10;
 
-            for (int i = 0; i < received_msg.size(); i += 10) {
-                if (received_msg[i] == Message::END) {
-                    break;
-                }
-                auto entity = static_cast<Entity>(received_msg[i + 1]);
-                const Entity generatedId = gCoordinator.createEntity(Coordinator::createKey(entity));
-                gCoordinator.addComponent<Transform>(generatedId, Transform{});
-                gCoordinator.addComponent<Color>(generatedId, Color{});
-                auto &[x, y, h, w, orientation, scale] = gCoordinator.getComponent<Transform>(generatedId);
-                auto &[color] = gCoordinator.getComponent<Color>(generatedId);
-                x = received_msg[i + 2];
-                y = received_msg[i + 3];
-                w = received_msg[i + 4];
-                h = received_msg[i + 5];
-                color.r = static_cast<Uint8>(received_msg[i + 6]);
-                color.g = static_cast<Uint8>(received_msg[i + 7]);
-                color.b = static_cast<Uint8>(received_msg[i + 8]);
-                color.a = static_cast<Uint8>(received_msg[i + 9]);
-            }
+public:
+    void update(zmq::socket_t &pub_socket, const int slot) const {
+        std::vector<float> request;
+        request.reserve(MESSAGE_SIZE * MAX_ENTITIES);
+        for (const auto entity: entities) {
+            auto &[x, y, h, w, orientation, scale] = gCoordinator.getComponent<Transform>(entity);
+            auto &[_, destroy, isSent] = gCoordinator.getComponent<Destroy>(entity);
+            auto &[color] = gCoordinator.getComponent<Color>(entity);
+            request.insert(request.end(), {
+                               Message::UPDATE,
+                               static_cast<float>(slot),
+                               static_cast<float>(entity),
+                               x, y, w, h,
+                               static_cast<float>(color.r),
+                               static_cast<float>(color.g),
+                               static_cast<float>(color.b),
+                               static_cast<float>(color.a)
+                           });
         }
+        request.insert(request.end(), (MESSAGE_SIZE * MAX_ENTITIES - request.size()), Message::END);
+        zmq::message_t message(request.data(), request.size() * sizeof(float));
+        pub_socket.send(message, zmq::send_flags::none);
     }
 };

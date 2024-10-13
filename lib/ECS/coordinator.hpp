@@ -5,6 +5,7 @@
 #pragma once
 #include <memory>
 #include <unordered_map>
+#include <shared_mutex>
 
 #include "component_manager.hpp"
 #include "entity_manager.hpp"
@@ -16,6 +17,7 @@ private:
     std::unique_ptr<EntityManager> entity_manager;
     std::unique_ptr<SystemManager> system_manager;
     std::unordered_map<std::string, Entity> entities;
+    mutable std::shared_mutex mutex;
 
 public:
     void init() {
@@ -25,12 +27,14 @@ public:
     }
 
     Entity createEntity() {
+        std::lock_guard<std::shared_mutex> lock(mutex);
         const Entity id = entity_manager->createEntity();
         entities[createKey(id)] = id;
         return id;
     }
 
     Entity createEntity(const std::string &key) {
+        std::lock_guard<std::shared_mutex> lock(mutex);
         if (entities.contains(key)) {
             return entities[key];
         }
@@ -40,22 +44,25 @@ public:
     }
 
     void destroyEntity(Entity entity) {
+        std::lock_guard<std::shared_mutex> lock(mutex);
         entity_manager->destroyEntity(entity);
 
         component_manager->entityDestroyed(entity);
         system_manager->entityDestroyed(entity);
 
-        delete &entities[createKey(entity)];
+        entities.erase(createKey(entity));
     }
 
     template<typename T>
     void registerComponent() const {
+        std::lock_guard<std::shared_mutex> lock(mutex);
         component_manager->registerComponent<T>();
     }
 
     template<typename T>
     void addComponent(Entity entity, T component) const {
-        if(component_manager->hasComponent<T>(entity)) {
+        std::lock_guard<std::shared_mutex> lock(mutex);
+        if (component_manager->hasComponent<T>(entity)) {
             return;
         }
         component_manager->addComponent<T>(entity, component);
@@ -69,6 +76,7 @@ public:
 
     template<typename T>
     void removeComponent(Entity entity) const {
+        std::lock_guard<std::shared_mutex> lock(mutex);
         component_manager->removeComponent<T>(entity);
 
         auto signature = entity_manager->getSignature(entity);
@@ -80,30 +88,36 @@ public:
 
     template<typename T>
     T &getComponent(Entity entity) const {
+        std::shared_lock lock(mutex);
         return component_manager->getComponent<T>(entity);
     }
 
     template<typename T>
     bool hasComponent(Entity entity) const {
+        std::shared_lock lock(mutex);
         return component_manager->hasComponent<T>(entity);
     }
 
     template<typename T>
     ComponentType getComponentType() const {
+        std::shared_lock lock(mutex);
         return component_manager->getComponentType<T>();
     }
 
     template<typename T>
     std::shared_ptr<T> registerSystem() const {
+        std::lock_guard<std::shared_mutex> lock(mutex);
         return system_manager->registerSystem<T>();
     }
 
     template<typename T>
     void setSystemSignature(Signature signature) const {
+        std::lock_guard<std::shared_mutex> lock(mutex);
         system_manager->setSignature<T>(signature);
     }
 
     std::unordered_map<std::string, Entity> &getEntityIds() {
+        std::shared_lock lock(mutex);
         return entities;
     }
 

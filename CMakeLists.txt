@@ -69,7 +69,9 @@ set(SOURCES
         lib/systems/server.hpp
 )
 
-add_executable(shade_engine ${SOURCES} main.cpp)
+add_executable(shade_engine ${SOURCES} main.cpp
+        lib/systems/destroy.hpp
+)
 
 add_executable(shade_engine_server ${SOURCES} server.cpp)
 
