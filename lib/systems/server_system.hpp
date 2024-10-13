@@ -2,8 +2,7 @@
 // Created by Utsav Lal on 10/12/24.
 //
 
-#ifndef NETWORK_SYSTEM_HPP
-#define NETWORK_SYSTEM_HPP
+#pragma once
 #include "../ECS/coordinator.hpp"
 #include "../ECS/system.hpp"
 #include "../enum/message_type.hpp"
@@ -12,13 +11,12 @@
 
 extern Coordinator gCoordinator;
 
-class NetworkSystem : public System {
+class ServerSystem : public System {
 public:
     void update(zmq::socket_t *socket) const {
         std::vector<float> request;
         request.reserve(10 * MAX_ENTITIES);
         for (const auto entity: entities) {
-            auto &[socket] = gCoordinator.getComponent<Network>(entity);
             auto &[x, y, h, w, orientation, scale] = gCoordinator.getComponent<Transform>(entity);
             auto &[color] = gCoordinator.getComponent<Color>(entity);
             request.insert(request.end(), {
@@ -36,5 +34,3 @@ public:
         socket->send(message, zmq::send_flags::none);
     }
 };
-
-#endif //NETWORK_SYSTEM_HPP

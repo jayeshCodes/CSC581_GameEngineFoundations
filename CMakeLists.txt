@@ -58,14 +58,13 @@ set(SOURCES
         lib/systems/kinematic.cpp
         lib/systems/camera.cpp
         lib/systems/keyboard_movement.cpp
-        lib/systems/server.hpp
         lib/systems/camera.cpp
         lib/systems/client.hpp
         lib/generic/packed_map.hpp
         lib/systems/move_between_2_point_system.hpp
         lib/model/data.hpp
         lib/helpers/ecs_helpers.hpp
-        lib/systems/network_system.hpp
+        lib/systems/server_system.hpp
 )
 
 add_executable(shade_engine ${SOURCES} main.cpp)

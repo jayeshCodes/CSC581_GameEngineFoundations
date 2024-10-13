@@ -142,6 +142,7 @@ int main(int argc, char *argv[]) {
 
     // Create 4 Rectangle instances
     cleanupSDL();
+    socket.close();
     std::cout << "Closing " << ENGINE_NAME << " Engine" << std::endl;
     return 0;
 }

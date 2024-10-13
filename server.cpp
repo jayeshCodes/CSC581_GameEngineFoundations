@@ -17,10 +17,9 @@
 #include "lib/systems/gravity.cpp"
 #include "lib/systems/camera.cpp"
 #include "lib/systems/keyboard_movement.cpp"
-#include "lib/systems/server.hpp"
 
 #include "lib/systems/move_between_2_point_system.hpp"
-#include "lib/systems/network_system.hpp"
+#include "lib/systems/server_system.hpp"
 
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
 Timeline anchorTimeline(nullptr, 1000);
@@ -61,16 +60,15 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<KeyboardMovement>();
     gCoordinator.registerComponent<Server>();
     gCoordinator.registerComponent<MovingPlatform>();
-    gCoordinator.registerComponent<Network>();
+    gCoordinator.registerComponent<ServerEntity>();
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
     auto kinematicSystem = gCoordinator.registerSystem<KinematicSystem>();
     auto gravitySystem = gCoordinator.registerSystem<GravitySystem>();
     auto cameraSystem = gCoordinator.registerSystem<CameraSystem>();
     auto keyboardMovementSystem = gCoordinator.registerSystem<KeyboardMovementSystem>();
-    auto serverSystem = gCoordinator.registerSystem<ServerSystem<float> >();
     auto moveBetween2PointsSystem = gCoordinator.registerSystem<MoveBetween2PointsSystem>();
-    auto networkSystem = gCoordinator.registerSystem<NetworkSystem>();
+    auto serverSystem = gCoordinator.registerSystem<ServerSystem>();
 
     Signature movingPlatformSignature;
     movingPlatformSignature.set(gCoordinator.getComponentType<Transform>());
@@ -84,15 +82,11 @@ int main(int argc, char *argv[]) {
     kinematicSignature.set(gCoordinator.getComponentType<CKinematic>());
     gCoordinator.setSystemSignature<KinematicSystem>(kinematicSignature);
 
-    Signature serverSignature;
-    serverSignature.set(gCoordinator.getComponentType<Server>());
-    gCoordinator.setSystemSignature<ServerSystem<float> >(serverSignature);
-
     Signature networkSignature;
-    networkSignature.set(gCoordinator.getComponentType<Network>());
+    networkSignature.set(gCoordinator.getComponentType<ServerEntity>());
     networkSignature.set(gCoordinator.getComponentType<Transform>());
     networkSignature.set(gCoordinator.getComponentType<Color>());
-    gCoordinator.setSystemSignature<NetworkSystem>(networkSignature);
+    gCoordinator.setSystemSignature<ServerSystem>(networkSignature);
 
     zmq::context_t context(1);
     Entity server = gCoordinator.createEntity();
@@ -108,29 +102,28 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(platform, Color{255, 0, 0, 255});
     gCoordinator.addComponent(platform, CKinematic{0, 0, 0, 0});
     gCoordinator.addComponent(platform, MovingPlatform{200, 800, LEFT, 2});
-    gCoordinator.addComponent(platform, Network{&socket});
+    gCoordinator.addComponent(platform, ServerEntity{});
 
     Entity platform2 = gCoordinator.createEntity();
     gCoordinator.addComponent(platform2, Transform{300, 300, 100, 100});
     gCoordinator.addComponent(platform2, Color{255, 255, 0, 255});
     gCoordinator.addComponent(platform2, CKinematic{0, 0, 0, 0});
     gCoordinator.addComponent(platform2, MovingPlatform{200, 800, RIGHT, 2});
-    gCoordinator.addComponent(platform2, Network{&socket});
+    gCoordinator.addComponent(platform2, ServerEntity{});
 
-    auto entity2 = gCoordinator.createEntity("LAND");
+    auto entity2 = gCoordinator.createEntity();
     gCoordinator.addComponent(entity2, Transform{300, SCREEN_HEIGHT, 32, SCREEN_WIDTH * 5, 0});
     gCoordinator.addComponent(entity2, Color{shade_color::Black});
-    gCoordinator.addComponent(entity2, Network{&socket});
+    gCoordinator.addComponent(entity2, ServerEntity{});
 
 
-    serverSystem->initialize(context);
     std::thread platform_thread([&gameTimeline, &moveBetween2PointsSystem]() {
         platform_movement(gameTimeline, *moveBetween2PointsSystem);
     });
 
-    std::thread network_thread([&networkSystem, &socket] {
+    std::thread network_thread([&serverSystem, &socket] {
         while (GameManager::getInstance()->gameRunning) {
-            networkSystem->update(&socket);
+            serverSystem->update(&socket);
         }
     });
 
