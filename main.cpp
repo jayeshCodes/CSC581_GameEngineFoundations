@@ -1,28 +1,26 @@
-#include <thread>
 #include <memory>
+#include <thread>
 
 #include "main.hpp"
-#include "lib/core/physics/collision.hpp"
-#include "lib/game/GameManager.hpp"
-#include "lib/model/components.hpp"
 #include "lib/core/timeline.hpp"
+#include "lib/core/physics/collision.hpp"
 #include "lib/ECS/coordinator.hpp"
+#include "lib/game/GameManager.hpp"
 #include "lib/helpers/colors.hpp"
 #include "lib/helpers/constants.hpp"
 #include "lib/helpers/ecs_helpers.hpp"
-#include "lib/systems/kinematic.cpp"
-#include "lib/systems/render.cpp"
-#include "lib/systems/gravity.cpp"
+#include "lib/model/components.hpp"
 #include "lib/systems/camera.cpp"
 #include "lib/systems/client.hpp"
+#include "lib/systems/gravity.cpp"
 #include "lib/systems/keyboard_movement.cpp"
+#include "lib/systems/kinematic.cpp"
 #include "lib/systems/move_between_2_point_system.hpp"
+#include "lib/systems/render.cpp"
+
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
 Timeline anchorTimeline(nullptr, 1000);
 Timeline gameTimeline(&anchorTimeline, 1);
-
-Coordinator gCoordinator;
-
 
 int main(int argc, char *argv[]) {
     std::cout << ENGINE_NAME << " v" << ENGINE_VERSION << " initializing" << std::endl;
@@ -46,7 +44,6 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<KeyboardMovement>();
     gCoordinator.registerComponent<Client>();
     gCoordinator.registerComponent<MovingPlatform>();
-
 
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
@@ -109,15 +106,18 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(clientEntity, Client{7000, 7001});
 
     zmq::context_t context(1);
-    clientSystem->initialize(context);
-
-    std::thread send_msg_thread([&clientSystem]() {
-        while (GameManager::getInstance()->gameRunning) { clientSystem->receive_message(gCoordinator); }
-    });
 
     auto last_time = gameTimeline.getElapsedTime();
-    std::cout << "Connecting to server on port: " << argv[1] << std::endl;
-    clientSystem->connect_server(std::stof(argv[1]));
+
+    zmq::socket_t socket(context, ZMQ_SUB);
+    socket.connect("tcp://localhost:" + std::to_string(SERVERPORT));
+    socket.set(zmq::sockopt::subscribe, "");
+
+    std::thread client_thread([&clientSystem, &socket]() {
+        while (GameManager::getInstance()->gameRunning) {
+            clientSystem->update(socket);
+        }
+    });
 
     while (GameManager::getInstance()->gameRunning) {
         doInput();
@@ -140,10 +140,7 @@ int main(int argc, char *argv[]) {
         presentScene();
     }
 
-    send_msg_thread.join();
-
     // Create 4 Rectangle instances
-    clientSystem->disconnect();
     cleanupSDL();
     std::cout << "Closing " << ENGINE_NAME << " Engine" << std::endl;
     return 0;

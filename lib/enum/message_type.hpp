@@ -25,7 +25,9 @@ enum Message {
     CREATE,
     DESTROY,
     ATTACH,
-    POSITION
+    POSITION,
+    UPDATE,
+    END
 };
 
 #endif //MESSAGE_TYPE_HPP

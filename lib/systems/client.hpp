@@ -9,54 +9,36 @@
 
 #include "../enum/message_type.hpp"
 
+extern Coordinator gCoordinator;
+
 class ClientSystem : public System {
-private:
-    zmq::socket_t connect_socket;
-    zmq::socket_t listen_socket;
-    int slot = -1;
-
 public:
-    void initialize(zmq::context_t &context) {
-        connect_socket = zmq::socket_t(context, ZMQ_REQ);
-        connect_socket.connect("tcp://localhost:8000");
-
-        listen_socket = zmq::socket_t(context, ZMQ_SUB);
-    }
-
-    void connect_server(float socket_number) {
-        std::cout << "connecting to server: " << socket_number << std::endl;
-        listen_socket.bind("tcp://*:" + std::to_string(socket_number));
-        listen_socket.set(zmq::sockopt::subscribe, "");
-
-        std::array<float, 2> request{Message::CONNECT, socket_number};
-        connect_socket.send(zmq::buffer(request, sizeof(request)), zmq::send_flags::none);
-
-
-        std::array<float, 1> reply{};
-        connect_socket.recv(zmq::buffer(reply, sizeof(reply)), zmq::recv_flags::none);
-        std::cout << "Connected to server slot number: " << reply[0] << std::endl;
-        slot = static_cast<int>(reply[0]);
-    }
-
-    void receive_message(Coordinator &gCoordinator) {
+    void update(zmq::socket_t &socket) {
         zmq::message_t message;
-        if (auto res = listen_socket.recv(message, zmq::recv_flags::none)) {
-            nlohmann::json j = nlohmann::json::parse(message.to_string());
-            ECS::parseGameState(gCoordinator, j);
-        }
-    }
+        if (socket.recv(message, zmq::recv_flags::none)) {
+            const std::vector<float> received_msg(static_cast<float *>(message.data()),
+                                                  static_cast<float *>(message.data()) + message.size() / sizeof(
+                                                      float));
 
-    void disconnect() {
-        std::array<float, 2> request{Message::DISCONNECT, static_cast<float>(slot)};
-        connect_socket.send(zmq::buffer(request, sizeof(request)), zmq::send_flags::none);
-
-        std::array<float, 1> reply{};
-        connect_socket.recv(zmq::buffer(reply, sizeof(reply)), zmq::recv_flags::none);
-        std::cout << "Disconnected from server" << std::endl;
-
-        if (reply[0] == Message::DISCONNECT) {
-            connect_socket.close();
-            listen_socket.close();
+            for (int i = 0; i < received_msg.size(); i += 10) {
+                if (received_msg[i] == Message::END) {
+                    break;
+                }
+                auto entity = static_cast<Entity>(received_msg[i + 1]);
+                const Entity generatedId = gCoordinator.createEntity(Coordinator::createKey(entity));
+                gCoordinator.addComponent<Transform>(generatedId, Transform{});
+                gCoordinator.addComponent<Color>(generatedId, Color{});
+                auto &[x, y, h, w, orientation, scale] = gCoordinator.getComponent<Transform>(generatedId);
+                auto &[color] = gCoordinator.getComponent<Color>(generatedId);
+                x = received_msg[i + 2];
+                y = received_msg[i + 3];
+                w = received_msg[i + 4];
+                h = received_msg[i + 5];
+                color.r = static_cast<Uint8>(received_msg[i + 6]);
+                color.g = static_cast<Uint8>(received_msg[i + 7]);
+                color.b = static_cast<Uint8>(received_msg[i + 8]);
+                color.a = static_cast<Uint8>(received_msg[i + 9]);
+            }
         }
     }
 };

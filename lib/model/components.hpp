@@ -5,10 +5,11 @@
 #ifndef TRANSFORM_HPP
 #define TRANSFORM_HPP
 #include <SDL.h>
+#include <zmq.hpp>
 #include <nlohmann/json.hpp>
 
 #include "../animation/controller/moveBetween2Points.hpp"
-#include "../core/defs.hpp"
+#include "../ECS/types.hpp"
 
 struct Transform {
     float x, y;
@@ -73,4 +74,8 @@ struct MovingPlatform {
     int wait_time;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(MovingPlatform, p1, p2, state, wait_time)
+
+struct Network {
+    zmq::socket_t *socket;
+};
 #endif //TRANSFORM_HPP
