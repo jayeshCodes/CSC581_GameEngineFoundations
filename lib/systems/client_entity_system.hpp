@@ -12,6 +12,10 @@
 
 extern Coordinator gCoordinator;
 
+/**
+ * This is a system that will manage all the entities that are to be sent to the server.
+ * Any entity that has a Transform, Color, Destroy and ClientEntity component will be sent to the server.
+ */
 class ClientEntitySystem : public System {
     const int MESSAGE_SIZE = 10;
 

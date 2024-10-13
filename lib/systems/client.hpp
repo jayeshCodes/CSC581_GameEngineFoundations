@@ -11,6 +11,10 @@
 
 extern Coordinator gCoordinator;
 
+/**
+ * This system will connect and disconnect the client from the server.
+ * This will also receive messages from the server and update the entities accordingly.
+ */
 class ClientSystem : public System {
     bool connected = false;
     const int MESSAGE_SIZE = 11;
@@ -67,10 +71,6 @@ public:
                 const std::string key = std::to_string(slot) + "_" + Coordinator::createKey(entity);
 
                 switch (static_cast<Message>(received_msg[i])) {
-                    case CONNECT:
-                    case CREATE:
-                    case DISCONNECT:
-                        break;
                     case DESTROY: {
                         const Entity generatedId = gCoordinator.createEntity(key);
                         gCoordinator.addComponent<Destroy>(generatedId, Destroy{});
@@ -78,9 +78,6 @@ public:
                         gCoordinator.getComponent<Destroy>(generatedId).isSent = true;
                         break;
                     }
-                    case ATTACH:
-                    case POSITION:
-                        break;
                     case UPDATE: {
                         const Entity generatedId = gCoordinator.createEntity(key);
                         gCoordinator.addComponent<Transform>(generatedId, Transform{});
@@ -96,9 +93,7 @@ public:
                         color.b = static_cast<Uint8>(received_msg[i + 9]);
                         color.a = static_cast<Uint8>(received_msg[i + 10]);
                     }
-                    case END:
-                    case CONNECTED:
-                    case DISCONNECTED:
+                    default:
                         break;
                 }
             }

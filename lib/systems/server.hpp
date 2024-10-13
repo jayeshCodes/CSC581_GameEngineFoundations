@@ -5,7 +5,7 @@
 #pragma once
 #include <thread>
 #include <zmq.hpp>
-#include <memory>  // For std::unique_ptr
+#include <memory>
 
 #include "../ECS/coordinator.hpp"
 #include "../enum/message_type.hpp"
@@ -14,6 +14,11 @@
 
 extern Coordinator gCoordinator;
 
+/**
+ * This is a system that will handle client messages
+ * First type of message is connect and disconnect which will simply trigger disconnection and entity destruction on all the clients
+ * Second type of message is update which will update all the entities on all the clients
+ */
 class ServerSystem : public System {
     std::unordered_map<int, std::shared_ptr<zmq::socket_t>> clients;
     std::unordered_map<int, std::atomic<bool>> connected;
@@ -33,13 +38,6 @@ class ServerSystem : public System {
                     const auto entity = static_cast<Entity>(received_msg[i + 2]);
                     const std::string key = std::to_string(slot) + "_" + Coordinator::createKey(entity);
                     switch (static_cast<Message>(received_msg[i])) {
-                        case CONNECT:
-                        case CREATE:
-                            break;
-                        case DISCONNECT: {
-                            end = true;
-                            break;
-                        }
                         case DESTROY: {
                             const Entity generatedId = gCoordinator.createEntity(key);
                             auto &[thisslot, destroyed, isSent] = gCoordinator.getComponent<Destroy>(generatedId);
@@ -48,9 +46,6 @@ class ServerSystem : public System {
                             isSent = false;
                             break;
                         }
-                        case ATTACH:
-                        case POSITION:
-                            break;
                         case UPDATE: {
                             const Entity generatedId = gCoordinator.createEntity(key);
                             gCoordinator.addComponent<Transform>(generatedId, Transform{});
@@ -72,14 +67,15 @@ class ServerSystem : public System {
                         case END:
                             end = true;
                             break;
-                        case CONNECTED:
-                        case DISCONNECTED:
+                        default:
                             break;
                     }
+                    // If message ends break out of the loop
                     if (end) break;
                 }
             }
         }
+        // Printing the message when the client disconnects to ensure thread is closed
         std::cout << "Client subscription thread closed" << std::endl;
     }
 

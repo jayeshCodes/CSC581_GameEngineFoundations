@@ -181,12 +181,6 @@ int main(int argc, char *argv[]) {
 
     /**
      * This is the cleanup code. The order is very important here since otherwise the program will crash.
-     * The order is as follows:
-     * 1. Destroy the main character
-     * 2. Update the client entity system to send the destroy message to the server
-     * 3. Join the send_to_server_thread
-     * 4. Disconnect the client from the server
-     * 5. Join the listen_from_server_thread
      */
     send_to_server_thread.join();
     clientSystem->disconnect(connect_socket, pub_socket, slot);
