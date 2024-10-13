@@ -64,7 +64,9 @@ set(SOURCES
         lib/systems/move_between_2_point_system.hpp
         lib/model/data.hpp
         lib/helpers/ecs_helpers.hpp
-        lib/systems/server_system.hpp
+        lib/systems/server_entity_system.hpp
+        lib/systems/client_entity_system.hpp
+        lib/systems/server.hpp
 )
 
 add_executable(shade_engine ${SOURCES} main.cpp)

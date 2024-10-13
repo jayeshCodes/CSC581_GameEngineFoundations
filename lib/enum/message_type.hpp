@@ -27,7 +27,9 @@ enum Message {
     ATTACH,
     POSITION,
     UPDATE,
-    END
+    END,
+    CONNECTED,
+    DISCONNECTED
 };
 
 #endif //MESSAGE_TYPE_HPP

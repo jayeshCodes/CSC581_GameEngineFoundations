@@ -44,6 +44,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<KeyboardMovement>();
     gCoordinator.registerComponent<Client>();
     gCoordinator.registerComponent<MovingPlatform>();
+    gCoordinator.registerComponent<ClientEntity>();
 
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
@@ -113,6 +114,14 @@ int main(int argc, char *argv[]) {
     socket.connect("tcp://localhost:" + std::to_string(SERVERPORT));
     socket.set(zmq::sockopt::subscribe, "");
 
+    zmq::socket_t pub_socket(context, ZMQ_PUB);
+
+    zmq::socket_t connect_socket(context, ZMQ_REQ);
+    connect_socket.connect("tcp://localhost:" + std::to_string(engine_constants::SERVER_CONNECT_PORT));
+
+    int pub_port = std::stoi(argv[1]);
+    clientSystem->connect(connect_socket, pub_socket, pub_port);
+
     std::thread client_thread([&clientSystem, &socket]() {
         while (GameManager::getInstance()->gameRunning) {
             clientSystem->update(socket);
@@ -141,8 +150,9 @@ int main(int argc, char *argv[]) {
     }
 
     // Create 4 Rectangle instances
+    client_thread.join();
+    clientSystem->disconnect(connect_socket);
     cleanupSDL();
-    socket.close();
     std::cout << "Closing " << ENGINE_NAME << " Engine" << std::endl;
     return 0;
 }

@@ -1,0 +1,45 @@
+//
+// Created by Utsav Lal on 10/12/24.
+//
+
+#pragma once
+#include <zmq.hpp>
+
+#include "../ECS/coordinator.hpp"
+#include "../ECS/system.hpp"
+#include "../enum/message_type.hpp"
+#include "../model/components.hpp"
+
+extern Coordinator gCoordinator;
+
+class ClientEntitySystem : System {
+public:
+    void update(zmq::socket_t &socket) {
+        zmq::message_t message;
+        if (socket.recv(message, zmq::recv_flags::none)) {
+            const std::vector<float> received_msg(static_cast<float *>(message.data()),
+                                                  static_cast<float *>(message.data()) + message.size() / sizeof(
+                                                      float));
+
+            for (int i = 0; i < received_msg.size(); i += 10) {
+                if (received_msg[i] == Message::END) {
+                    break;
+                }
+                auto entity = static_cast<Entity>(received_msg[i + 1]);
+                const Entity generatedId = gCoordinator.createEntity(Coordinator::createKey(entity));
+                gCoordinator.addComponent<Transform>(generatedId, Transform{});
+                gCoordinator.addComponent<Color>(generatedId, Color{});
+                auto &[x, y, h, w, orientation, scale] = gCoordinator.getComponent<Transform>(generatedId);
+                auto &[color] = gCoordinator.getComponent<Color>(generatedId);
+                x = received_msg[i + 2];
+                y = received_msg[i + 3];
+                w = received_msg[i + 4];
+                h = received_msg[i + 5];
+                color.r = static_cast<Uint8>(received_msg[i + 6]);
+                color.g = static_cast<Uint8>(received_msg[i + 7]);
+                color.b = static_cast<Uint8>(received_msg[i + 8]);
+                color.a = static_cast<Uint8>(received_msg[i + 9]);
+            }
+        }
+    }
+};

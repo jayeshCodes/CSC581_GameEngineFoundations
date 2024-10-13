@@ -2,6 +2,8 @@
 // Created by Utsav Lal on 10/7/24.
 //
 
+#include "lib/systems/server.hpp"
+
 #include <thread>
 #include <memory>
 
@@ -12,6 +14,7 @@
 #include "lib/core/timeline.hpp"
 #include "lib/ECS/coordinator.hpp"
 #include "lib/helpers/colors.hpp"
+#include "lib/helpers/constants.hpp"
 #include "lib/systems/kinematic.cpp"
 #include "lib/systems/render.cpp"
 #include "lib/systems/gravity.cpp"
@@ -19,7 +22,7 @@
 #include "lib/systems/keyboard_movement.cpp"
 
 #include "lib/systems/move_between_2_point_system.hpp"
-#include "lib/systems/server_system.hpp"
+#include "lib/systems/server_entity_system.hpp"
 
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
 Timeline anchorTimeline(nullptr, 1000);
@@ -68,6 +71,7 @@ int main(int argc, char *argv[]) {
     auto cameraSystem = gCoordinator.registerSystem<CameraSystem>();
     auto keyboardMovementSystem = gCoordinator.registerSystem<KeyboardMovementSystem>();
     auto moveBetween2PointsSystem = gCoordinator.registerSystem<MoveBetween2PointsSystem>();
+    auto severEntitySystem = gCoordinator.registerSystem<ServerEntitySystem>();
     auto serverSystem = gCoordinator.registerSystem<ServerSystem>();
 
     Signature movingPlatformSignature;
@@ -82,11 +86,15 @@ int main(int argc, char *argv[]) {
     kinematicSignature.set(gCoordinator.getComponentType<CKinematic>());
     gCoordinator.setSystemSignature<KinematicSystem>(kinematicSignature);
 
-    Signature networkSignature;
-    networkSignature.set(gCoordinator.getComponentType<ServerEntity>());
-    networkSignature.set(gCoordinator.getComponentType<Transform>());
-    networkSignature.set(gCoordinator.getComponentType<Color>());
-    gCoordinator.setSystemSignature<ServerSystem>(networkSignature);
+    Signature serverEntitySignature;
+    serverEntitySignature.set(gCoordinator.getComponentType<ServerEntity>());
+    serverEntitySignature.set(gCoordinator.getComponentType<Transform>());
+    serverEntitySignature.set(gCoordinator.getComponentType<Color>());
+    gCoordinator.setSystemSignature<ServerEntitySystem>(serverEntitySignature);
+
+    Signature serverSig;
+    serverSig.set(gCoordinator.getComponentType<Server>());
+    gCoordinator.setSystemSignature<ServerSystem>(serverSig);
 
     zmq::context_t context(1);
     Entity server = gCoordinator.createEntity();
@@ -96,6 +104,9 @@ int main(int argc, char *argv[]) {
 
     zmq::socket_t socket(context, ZMQ_PUB);
     socket.bind("tcp://*:" + std::to_string(SERVERPORT));
+
+    zmq::socket_t connect_socket(context, ZMQ_REP);
+    connect_socket.bind("tcp://*:" + std::to_string(engine_constants::SERVER_CONNECT_PORT));
 
     Entity platform = gCoordinator.createEntity();
     gCoordinator.addComponent(platform, Transform{300, 100, 100, 100});
@@ -121,9 +132,15 @@ int main(int argc, char *argv[]) {
         platform_movement(gameTimeline, *moveBetween2PointsSystem);
     });
 
-    std::thread network_thread([&serverSystem, &socket] {
+    std::thread server_thread([&serverSystem, &connect_socket, &context] {
         while (GameManager::getInstance()->gameRunning) {
-            serverSystem->update(&socket);
+            serverSystem->update(context, connect_socket);
+        }
+    });
+
+    std::thread network_thread([&severEntitySystem, &socket] {
+        while (GameManager::getInstance()->gameRunning) {
+            severEntitySystem->update(&socket);
         }
     });
 

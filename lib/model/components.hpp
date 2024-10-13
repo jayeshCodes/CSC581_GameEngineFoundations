@@ -86,4 +86,9 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(MovingPlatform, p1, p2, state, wait_time)
 
 struct ServerEntity {
 };
+
+
+struct ClientEntity {
+};
+
 #endif //TRANSFORM_HPP

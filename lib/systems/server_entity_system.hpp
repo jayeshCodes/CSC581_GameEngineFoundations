@@ -11,7 +11,7 @@
 
 extern Coordinator gCoordinator;
 
-class ServerSystem : public System {
+class ServerEntitySystem : public System {
 public:
     void update(zmq::socket_t *socket) const {
         std::vector<float> request;

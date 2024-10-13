@@ -12,10 +12,46 @@
 extern Coordinator gCoordinator;
 
 class ClientSystem : public System {
+    bool connected = false;
+    int slot = -1;
+
 public:
-    void update(zmq::socket_t &socket) {
+    void connect(zmq::socket_t &connect_socket, zmq::socket_t &pub_socket, const int pub_port) {
+        std::array<float, 2> message = {Message::CONNECT, static_cast<float>(pub_port)};
+        connect_socket.send(zmq::buffer(message), zmq::send_flags::none);
+
+        if (std::array<float, 2> response{}; connect_socket.recv(zmq::buffer(response), zmq::recv_flags::none)) {
+            if (response[0] == Message::CONNECTED) {
+                slot = static_cast<int>(response[1]);
+                pub_socket.connect("tcp://localhost:" + std::to_string(pub_port));
+            }
+            std::cout << "Connected to server" << std::endl;
+            connected = true;
+        }
+    }
+
+    void disconnect(zmq::socket_t &connect_socket) {
+        std::array<float, 2> message = {Message::DISCONNECT, static_cast<float>(slot)};
+        connect_socket.send(zmq::buffer(message), zmq::send_flags::none);
+
+        if (std::array<float, 1> response{}; connect_socket.recv(zmq::buffer(response), zmq::recv_flags::none)) {
+            if (response[0] == Message::DISCONNECTED) {
+                connected = false;
+                std::cout << "Disconnected from server" << std::endl;
+                return;
+            }
+        }
+        std::cout << "Failed to disconnect from server" << std::endl;
+    }
+
+
+    void update(zmq::socket_t &sub_socket) {
+        if (!connected) {
+            std::cout << "Not connected to server" << std::endl;
+            return;
+        }
         zmq::message_t message;
-        if (socket.recv(message, zmq::recv_flags::none)) {
+        if (sub_socket.recv(message, zmq::recv_flags::none)) {
             const std::vector<float> received_msg(static_cast<float *>(message.data()),
                                                   static_cast<float *>(message.data()) + message.size() / sizeof(
                                                       float));
