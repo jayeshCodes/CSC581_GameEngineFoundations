@@ -70,4 +70,8 @@ public:
             removeData(entity);
         }
     }
+
+    bool hasData(Entity entity) {
+        return entity_to_index_map.find(entity) != entity_to_index_map.end();
+    }
 };

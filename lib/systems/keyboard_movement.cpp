@@ -20,15 +20,15 @@ public:
             const Uint8 *state = SDL_GetKeyboardState(nullptr);
             kinematic.velocity.x = 0;
             kinematic.velocity.y = 0;
-            if (state[SDL_SCANCODE_W]) {
-                kinematic.velocity.y = -keyboard.speed;
-            }
+            // if (state[SDL_SCANCODE_W]) {
+            //     kinematic.velocity.y = -keyboard.speed;
+            // }
             if (state[SDL_SCANCODE_A]) {
                 kinematic.velocity.x = -keyboard.speed;
             }
-            if (state[SDL_SCANCODE_S]) {
-                kinematic.velocity.y = keyboard.speed;
-            }
+            // if (state[SDL_SCANCODE_S]) {
+            //     kinematic.velocity.y = keyboard.speed;
+            // }
             if (state[SDL_SCANCODE_D]) {
                 kinematic.velocity.x = keyboard.speed;
             }

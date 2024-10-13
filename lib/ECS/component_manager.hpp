@@ -61,10 +61,15 @@ public:
     }
 
     void entityDestroyed(Entity entity) {
-        for (auto const &pair : component_arrays) {
+        for (auto const &pair: component_arrays) {
             auto const &component = pair.second;
 
             component->entityDestroyed(entity);
         }
+    }
+
+    template<typename T>
+    bool hasComponent(Entity entity) {
+        return getComponentArray<T>()->hasData(entity);
     }
 };

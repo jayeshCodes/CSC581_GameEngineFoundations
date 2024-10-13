@@ -61,7 +61,7 @@ public:
     }
 
     template<typename T>
-    T& getComponent(Entity entity) const {
+    T &getComponent(Entity entity) const {
         return component_manager->getComponent<T>(entity);
     }
 
@@ -78,5 +78,10 @@ public:
     template<typename T>
     void setSystemSignature(Signature signature) const {
         system_manager->setSignature<T>(signature);
+    }
+
+    template<typename T>
+    bool hasComponent(Entity entity) {
+        return component_manager->hasComponent<T>(entity);
     }
 };

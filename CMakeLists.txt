@@ -23,8 +23,8 @@ set(SOURCES
         lib/core/physics/gravity.cpp
         lib/core/physics/keyMovement.cpp
         lib/core/physics/keyMovement.hpp
-        lib/core/physics/collision.hpp
-        lib/core/physics/collision.cpp
+#        lib/core/physics/collision.hpp
+#        lib/core/physics/collision.cpp
         lib/generic/singleton.cpp
         lib/generic/singleton.hpp
         lib/game/GameManager.cpp
@@ -60,15 +60,20 @@ set(SOURCES
         lib/systems/keyboard_movement.cpp
         lib/systems/server.hpp
         lib/systems/camera.cpp
+        lib/systems/collision.cpp
+        lib/systems/jump.cpp
 )
 
 add_executable(shade_engine ${SOURCES} main.cpp
         lib/systems/client.hpp
         lib/generic/packed_map.hpp
         lib/systems/move_between_2_point_system.hpp
+        lib/systems/collision.cpp
+        lib/systems/jump.cpp
 )
 
-add_executable(shade_engine_server ${SOURCES} server.cpp)
+add_executable(shade_engine_server ${SOURCES} server.cpp
+        lib/systems/collision.cpp)
 
 
 find_package(SDL2 REQUIRED)
