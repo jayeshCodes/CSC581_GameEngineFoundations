@@ -6,6 +6,7 @@
 
 #include <thread>
 #include <memory>
+#include <csignal>
 
 #include "main.hpp"
 #include "lib/game/GameManager.hpp"
@@ -18,7 +19,9 @@
 #include "lib/systems/render.cpp"
 #include "lib/systems/gravity.cpp"
 #include "lib/systems/camera.cpp"
+#include "lib/systems/collision.hpp"
 #include "lib/systems/destroy.hpp"
+#include "lib/systems/jump.hpp"
 #include "lib/systems/keyboard_movement.cpp"
 
 #include "lib/systems/move_between_2_point_system.hpp"
@@ -42,9 +45,22 @@ void platform_movement(Timeline &timeline, MoveBetween2PointsSystem &moveBetween
 
     std::cout << "Kill platform thread" << std::endl;
 }
+void handleSignal(int signal) {
+    GameManager::getInstance()->gameRunning = false;
+}
+
 
 
 int main(int argc, char *argv[]) {
+    // Register signals so that we can gracefully shutdown the server
+    std::signal(SIGTERM, handleSignal);
+    std::signal(SIGINT, handleSignal);
+    std::signal(SIGILL, handleSignal);
+    std::signal(SIGABRT, handleSignal);
+    std::signal(SIGFPE, handleSignal);
+    std::signal(SIGSEGV, handleSignal);
+    std::signal(SIGTERM, handleSignal);
+
     std::cout << ENGINE_NAME << " v" << ENGINE_VERSION << " initializing server" << std::endl;
     std::cout << "Created by Utsav and Jayesh" << std::endl;
     std::cout << std::endl;
@@ -65,6 +81,8 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<MovingPlatform>();
     gCoordinator.registerComponent<ServerEntity>();
     gCoordinator.registerComponent<Destroy>();
+    gCoordinator.registerComponent<Collision>();
+    gCoordinator.registerComponent<Jump>();
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
     auto kinematicSystem = gCoordinator.registerSystem<KinematicSystem>();
@@ -75,6 +93,8 @@ int main(int argc, char *argv[]) {
     auto severEntitySystem = gCoordinator.registerSystem<ServerEntitySystem>();
     auto serverSystem = gCoordinator.registerSystem<ServerSystem>();
     auto destroySystem = gCoordinator.registerSystem<DestroySystem>();
+    auto collisionSystem = gCoordinator.registerSystem<CollisionSystem>();
+    auto jumpSystem = gCoordinator.registerSystem<JumpSystem>();
 
     Signature movingPlatformSignature;
     movingPlatformSignature.set(gCoordinator.getComponentType<Transform>());
@@ -102,6 +122,17 @@ int main(int argc, char *argv[]) {
     Signature destroySig;
     destroySig.set(gCoordinator.getComponentType<Destroy>());
     gCoordinator.setSystemSignature<DestroySystem>(destroySig);
+
+    Signature collisionSignature;
+    collisionSignature.set(gCoordinator.getComponentType<Transform>());
+    collisionSignature.set(gCoordinator.getComponentType<Collision>());
+    gCoordinator.setSystemSignature<CollisionSystem>(collisionSignature);
+
+    Signature jumpSignature;
+    jumpSignature.set(gCoordinator.getComponentType<Transform>());
+    jumpSignature.set(gCoordinator.getComponentType<CKinematic>());
+    jumpSignature.set(gCoordinator.getComponentType<Jump>());
+    gCoordinator.setSystemSignature<JumpSystem>(jumpSignature);
 
     zmq::context_t context(1);
     Entity server = gCoordinator.createEntity();
@@ -172,8 +203,8 @@ int main(int argc, char *argv[]) {
     // Create 4 Rectangle instances
     platform_thread.join();
     network_thread.join();
-    socket.close();
     delete_thread.join();
+    server_thread.join();
 
     std::cout << "Closing " << ENGINE_NAME << " Engine" << std::endl;
     return 0;

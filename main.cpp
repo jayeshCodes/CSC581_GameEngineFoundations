@@ -200,9 +200,7 @@ int main(int argc, char *argv[]) {
 
         last_time = current_time;
 
-        dt = std::max(dt, 1.f / 60.f); // Cap the maximum dt to 60fps
-
-        std::cout << "FPS: " << 1.f / dt << std::endl;
+        dt = std::max(dt, engine_constants::FRAME_RATE); // Cap the maximum dt to 60fps
 
         kinematicSystem->update(dt);
         cameraSystem->update(dt);
@@ -231,8 +229,6 @@ int main(int argc, char *argv[]) {
     clientSystem->disconnect(connect_socket, pub_socket, slot);
     listen_from_server_thread.join();
 
-    connect_socket.close();
-    pub_socket.close();
     delete_thread.join();
     keyboard_thread.join();
     cleanupSDL();

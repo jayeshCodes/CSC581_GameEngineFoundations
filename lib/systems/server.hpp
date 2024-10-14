@@ -20,17 +20,22 @@ extern Coordinator gCoordinator;
  * Second type of message is update which will update all the entities on all the clients
  */
 class ServerSystem : public System {
-    std::unordered_map<int, std::shared_ptr<zmq::socket_t>> clients;
-    std::unordered_map<int, std::atomic<bool>> connected;
+    std::unordered_map<int, std::shared_ptr<zmq::socket_t> > clients;
+    std::unordered_map<int, std::atomic<bool> > connected;
     std::unordered_map<int, std::thread> threads;
     int MESSAGE_SIZE = 11;
 
     void listen_client(zmq::socket_t &sub_socket, const int slot) const {
+        zmq::pollitem_t pollitems[] = {{sub_socket, 0, ZMQ_POLLIN, 0}};
+
         while (connected.at(slot).load()) {
-            zmq::message_t message;
-            if (sub_socket.recv(message, zmq::recv_flags::none)) {
+            zmq::poll(&pollitems[0], 1, std::chrono::milliseconds(1000));
+            if (pollitems[0].revents & ZMQ_POLLIN) {
+                zmq::message_t message;
+                auto res = sub_socket.recv(message, zmq::recv_flags::none);
                 const std::vector<float> received_msg(static_cast<float *>(message.data()),
-                                                      static_cast<float *>(message.data()) + message.size() / sizeof(
+                                                      static_cast<float *>(message.data()) + message.size() / sizeof
+                                                      (
                                                           float));
 
                 for (int i = 0; i < received_msg.size(); i += MESSAGE_SIZE) {
@@ -52,7 +57,8 @@ class ServerSystem : public System {
                             gCoordinator.addComponent<Color>(generatedId, Color{});
                             gCoordinator.addComponent<ServerEntity>(generatedId, ServerEntity{});
                             gCoordinator.addComponent<Destroy>(generatedId, Destroy{slot, false});
-                            auto &[x, y, h, w, orientation, scale] = gCoordinator.getComponent<Transform>(generatedId);
+                            auto &[x, y, h, w, orientation, scale] = gCoordinator.getComponent<Transform>(
+                                generatedId);
                             auto &[color] = gCoordinator.getComponent<Color>(generatedId);
                             x = received_msg[i + 3];
                             y = received_msg[i + 4];
@@ -79,10 +85,11 @@ class ServerSystem : public System {
         std::cout << "Client subscription thread closed" << std::endl;
     }
 
+
     void mark_destroyed(const int slot) const {
         auto allEntities = gCoordinator.getEntityIds();
         std::string check = std::to_string(slot) + "_";
-        for(auto &[key,id]: allEntities) {
+        for (auto &[key,id]: allEntities) {
             if (key.rfind(check, 0) == 0) {
                 gCoordinator.getComponent<Destroy>(id).destroy = true;
                 gCoordinator.getComponent<Destroy>(id).isSent = false;
@@ -90,8 +97,9 @@ class ServerSystem : public System {
         }
     }
 
-//Message: [CONNECT, port, slot]
-public:
+    //Message: [CONNECT, port, slot]
+public
+:
     void update(zmq::context_t &context, zmq::socket_t &connect_socket) {
         std::array<float, 3> message{};
         if (connect_socket.recv(zmq::buffer(message), zmq::recv_flags::none)) {
@@ -103,13 +111,13 @@ public:
                 clients[slot]->set(zmq::sockopt::subscribe, "");
                 connected[slot].store(true);
                 threads[slot] = std::thread(&ServerSystem::listen_client, this, std::ref(*clients[slot]), slot);
-                threads[slot].detach();
                 std::array<float, 2> response = {Message::CONNECTED, static_cast<float>(slot)};
                 connect_socket.send(zmq::buffer(response), zmq::send_flags::none);
                 std::cout << "Client connected: " << slot << std::endl;
             } else if (message[0] == Message::DISCONNECT) {
                 const int slot = static_cast<int>(message[2]);
                 connected[slot].store(false);
+                threads[slot].join();
                 clients[slot]->close();
                 clients.erase(slot);
                 mark_destroyed(slot);
