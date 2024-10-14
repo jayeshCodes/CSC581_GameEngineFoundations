@@ -16,7 +16,8 @@ public:
             auto &kinematic = gCoordinator.getComponent<CKinematic>(entity);
             auto &gravity = gCoordinator.getComponent<Gravity>(entity);
 
-            kinematic.acceleration.y += 9.8f * dt;
+            kinematic.acceleration.y = gravity.gravY;
+            kinematic.acceleration.x = gravity.gravX;
         }
     }
 };

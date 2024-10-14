@@ -97,4 +97,31 @@ struct Destroy {
     bool isSent = false;
 };
 
+/**
+ * The CollisionShape is an enumeration that defines the shape of the collision boundary for an entity.
+ * It's used to determine how collision detection should be performed for that entity.
+ */
+enum class CollisionShape {
+    RECTANGLE,
+    CIRCLE
+};
+
+struct Collision {
+    bool isCollider;
+    bool isTrigger;
+    CollisionShape shape;
+    float width;
+    float height;
+};
+
+// Jump
+struct Jump {
+    float maxJumpHeight;
+    float jumpDuration;
+    bool isJumping;
+    float jumpTime;
+    bool canJump;
+    float initialJumpVelocity;
+};
+
 #endif //TRANSFORM_HPP

@@ -8,7 +8,6 @@
 #include <memory>
 
 #include "main.hpp"
-#include "lib/core/physics/collision.hpp"
 #include "lib/game/GameManager.hpp"
 #include "lib/model/components.hpp"
 #include "lib/core/timeline.hpp"

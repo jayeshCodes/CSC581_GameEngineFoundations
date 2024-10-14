@@ -23,8 +23,6 @@ set(SOURCES
         lib/core/physics/gravity.cpp
         lib/core/physics/keyMovement.cpp
         lib/core/physics/keyMovement.hpp
-        lib/core/physics/collision.hpp
-        lib/core/physics/collision.cpp
         lib/generic/singleton.cpp
         lib/generic/singleton.hpp
         lib/game/GameManager.cpp
@@ -67,10 +65,12 @@ set(SOURCES
         lib/systems/server_entity_system.hpp
         lib/systems/client_entity_system.hpp
         lib/systems/server.hpp
+        lib/systems/destroy.hpp
+        lib/systems/collision.hpp
+        lib/systems/jump.hpp
 )
 
 add_executable(shade_engine ${SOURCES} main.cpp
-        lib/systems/destroy.hpp
 )
 
 add_executable(shade_engine_server ${SOURCES} server.cpp)

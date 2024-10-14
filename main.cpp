@@ -3,7 +3,6 @@
 
 #include "main.hpp"
 #include "lib/core/timeline.hpp"
-#include "lib/core/physics/collision.hpp"
 #include "lib/ECS/coordinator.hpp"
 #include "lib/game/GameManager.hpp"
 #include "lib/helpers/colors.hpp"
@@ -13,8 +12,10 @@
 #include "lib/systems/camera.cpp"
 #include "lib/systems/client.hpp"
 #include "lib/systems/client_entity_system.hpp"
+#include "lib/systems/collision.hpp"
 #include "lib/systems/destroy.hpp"
 #include "lib/systems/gravity.cpp"
+#include "lib/systems/jump.hpp"
 #include "lib/systems/keyboard_movement.cpp"
 #include "lib/systems/kinematic.cpp"
 #include "lib/systems/move_between_2_point_system.hpp"
@@ -48,6 +49,8 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<MovingPlatform>();
     gCoordinator.registerComponent<ClientEntity>();
     gCoordinator.registerComponent<Destroy>();
+    gCoordinator.registerComponent<Collision>();
+    gCoordinator.registerComponent<Jump>();
 
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
@@ -59,6 +62,8 @@ int main(int argc, char *argv[]) {
     auto moveBetween2PointsSystem = gCoordinator.registerSystem<MoveBetween2PointsSystem>();
     auto clientEntitySystem = gCoordinator.registerSystem<ClientEntitySystem>();
     auto destroySystem = gCoordinator.registerSystem<DestroySystem>();
+    auto collisionSystem = gCoordinator.registerSystem<CollisionSystem>();
+    auto jumpSystem = gCoordinator.registerSystem<JumpSystem>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
@@ -83,6 +88,7 @@ int main(int argc, char *argv[]) {
     keyboardMovementSignature.set(gCoordinator.getComponentType<Transform>());
     keyboardMovementSignature.set(gCoordinator.getComponentType<CKinematic>());
     keyboardMovementSignature.set(gCoordinator.getComponentType<KeyboardMovement>());
+    keyboardMovementSignature.set(gCoordinator.getComponentType<Jump>());
     gCoordinator.setSystemSignature<KeyboardMovementSystem>(keyboardMovementSignature);
 
     Signature clientSignature;
@@ -106,6 +112,17 @@ int main(int argc, char *argv[]) {
     destroySig.set(gCoordinator.getComponentType<Destroy>());
     gCoordinator.setSystemSignature<DestroySystem>(destroySig);
 
+    Signature collisionSignature;
+    collisionSignature.set(gCoordinator.getComponentType<Transform>());
+    collisionSignature.set(gCoordinator.getComponentType<Collision>());
+    gCoordinator.setSystemSignature<CollisionSystem>(collisionSignature);
+
+    Signature jumpSignature;
+    jumpSignature.set(gCoordinator.getComponentType<Transform>());
+    jumpSignature.set(gCoordinator.getComponentType<CKinematic>());
+    jumpSignature.set(gCoordinator.getComponentType<Jump>());
+    gCoordinator.setSystemSignature<JumpSystem>(jumpSignature);
+
 
     Entity mainCamera = gCoordinator.createEntity("CAMERA");
     gCoordinator.addComponent(mainCamera, Camera{
@@ -114,12 +131,14 @@ int main(int argc, char *argv[]) {
     // temporary values for viewport width and height
 
     auto mainChar = gCoordinator.createEntity("CHAR");
-    gCoordinator.addComponent(mainChar, Transform{SCREEN_WIDTH / 2.f, SCREEN_HEIGHT * 3 / 4.f, 32, 32, 0});
+    gCoordinator.addComponent(mainChar, Transform{0, SCREEN_HEIGHT - 32, 32, 32, 0});
     gCoordinator.addComponent(mainChar, Color{shade_color::Blue});
     gCoordinator.addComponent(mainChar, CKinematic{});
-    gCoordinator.addComponent(mainChar, KeyboardMovement{300.f});
+    gCoordinator.addComponent(mainChar, KeyboardMovement{150.f});
     gCoordinator.addComponent(mainChar, ClientEntity{});
     gCoordinator.addComponent(mainChar, Destroy{});
+    gCoordinator.addComponent(mainChar, Jump{100.f, 1.f, false, 0.0f, true, 60.f});
+    gCoordinator.addComponent(mainChar, Gravity{0, 100});
 
     auto clientEntity = gCoordinator.createEntity("CLIENT");
     gCoordinator.addComponent(clientEntity, Client{7000, 7001});
@@ -159,23 +178,49 @@ int main(int argc, char *argv[]) {
         }
     });
 
+    std::thread keyboard_thread([&keyboardMovementSystem]() {
+        Timeline gameTimeline(&anchorTimeline, 1);
+        gameTimeline.start();
+        auto last = gameTimeline.getElapsedTime();
+
+        auto last_time = gameTimeline.getElapsedTime();
+        while (GameManager::getInstance()->gameRunning) {
+            auto current = gameTimeline.getElapsedTime();
+            auto dt = (current - last) / 1000.f;
+            last = current;
+        }
+    });
+
     while (GameManager::getInstance()->gameRunning) {
         doInput();
         prepareScene();
 
         auto current_time = gameTimeline.getElapsedTime();
-        auto dt = (current_time - last_time) / 1000.f;
+        auto dt = (current_time - last_time) / 1000.f; // Ensure this is in seconds
 
         last_time = current_time;
 
-        gravitySystem->update(dt);
+        dt = std::max(dt, 1.f / 60.f); // Cap the maximum dt to 60fps
+
+        std::cout << "FPS: " << 1.f / dt << std::endl;
+
         kinematicSystem->update(dt);
-        keyboardMovementSystem->update(dt);
         cameraSystem->update(dt);
+        // collisionSystem->update(dt);
+        jumpSystem->update(dt);
+        gravitySystem->update(dt);
+        keyboardMovementSystem->update();
 
         auto main_camera = cameraSystem->getMainCamera();
         auto transform = gCoordinator.getComponent<Transform>(mainChar);
         renderSystem->update(*main_camera, transform.x, transform.y);
+
+        auto elapsed_time = gameTimeline.getElapsedTime();
+        auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - current_time); // Ensure float division
+        if (time_to_sleep > 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(time_to_sleep * 1000)));
+        }
+
         presentScene();
     }
 
@@ -189,6 +234,7 @@ int main(int argc, char *argv[]) {
     connect_socket.close();
     pub_socket.close();
     delete_thread.join();
+    keyboard_thread.join();
     cleanupSDL();
     std::cout << "Closing " << ENGINE_NAME << " Engine" << std::endl;
     return 0;
