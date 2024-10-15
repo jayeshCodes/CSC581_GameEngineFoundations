@@ -19,6 +19,8 @@
 #include "lib/systems/keyboard_movement.cpp"
 #include "lib/systems/kinematic.cpp"
 #include "lib/systems/move_between_2_point_system.hpp"
+#include "lib/systems/platformcollision.hpp"
+#include "lib/systems/respawn.hpp"
 #include "lib/systems/render.cpp"
 
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
@@ -51,6 +53,8 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Destroy>();
     gCoordinator.registerComponent<Collision>();
     gCoordinator.registerComponent<Jump>();
+    gCoordinator.registerComponent<Platform>();
+    gCoordinator.registerComponent<Respawnable>();
 
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
@@ -64,6 +68,8 @@ int main(int argc, char *argv[]) {
     auto destroySystem = gCoordinator.registerSystem<DestroySystem>();
     auto collisionSystem = gCoordinator.registerSystem<CollisionSystem>();
     auto jumpSystem = gCoordinator.registerSystem<JumpSystem>();
+    auto platformCollisionSystem = gCoordinator.registerSystem<PlatformCollisionSystem>();
+    auto respawnSystem = gCoordinator.registerSystem<RespawnSystem>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
@@ -115,6 +121,7 @@ int main(int argc, char *argv[]) {
     Signature collisionSignature;
     collisionSignature.set(gCoordinator.getComponentType<Transform>());
     collisionSignature.set(gCoordinator.getComponentType<Collision>());
+    collisionSignature.set(gCoordinator.getComponentType<CKinematic>());
     gCoordinator.setSystemSignature<CollisionSystem>(collisionSignature);
 
     Signature jumpSignature;
@@ -123,15 +130,28 @@ int main(int argc, char *argv[]) {
     jumpSignature.set(gCoordinator.getComponentType<Jump>());
     gCoordinator.setSystemSignature<JumpSystem>(jumpSignature);
 
+    Signature platformCollisionSignature;
+    platformCollisionSignature.set(gCoordinator.getComponentType<Transform>());
+    platformCollisionSignature.set(gCoordinator.getComponentType<Platform>());
+    gCoordinator.setSystemSignature<PlatformCollisionSystem>(platformCollisionSignature);
+
+    Signature respawnSignature;
+    respawnSignature.set(gCoordinator.getComponentType<Respawnable>());
+    gCoordinator.setSystemSignature<RespawnSystem>(respawnSignature);
+
 
     Entity mainCamera = gCoordinator.createEntity("CAMERA");
-    gCoordinator.addComponent(mainCamera, Camera{
-                                  SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT
-                              });
-    // temporary values for viewport width and height
+    gCoordinator.addComponent(mainCamera, Camera{SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT}); // temporary values for viewport width and height
+
+    // create a platform
+    auto platformEntity = gCoordinator.createEntity("PLATFORM");
+    gCoordinator.addComponent(platformEntity, Transform{0, SCREEN_HEIGHT, 100.f, SCREEN_WIDTH/4.f, 0});
+    gCoordinator.addComponent(platformEntity, Color{shade_color::Green});
+    gCoordinator.addComponent(platformEntity, Platform{-100.0, SCREEN_WIDTH/4.f, SCREEN_HEIGHT, SCREEN_HEIGHT + 32});
+    gCoordinator.addComponent(platformEntity, ClientEntity{});
 
     auto mainChar = gCoordinator.createEntity("CHAR");
-    gCoordinator.addComponent(mainChar, Transform{0, SCREEN_HEIGHT - 32, 32, 32, 0});
+    gCoordinator.addComponent(mainChar, Transform{0.f, SCREEN_HEIGHT - 500.f, 32, 32, 0});
     gCoordinator.addComponent(mainChar, Color{shade_color::Blue});
     gCoordinator.addComponent(mainChar, CKinematic{});
     gCoordinator.addComponent(mainChar, KeyboardMovement{150.f});
@@ -139,6 +159,8 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(mainChar, Destroy{});
     gCoordinator.addComponent(mainChar, Jump{100.f, 1.f, false, 0.0f, true, 60.f});
     gCoordinator.addComponent(mainChar, Gravity{0, 100});
+    gCoordinator.addComponent(mainChar, Respawnable{{}});
+
 
     auto clientEntity = gCoordinator.createEntity("CLIENT");
     gCoordinator.addComponent(clientEntity, Client{7000, 7001});
@@ -202,14 +224,14 @@ int main(int argc, char *argv[]) {
 
         dt = std::max(dt, 1.f / 60.f); // Cap the maximum dt to 60fps
 
-        std::cout << "FPS: " << 1.f / dt << std::endl;
 
         kinematicSystem->update(dt);
         cameraSystem->update(dt);
-        // collisionSystem->update(dt);
         jumpSystem->update(dt);
         gravitySystem->update(dt);
         keyboardMovementSystem->update();
+        platformCollisionSystem->update(dt);
+        respawnSystem->update();
 
         auto main_camera = cameraSystem->getMainCamera();
         auto transform = gCoordinator.getComponent<Transform>(mainChar);

@@ -68,9 +68,13 @@ set(SOURCES
         lib/systems/destroy.hpp
         lib/systems/collision.hpp
         lib/systems/jump.hpp
+        lib/systems/platformcollision.hpp
+        lib/systems/respawn.hpp
 )
 
 add_executable(shade_engine ${SOURCES} main.cpp
+        lib/systems/platformcollision.hpp
+        lib/systems/respawn.hpp
 )
 
 add_executable(shade_engine_server ${SOURCES} server.cpp)

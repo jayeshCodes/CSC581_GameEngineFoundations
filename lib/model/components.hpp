@@ -124,4 +124,23 @@ struct Jump {
     float initialJumpVelocity;
 };
 
+struct Platform {
+    float minX;
+    float maxX;
+    float minY;
+    float maxY;
+};
+
+struct Respawnable {
+    Transform lastSafePosition;
+    bool isRespawn = false;
+};
+
+struct RigidBody {
+    float mass;
+    float drag;
+    float angular_drag;
+    float gravity_scale;
+};
+
 #endif //TRANSFORM_HPP
