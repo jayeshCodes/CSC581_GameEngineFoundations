@@ -186,14 +186,54 @@ private:
             kinematicA.velocity.y -= impulse.y / rigidBodyA.mass;
             kinematicB.velocity.x += impulse.x / rigidBodyB.mass;
             kinematicB.velocity.y += impulse.y / rigidBodyB.mass;
-        } else if (!immovableA) {
-            // Reverse velocity for A if B is immovable
-            kinematicA.velocity.x = -kinematicA.velocity.x;
-            kinematicA.velocity.y = -kinematicA.velocity.y;
-        } else if (!immovableB) {
-            // Reverse velocity for B if A is immovable
-            kinematicB.velocity.x = -kinematicB.velocity.x;
-            kinematicB.velocity.y = -kinematicB.velocity.y;
+        } else {
+            // At least one object is immovable
+            Entity movableEntity = immovableA ? entityB : entityA;
+            Entity immovableEntity = immovableA ? entityA : entityB;
+
+            auto& movableTransform = immovableA ? transformB : transformA;
+            auto& immovableTransform = immovableA ? transformA : transformB;
+            auto& movableKinematic = immovableA ? kinematicB : kinematicA;
+
+            // Determine the direction of collision
+            bool fromTop = movableTransform.y + movableTransform.h - overlapY <= immovableTransform.y;
+            bool fromLeft = movableTransform.x + movableTransform.w - overlapX <= immovableTransform.x;
+
+            const float epsilon = 0.01f; // Small value to prevent floating point errors
+
+            if (fromTop && overlapY < overlapX) {
+                // Movable object is on top of immovable object
+                movableTransform.y = immovableTransform.y - movableTransform.h - epsilon;
+                if (movableKinematic.velocity.y > 0) {
+                    movableKinematic.velocity.y = 0;  // Only stop downward movement
+                }
+            } else if (fromLeft) {
+                // Movable object is to the left of immovable object
+                movableTransform.x = immovableTransform.x - movableTransform.w - epsilon;
+                if (movableKinematic.velocity.x > 0) {
+                    movableKinematic.velocity.x = 0;  // Only stop rightward movement
+                }
+            } else if (!fromTop && overlapY < overlapX) {
+                // Movable object is below immovable object
+                movableTransform.y = immovableTransform.y + immovableTransform.h + epsilon;
+                if (movableKinematic.velocity.y < 0) {
+                    movableKinematic.velocity.y = 0;  // Only stop upward movement
+                }
+            } else {
+                // Movable object is to the right of immovable object
+                movableTransform.x = immovableTransform.x + immovableTransform.w + epsilon;
+                if (movableKinematic.velocity.x < 0) {
+                    movableKinematic.velocity.x = 0;  // Only stop leftward movement
+                }
+            }
+
+            // Update the Jump component if it exists
+            if (gCoordinator.hasComponent<Jump>(movableEntity)) {
+                auto& jump = gCoordinator.getComponent<Jump>(movableEntity);
+                if (fromTop && overlapY < overlapX) {
+                    jump.canJump = true;  // Allow jumping when on top of a platform
+                }
+            }
         }
     }
 
