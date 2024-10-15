@@ -147,12 +147,13 @@ int main(int argc, char *argv[]) {
 
     // create a platform
     auto platformEntity = gCoordinator.createEntity("PLATFORM");
-    gCoordinator.addComponent(platformEntity, Transform{0, SCREEN_HEIGHT - 100.f, 100.f, SCREEN_WIDTH/4.f, 0});
+    gCoordinator.addComponent(platformEntity, Transform{0, SCREEN_HEIGHT - 100.f, 100.f, SCREEN_WIDTH * 3/4.f, 0});
     gCoordinator.addComponent(platformEntity, Color{shade_color::Green});
     gCoordinator.addComponent(platformEntity, Platform{-100.0, SCREEN_WIDTH/4.f, SCREEN_HEIGHT, SCREEN_HEIGHT + 32});
     gCoordinator.addComponent(platformEntity, ClientEntity{});
     gCoordinator.addComponent(platformEntity, RigidBody{-1.f});
     gCoordinator.addComponent(platformEntity, Collision{true, false});
+    gCoordinator.addComponent(platformEntity, CKinematic{});
 
     auto mainChar = gCoordinator.createEntity("CHAR");
     gCoordinator.addComponent(mainChar, Transform{0.f, SCREEN_HEIGHT - 500.f, 32, 32, 0});

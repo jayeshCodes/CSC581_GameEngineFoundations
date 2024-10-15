@@ -29,25 +29,25 @@ public:
     }
 
 private:
-    void sweepAndPrune(std::vector<Entity>& entities) {
+    void sweepAndPrune(std::vector<Entity> &entities) {
         // Sort entities based on their x position
         std::sort(entities.begin(), entities.end(), [](Entity a, Entity b) {
-            auto& transformA = gCoordinator.getComponent<Transform>(a);
-            auto& transformB = gCoordinator.getComponent<Transform>(b);
+            auto &transformA = gCoordinator.getComponent<Transform>(a);
+            auto &transformB = gCoordinator.getComponent<Transform>(b);
             return transformA.x < transformB.x;
         });
     }
 
-    void narrowPhaseCollisionAndResolution(const std::vector<Entity>& entities) {
+    void narrowPhaseCollisionAndResolution(const std::vector<Entity> &entities) {
         for (size_t i = 0; i < entities.size(); ++i) {
             for (size_t j = i + 1; j < entities.size(); ++j) {
                 Entity entityA = entities[i];
                 Entity entityB = entities[j];
 
-                auto& transformA = gCoordinator.getComponent<Transform>(entityA);
-                auto& transformB = gCoordinator.getComponent<Transform>(entityB);
-                auto& collisionA = gCoordinator.getComponent<Collision>(entityA);
-                auto& collisionB = gCoordinator.getComponent<Collision>(entityB);
+                auto &transformA = gCoordinator.getComponent<Transform>(entityA);
+                auto &transformB = gCoordinator.getComponent<Transform>(entityB);
+                auto &collisionA = gCoordinator.getComponent<Collision>(entityA);
+                auto &collisionB = gCoordinator.getComponent<Collision>(entityB);
 
                 // Check if both entities are colliders
                 if (!collisionA.isCollider || !collisionB.isCollider) {
@@ -67,7 +67,7 @@ private:
         }
     }
 
-    bool checkAABBCollision(const Transform& a, const Transform& b) {
+    bool checkAABBCollision(const Transform &a, const Transform &b) {
         return (a.x < b.x + b.w &&
                 a.x + a.w > b.x &&
                 a.y < b.y + b.h &&
@@ -81,8 +81,25 @@ private:
     }
 
     void resolveCollision(Entity entityA, Entity entityB) {
-        auto& transformA = gCoordinator.getComponent<Transform>(entityA);
-        auto& transformB = gCoordinator.getComponent<Transform>(entityB);
+        if (!hasRequiredComponents(entityA) || !hasRequiredComponents(entityB)) {
+            // Log an error or handle the missing component case
+            if(!hasRequiredComponents(entityA))
+                std::cerr << "Error: Entity " << entityA << " is missing required components for collision resolution." << std::endl;
+            if (!hasRequiredComponents(entityB))
+                std::cerr << "Error: Entity " << entityB << " is missing required components for collision resolution." << std::endl;
+            return;
+        }
+        auto &transformA = gCoordinator.getComponent<Transform>(entityA);
+        auto &transformB = gCoordinator.getComponent<Transform>(entityB);
+        auto &rigidBodyA = gCoordinator.getComponent<RigidBody>(entityA);
+        auto &rigidBodyB = gCoordinator.getComponent<RigidBody>(entityB);
+        auto &kinematicA = gCoordinator.getComponent<CKinematic>(entityA);
+        auto &kinematicB = gCoordinator.getComponent<CKinematic>(entityB);
+
+
+        // Check if either object is immovable
+        bool immovableA = rigidBodyA.mass < 0;
+        bool immovableB = rigidBodyB.mass < 0;
 
         // Calculate the overlap on both axes
         float overlapX = std::min(transformA.x + transformA.w, transformB.x + transformB.w) -
@@ -93,33 +110,96 @@ private:
         // Determine the separation direction (the axis with the smaller overlap)
         if (overlapX < overlapY) {
             // Separate on X-axis
-            if (transformA.x < transformB.x) {
-                transformA.x -= overlapX / 2;
-                transformB.x += overlapX / 2;
-            } else {
-                transformA.x += overlapX / 2;
-                transformB.x -= overlapX / 2;
+            if (!immovableA && !immovableB) {
+                float totalMass = rigidBodyA.mass + rigidBodyB.mass;
+                float ratioA = rigidBodyB.mass / totalMass;
+                float ratioB = rigidBodyA.mass / totalMass;
+
+                if (transformA.x < transformB.x) {
+                    transformA.x -= overlapX * ratioA;
+                    transformB.x += overlapX * ratioB;
+                } else {
+                    transformA.x += overlapX * ratioA;
+                    transformB.x -= overlapX * ratioB;
+                }
+            } else if (!immovableA) {
+                transformA.x += (transformA.x < transformB.x) ? -overlapX : overlapX;
+            } else if (!immovableB) {
+                transformB.x += (transformB.x < transformA.x) ? -overlapX : overlapX;
             }
         } else {
             // Separate on Y-axis
-            if (transformA.y < transformB.y) {
-                transformA.y -= overlapY / 2;
-                transformB.y += overlapY / 2;
-            } else {
-                transformA.y += overlapY / 2;
-                transformB.y -= overlapY / 2;
+            if (!immovableA && !immovableB) {
+                float totalMass = rigidBodyA.mass + rigidBodyB.mass;
+                float ratioA = rigidBodyB.mass / totalMass;
+                float ratioB = rigidBodyA.mass / totalMass;
+
+                if (transformA.y < transformB.y) {
+                    transformA.y -= overlapY * ratioA;
+                    transformB.y += overlapY * ratioB;
+                } else {
+                    transformA.y += overlapY * ratioA;
+                    transformB.y -= overlapY * ratioB;
+                }
+            } else if (!immovableA) {
+                transformA.y += (transformA.y < transformB.y) ? -overlapY : overlapY;
+            } else if (!immovableB) {
+                transformB.y += (transformB.y < transformA.y) ? -overlapY : overlapY;
             }
         }
 
-        // If the entities have Kinematic components, adjust their velocities
-        if (gCoordinator.hasComponent<CKinematic>(entityA) && gCoordinator.hasComponent<CKinematic>(entityB)) {
-            auto& kinematicA = gCoordinator.getComponent<CKinematic>(entityA);
-            auto& kinematicB = gCoordinator.getComponent<CKinematic>(entityB);
+        // Adjust velocities based on mass and elasticity
+        if (!immovableA && !immovableB) {
+            // Calculate relative velocity
+            SDL_FPoint relativeVelocity = {
+                kinematicB.velocity.x - kinematicA.velocity.x,
+                kinematicB.velocity.y - kinematicA.velocity.y
+            };
 
-            // Simple elastic collision response
-            SDL_FPoint tempVelocity = kinematicA.velocity;
-            kinematicA.velocity = kinematicB.velocity;
-            kinematicB.velocity = tempVelocity;
+            // Calculate collision normal
+            SDL_FPoint normal = {
+                transformB.x - transformA.x,
+                transformB.y - transformA.y
+            };
+            float normalLength = std::sqrt(normal.x * normal.x + normal.y * normal.y);
+            normal.x /= normalLength;
+            normal.y /= normalLength;
+
+            // Calculate relative velocity along the normal
+            float velocityAlongNormal = relativeVelocity.x * normal.x + relativeVelocity.y * normal.y;
+
+            // Do not resolve if velocities are separating
+            if (velocityAlongNormal > 0)
+                return;
+
+            // Calculate restitution (elasticity)
+            float e = 0.8f; // You might want to make this configurable or part of the RigidBody component
+
+            // Calculate impulse scalar
+            float j = -(1 + e) * velocityAlongNormal;
+            j /= 1 / rigidBodyA.mass + 1 / rigidBodyB.mass;
+
+            // Apply impulse
+            SDL_FPoint impulse = {j * normal.x, j * normal.y};
+
+            kinematicA.velocity.x -= impulse.x / rigidBodyA.mass;
+            kinematicA.velocity.y -= impulse.y / rigidBodyA.mass;
+            kinematicB.velocity.x += impulse.x / rigidBodyB.mass;
+            kinematicB.velocity.y += impulse.y / rigidBodyB.mass;
+        } else if (!immovableA) {
+            // Reverse velocity for A if B is immovable
+            kinematicA.velocity.x = -kinematicA.velocity.x;
+            kinematicA.velocity.y = -kinematicA.velocity.y;
+        } else if (!immovableB) {
+            // Reverse velocity for B if A is immovable
+            kinematicB.velocity.x = -kinematicB.velocity.x;
+            kinematicB.velocity.y = -kinematicB.velocity.y;
         }
+    }
+
+    bool hasRequiredComponents(Entity entity) {
+        return gCoordinator.hasComponent<Transform>(entity) &&
+               gCoordinator.hasComponent<RigidBody>(entity) &&
+               gCoordinator.hasComponent<CKinematic>(entity);
     }
 };
