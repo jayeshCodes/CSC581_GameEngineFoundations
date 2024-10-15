@@ -149,14 +149,13 @@ int main(int argc, char *argv[]) {
     auto platformEntity = gCoordinator.createEntity("PLATFORM");
     gCoordinator.addComponent(platformEntity, Transform{0, SCREEN_HEIGHT - 100.f, 100.f, SCREEN_WIDTH * 3/4.f, 0});
     gCoordinator.addComponent(platformEntity, Color{shade_color::Green});
-    gCoordinator.addComponent(platformEntity, Platform{-100.0, SCREEN_WIDTH/4.f, SCREEN_HEIGHT, SCREEN_HEIGHT + 32});
     gCoordinator.addComponent(platformEntity, ClientEntity{});
-    gCoordinator.addComponent(platformEntity, RigidBody{-1.f});
+    gCoordinator.addComponent(platformEntity, RigidBody{-1.f}); // a negative mass value indicates that the entity is immovable by other entities
     gCoordinator.addComponent(platformEntity, Collision{true, false});
     gCoordinator.addComponent(platformEntity, CKinematic{});
 
     auto mainChar = gCoordinator.createEntity("CHAR");
-    gCoordinator.addComponent(mainChar, Transform{0.f, SCREEN_HEIGHT - 500.f, 32, 32, 0});
+    gCoordinator.addComponent(mainChar, Transform{0.f, SCREEN_HEIGHT - 200.f, 32, 32, 0});
     gCoordinator.addComponent(mainChar, Color{shade_color::Blue});
     gCoordinator.addComponent(mainChar, CKinematic{});
     gCoordinator.addComponent(mainChar, KeyboardMovement{150.f});
@@ -164,9 +163,18 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(mainChar, Destroy{});
     gCoordinator.addComponent(mainChar, Jump{100.f, 1.f, false, 0.0f, true, 60.f});
     gCoordinator.addComponent(mainChar, Gravity{0, 100});
-    gCoordinator.addComponent(mainChar, Respawnable{{}});
+    gCoordinator.addComponent(mainChar, Respawnable{{0, SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false});
     gCoordinator.addComponent(mainChar, RigidBody{1.f});
     gCoordinator.addComponent(mainChar, Collision{true, false});
+
+    auto entity2 = gCoordinator.createEntity("CHAR2");
+    gCoordinator.addComponent(entity2, Transform{100.f, SCREEN_HEIGHT - 500.f, 32, 32, 0});
+    gCoordinator.addComponent(entity2, Color{shade_color::Red});
+    gCoordinator.addComponent(entity2, CKinematic{});
+    gCoordinator.addComponent(entity2, Collision{true, false});
+    gCoordinator.addComponent(entity2, RigidBody{1.f});
+    gCoordinator.addComponent(entity2, Gravity{0, 100});
+
 
 
 
@@ -239,8 +247,7 @@ int main(int argc, char *argv[]) {
         gravitySystem->update(dt);
         keyboardMovementSystem->update();
         collisionSystem->update();
-        // platformCollisionSystem->update(dt);
-        // respawnSystem->update();
+        respawnSystem->update();
 
         auto main_camera = cameraSystem->getMainCamera();
         auto transform = gCoordinator.getComponent<Transform>(mainChar);

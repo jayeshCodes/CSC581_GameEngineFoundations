@@ -15,6 +15,7 @@ extern Coordinator gCoordinator;
 // AABB collision detection for narrow phase collision detection.
 // referenced from the following source:
 // Building Collision Simulations: An Introduction to Computer Graphics - https://www.youtube.com/watch?v=eED4bSkYCB8
+// Co-authored by github copilot
 
 class CollisionSystem : public System {
 public:
