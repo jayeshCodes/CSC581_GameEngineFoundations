@@ -6,101 +6,120 @@
 #include "../model/components.hpp"
 #include "../ECS/coordinator.hpp"
 #include <mutex>
+#include <algorithm>
 
 extern Coordinator gCoordinator;
 
+
+// the following collision algorithm is based on the sweep and prune algorithm for broad phase collision detection and,
+// AABB collision detection for narrow phase collision detection.
+// referenced from the following source:
+// Building Collision Simulations: An Introduction to Computer Graphics - https://www.youtube.com/watch?v=eED4bSkYCB8
+
 class CollisionSystem : public System {
 public:
-    void update(float dt) {
-        std::vector<std::pair<Entity, Entity> > collisions;
+    void update() {
+        std::vector<Entity> entities = gCoordinator.getEntitiesWithComponent<Collision>();
 
-        for (auto it = entities.begin(); it != entities.end(); ++it) {
-            Entity entity = *it;
+        // Broad phase collision detection (sweep and prune)
+        sweepAndPrune(entities);
 
-            // Check if the entity has Transform and Collision components
+        // Narrow phase collision detection and resolution
+        narrowPhaseCollisionAndResolution(entities);
+    }
 
-            const auto &transform = gCoordinator.getComponent<Transform>(entity);
-            const auto &collision = gCoordinator.getComponent<Collision>(entity);
+private:
+    void sweepAndPrune(std::vector<Entity>& entities) {
+        // Sort entities based on their x position
+        std::sort(entities.begin(), entities.end(), [](Entity a, Entity b) {
+            auto& transformA = gCoordinator.getComponent<Transform>(a);
+            auto& transformB = gCoordinator.getComponent<Transform>(b);
+            return transformA.x < transformB.x;
+        });
+    }
 
-            // Loop through the remaining entities to check for collisions
-            for (auto other_it = std::next(it); other_it != entities.end(); ++other_it) {
-                Entity other_entity = *other_it;
+    void narrowPhaseCollisionAndResolution(const std::vector<Entity>& entities) {
+        for (size_t i = 0; i < entities.size(); ++i) {
+            for (size_t j = i + 1; j < entities.size(); ++j) {
+                Entity entityA = entities[i];
+                Entity entityB = entities[j];
 
-                // Check if the other entity has Transform and Collision components
-                if (gCoordinator.hasComponent<Transform>(other_entity) &&
-                    gCoordinator.hasComponent<Collision>(other_entity)) {
-                    const auto &other_transform = gCoordinator.getComponent<Transform>(other_entity);
-                    const auto &other_collision = gCoordinator.getComponent<Collision>(other_entity);
+                auto& transformA = gCoordinator.getComponent<Transform>(entityA);
+                auto& transformB = gCoordinator.getComponent<Transform>(entityB);
+                auto& collisionA = gCoordinator.getComponent<Collision>(entityA);
+                auto& collisionB = gCoordinator.getComponent<Collision>(entityB);
 
-                    // Check if the entities collide
-                    if (checkCollision(transform, collision, other_transform, other_collision)) {
-                        collisions.emplace_back(entity, other_entity);
+                // Check if both entities are colliders
+                if (!collisionA.isCollider || !collisionB.isCollider) {
+                    continue;
+                }
+
+                // Perform AABB collision detection
+                if (checkAABBCollision(transformA, transformB)) {
+                    // Handle collision
+                    if (collisionA.isTrigger || collisionB.isTrigger) {
+                        handleTrigger(entityA, entityB);
+                    } else {
+                        resolveCollision(entityA, entityB);
                     }
                 }
             }
         }
-
-        // Handle collisions
-        for (const auto &[e1, e2]: collisions) {
-            handleCollision(e1, e2, dt);
-        }
     }
 
-private:
-    static bool checkCollision(const Transform &t1, const Collision &c1, const Transform &t2, const Collision &c2) {
-        // Assuming all shapes are rectangles for now
-        return (t1.x < t2.x + c2.width &&
-                t1.x + c1.width > t2.x &&
-                t1.y < t2.y + c2.height &&
-                t1.y + c1.height > t2.y);
+    bool checkAABBCollision(const Transform& a, const Transform& b) {
+        return (a.x < b.x + b.w &&
+                a.x + a.w > b.x &&
+                a.y < b.y + b.h &&
+                a.y + a.h > b.y);
     }
 
-    static void handleCollision(Entity e1, Entity e2, float dt) {
-        auto &c1 = gCoordinator.getComponent<Collision>(e1);
-        auto &c2 = gCoordinator.getComponent<Collision>(e2);
+    void handleTrigger(Entity triggerEntity, Entity otherEntity) {
+        // Implement trigger logic here
+        // For example, you might want to notify a game event system
+        // or directly modify component states
+    }
 
-        if (c1.isTrigger || c2.isTrigger) {
-            // Handle trigger collision (e.g., event system, callbacks)
-        } else {
-            auto &t1 = gCoordinator.getComponent<Transform>(e1);
-            auto &t2 = gCoordinator.getComponent<Transform>(e2);
-            auto &k1 = gCoordinator.getComponent<CKinematic>(e1);
-            auto &k2 = gCoordinator.getComponent<CKinematic>(e2);
+    void resolveCollision(Entity entityA, Entity entityB) {
+        auto& transformA = gCoordinator.getComponent<Transform>(entityA);
+        auto& transformB = gCoordinator.getComponent<Transform>(entityB);
 
-            // Ensure the width and height are valid
-            float width1 = std::max(c1.width, 0.001f);
-            float height1 = std::max(c1.height, 0.001f);
-            float width2 = std::max(c2.width, 0.001f);
-            float height2 = std::max(c2.height, 0.001f);
+        // Calculate the overlap on both axes
+        float overlapX = std::min(transformA.x + transformA.w, transformB.x + transformB.w) -
+                         std::max(transformA.x, transformB.x);
+        float overlapY = std::min(transformA.y + transformA.h, transformB.y + transformB.h) -
+                         std::max(transformA.y, transformB.y);
 
-            float overlap_x = (t1.x + width1 / 2) - (t2.x + width2 / 2);
-            float overlap_y = (t1.y + height1 / 2) - (t2.y + height2 / 2);
-
-            if (std::abs(overlap_x) < std::abs(overlap_y)) {
-                // Adjust positions based on the overlap in the x-axis
-                t1.x += overlap_x / 2;
-                t2.x -= overlap_x / 2;
-
-                // Swap velocities and apply slight energy loss
-                std::swap(k1.velocity.x, k2.velocity.x);
-                k1.velocity.x *= 0.9f; // Slight energy loss
-                k2.velocity.x *= 0.9f;
+        // Determine the separation direction (the axis with the smaller overlap)
+        if (overlapX < overlapY) {
+            // Separate on X-axis
+            if (transformA.x < transformB.x) {
+                transformA.x -= overlapX / 2;
+                transformB.x += overlapX / 2;
             } else {
-                // Adjust positions based on the overlap in the y-axis
-                t1.y += overlap_y / 2;
-                t2.y -= overlap_y / 2;
-
-                // Swap velocities and apply slight energy loss
-                std::swap(k1.velocity.y, k2.velocity.y);
-                k1.velocity.y *= 0.9f; // Slight energy loss
-                k2.velocity.y *= 0.9f;
+                transformA.x += overlapX / 2;
+                transformB.x -= overlapX / 2;
             }
+        } else {
+            // Separate on Y-axis
+            if (transformA.y < transformB.y) {
+                transformA.y -= overlapY / 2;
+                transformB.y += overlapY / 2;
+            } else {
+                transformA.y += overlapY / 2;
+                transformB.y -= overlapY / 2;
+            }
+        }
 
-            // Apply changes based on dt, with bounds checking
-            t1.x = std::clamp(t1.x + k1.velocity.x * dt, 0.0f, static_cast<float>(SCREEN_WIDTH));
-            t1.y = std::clamp(t1.y + k1.velocity.y * dt, 0.0f, static_cast<float>(SCREEN_HEIGHT));
-            t2.x = std::clamp(t2.x + k2.velocity.x * dt, 0.0f, static_cast<float>(SCREEN_WIDTH));
-            t2.y = std::clamp(t2.y + k2.velocity.y * dt, 0.0f, static_cast<float>(SCREEN_HEIGHT));
+        // If the entities have Kinematic components, adjust their velocities
+        if (gCoordinator.hasComponent<CKinematic>(entityA) && gCoordinator.hasComponent<CKinematic>(entityB)) {
+            auto& kinematicA = gCoordinator.getComponent<CKinematic>(entityA);
+            auto& kinematicB = gCoordinator.getComponent<CKinematic>(entityB);
+
+            // Simple elastic collision response
+            SDL_FPoint tempVelocity = kinematicA.velocity;
+            kinematicA.velocity = kinematicB.velocity;
+            kinematicB.velocity = tempVelocity;
         }
     }
 };

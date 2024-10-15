@@ -109,9 +109,6 @@ enum class CollisionShape {
 struct Collision {
     bool isCollider;
     bool isTrigger;
-    CollisionShape shape;
-    float width;
-    float height;
 };
 
 // Jump

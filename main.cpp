@@ -55,6 +55,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Jump>();
     gCoordinator.registerComponent<Platform>();
     gCoordinator.registerComponent<Respawnable>();
+    gCoordinator.registerComponent<RigidBody>();
 
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
@@ -122,6 +123,7 @@ int main(int argc, char *argv[]) {
     collisionSignature.set(gCoordinator.getComponentType<Transform>());
     collisionSignature.set(gCoordinator.getComponentType<Collision>());
     collisionSignature.set(gCoordinator.getComponentType<CKinematic>());
+    collisionSignature.set(gCoordinator.getComponentType<RigidBody>());
     gCoordinator.setSystemSignature<CollisionSystem>(collisionSignature);
 
     Signature jumpSignature;
@@ -145,10 +147,12 @@ int main(int argc, char *argv[]) {
 
     // create a platform
     auto platformEntity = gCoordinator.createEntity("PLATFORM");
-    gCoordinator.addComponent(platformEntity, Transform{0, SCREEN_HEIGHT, 100.f, SCREEN_WIDTH/4.f, 0});
+    gCoordinator.addComponent(platformEntity, Transform{0, SCREEN_HEIGHT - 100.f, 100.f, SCREEN_WIDTH/4.f, 0});
     gCoordinator.addComponent(platformEntity, Color{shade_color::Green});
     gCoordinator.addComponent(platformEntity, Platform{-100.0, SCREEN_WIDTH/4.f, SCREEN_HEIGHT, SCREEN_HEIGHT + 32});
     gCoordinator.addComponent(platformEntity, ClientEntity{});
+    gCoordinator.addComponent(platformEntity, RigidBody{-1.f});
+    gCoordinator.addComponent(platformEntity, Collision{true, false});
 
     auto mainChar = gCoordinator.createEntity("CHAR");
     gCoordinator.addComponent(mainChar, Transform{0.f, SCREEN_HEIGHT - 500.f, 32, 32, 0});
@@ -160,6 +164,9 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(mainChar, Jump{100.f, 1.f, false, 0.0f, true, 60.f});
     gCoordinator.addComponent(mainChar, Gravity{0, 100});
     gCoordinator.addComponent(mainChar, Respawnable{{}});
+    gCoordinator.addComponent(mainChar, RigidBody{1.f});
+    gCoordinator.addComponent(mainChar, Collision{true, false});
+
 
 
     auto clientEntity = gCoordinator.createEntity("CLIENT");
@@ -230,8 +237,9 @@ int main(int argc, char *argv[]) {
         jumpSystem->update(dt);
         gravitySystem->update(dt);
         keyboardMovementSystem->update();
-        platformCollisionSystem->update(dt);
-        respawnSystem->update();
+        collisionSystem->update();
+        // platformCollisionSystem->update(dt);
+        // respawnSystem->update();
 
         auto main_camera = cameraSystem->getMainCamera();
         auto transform = gCoordinator.getComponent<Transform>(mainChar);
