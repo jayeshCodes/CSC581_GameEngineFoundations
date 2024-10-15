@@ -1,103 +1,75 @@
 //
-// Created by Utsav Lal on 10/7/24.
+// Created by Utsav Lal on 10/15/24.
 //
 
-#ifndef CLIENT_HPP
-#define CLIENT_HPP
-#include <zmq.hpp>
-#include <iostream>
+#pragma once
 
+#include <iostream>
+#include <unordered_set>
+#include <zmq.hpp>
+
+#include "../ECS/coordinator.hpp"
+#include "../ECS/system.hpp"
 #include "../enum/message_type.hpp"
+#include "../model/components.hpp"
 
 extern Coordinator gCoordinator;
 
-/**
- * This system will connect and disconnect the client from the server.
- * This will also receive messages from the server and update the entities accordingly.
- */
 class ClientSystem : public System {
+    std::map<Entity, Transform> previous;
     bool connected = false;
-    const int MESSAGE_SIZE = 11;
+
+    void sync(zmq::socket_t &client_socket) {
+        std::vector<float> message;
+        message.reserve(10);
+        message.emplace_back(Message::SYNC);
+        for (int i = 0; i < 9; i++) {
+            message.emplace_back(0);
+        }
+        std::string entity_id = client_socket.get(zmq::sockopt::routing_id) + std::to_string(-123);
+        client_socket.send(zmq::buffer(entity_id), zmq::send_flags::sndmore);
+        client_socket.send(zmq::buffer(message), zmq::send_flags::none);
+        std::cout << "Sending SYNC" << std::endl;
+        connected = true;
+    }
+
+    void send_update(zmq::socket_t &client_socket) {
+        for (auto entity: entities) {
+            auto &transform = gCoordinator.getComponent<Transform>(entity);
+            auto &color = gCoordinator.getComponent<Color>(entity);
+            auto &clientEntity = gCoordinator.getComponent<ClientEntity>(entity);
+
+            if (previous[entity].equal(transform) && clientEntity.noOfTimes == 0) {
+                continue;
+            }
+            clientEntity.noOfTimes--;
+            clientEntity.noOfTimes = std::max(0, clientEntity.noOfTimes);
+            std::vector<float> message;
+            message.reserve(10);
+            message.emplace_back(Message::UPDATE);
+            message.emplace_back(entity);
+            message.emplace_back(transform.x);
+            message.emplace_back(transform.y);
+            message.emplace_back(transform.h);
+            message.emplace_back(transform.w);
+            message.emplace_back(color.color.r);
+            message.emplace_back(color.color.g);
+            message.emplace_back(color.color.b);
+            message.emplace_back(color.color.a);
+
+            previous[entity] = transform;
+
+            std::string entity_id = client_socket.get(zmq::sockopt::routing_id) + std::to_string(entity);
+            client_socket.send(zmq::buffer(entity_id), zmq::send_flags::sndmore);
+            client_socket.send(zmq::buffer(message), zmq::send_flags::none);
+        }
+    }
 
 public:
-    void connect(zmq::socket_t &connect_socket, zmq::socket_t &pub_socket, const int pub_port, const int slot) {
-        std::array<float, 3> message = {Message::CONNECT, static_cast<float>(pub_port), static_cast<float>(slot)};
-        connect_socket.send(zmq::buffer(message), zmq::send_flags::none);
-
-        if (std::array<float, 2> response{}; connect_socket.recv(zmq::buffer(response), zmq::recv_flags::none)) {
-            if (response[0] == Message::CONNECTED) {
-                pub_socket.connect("tcp://localhost:" + std::to_string(pub_port));
-            }
-            std::cout << "Connected to server" << std::endl;
-            connected = true;
-        }
-    }
-
-    void disconnect(zmq::socket_t &connect_socket, zmq::socket_t &pub_socket, const int slot) {
-        std::array<float, 3> message = {Message::DISCONNECT, -1, static_cast<float>(slot)};
-        connect_socket.send(zmq::buffer(message), zmq::send_flags::none);
-
-        if (std::array<float, 1> response{}; connect_socket.recv(zmq::buffer(response), zmq::recv_flags::none)) {
-            if (response[0] == Message::DISCONNECTED) {
-                connected = false;
-                std::cout << "Disconnected from server" << std::endl;
-                return;
-            }
-        }
-        std::cout << "Failed to disconnect from server" << std::endl;
-    }
-
-
-    void update(zmq::socket_t &sub_socket, const int client_slot) {
+    void update(zmq::socket_t &client_socket) {
         if (!connected) {
-            std::cout << "Not connected to server" << std::endl;
-            return;
+            sync(client_socket);
         }
-        zmq::message_t message;
-        if (sub_socket.recv(message, zmq::recv_flags::none)) {
-            const std::vector<float> received_msg(static_cast<float *>(message.data()),
-                                                  static_cast<float *>(message.data()) + message.size() / sizeof(
-                                                      float));
-
-            for (int i = 0; i < received_msg.size(); i += MESSAGE_SIZE) {
-                if (received_msg[i] == Message::END) {
-                    break;
-                }
-                auto entity = static_cast<Entity>(received_msg[i + 2]);
-                auto slot = static_cast<int>(received_msg[i + 1]);
-                if (slot == client_slot) {
-                    continue;
-                }
-                const std::string key = std::to_string(slot) + "_" + Coordinator::createKey(entity);
-
-                switch (static_cast<Message>(received_msg[i])) {
-                    case DESTROY: {
-                        const Entity generatedId = gCoordinator.createEntity(key);
-                        gCoordinator.addComponent<Destroy>(generatedId, Destroy{});
-                        gCoordinator.getComponent<Destroy>(generatedId).destroy = true;
-                        gCoordinator.getComponent<Destroy>(generatedId).isSent = true;
-                        break;
-                    }
-                    case UPDATE: {
-                        const Entity generatedId = gCoordinator.createEntity(key);
-                        gCoordinator.addComponent<Transform>(generatedId, Transform{});
-                        gCoordinator.addComponent<Color>(generatedId, Color{});
-                        auto &[x, y, h, w, orientation, scale] = gCoordinator.getComponent<Transform>(generatedId);
-                        auto &[color] = gCoordinator.getComponent<Color>(generatedId);
-                        x = received_msg[i + 3];
-                        y = received_msg[i + 4];
-                        w = received_msg[i + 5];
-                        h = received_msg[i + 6];
-                        color.r = static_cast<Uint8>(received_msg[i + 7]);
-                        color.g = static_cast<Uint8>(received_msg[i + 8]);
-                        color.b = static_cast<Uint8>(received_msg[i + 9]);
-                        color.a = static_cast<Uint8>(received_msg[i + 10]);
-                    }
-                    default:
-                        break;
-                }
-            }
-        }
+        send_update(client_socket);
     }
 };
-#endif //CLIENT_HPP

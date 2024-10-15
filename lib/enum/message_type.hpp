@@ -20,16 +20,9 @@ enum P2PMessageType {
 };
 
 enum Message {
-    CONNECT,
-    DISCONNECT,
-    CREATE,
-    DESTROY,
-    ATTACH,
-    POSITION,
     UPDATE,
-    END,
-    CONNECTED,
-    DISCONNECTED
+    DESTROY,
+    SYNC
 };
 
 #endif //MESSAGE_TYPE_HPP

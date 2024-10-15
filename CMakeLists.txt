@@ -57,21 +57,19 @@ set(SOURCES
         lib/systems/camera.cpp
         lib/systems/keyboard_movement.cpp
         lib/systems/camera.cpp
-        lib/systems/client.hpp
         lib/generic/packed_map.hpp
         lib/systems/move_between_2_point_system.hpp
         lib/model/data.hpp
         lib/helpers/ecs_helpers.hpp
-        lib/systems/server_entity_system.hpp
-        lib/systems/client_entity_system.hpp
-        lib/systems/server.hpp
         lib/systems/destroy.hpp
         lib/systems/collision.hpp
         lib/systems/jump.hpp
+        lib/server/worker.hpp
+        lib/systems/client.hpp
+        lib/systems/receiver.hpp
 )
 
-add_executable(shade_engine ${SOURCES} main.cpp
-)
+add_executable(shade_engine ${SOURCES} main.cpp)
 
 add_executable(shade_engine_server ${SOURCES} server.cpp)
 

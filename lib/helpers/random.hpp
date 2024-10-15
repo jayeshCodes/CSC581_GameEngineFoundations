@@ -15,6 +15,23 @@ public:
         static std::uniform_int_distribution<> dis(1, 10000);
         return dis(gen);
     }
+
+    static std::string generateRandomID(const int length) {
+        static const char alphanum[] =
+            "0123456789"
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            "abcdefghijklmnopqrstuvwxyz";
+        std::random_device rd;
+        std::mt19937 generator(rd());
+        std::uniform_int_distribution<int> distribution(0, sizeof(alphanum) - 2);
+
+        std::string id;
+        for (int i = 0; i < length; ++i) {
+            id += alphanum[distribution(generator)];
+        }
+        return id;
+    }
+
 };
 
 #endif //RANDOM_HPP

@@ -15,14 +15,14 @@ public:
     void update() const {
         std::vector<Entity> entitiesToDestroy;
 
-        for (const auto entity: entities) {
-            if (auto &[slot, destroyed, isSent] = gCoordinator.getComponent<Destroy>(entity); destroyed && isSent) {
-                entitiesToDestroy.push_back(entity);
-            }
-        }
-
-        for (const auto entity: entitiesToDestroy) {
-            gCoordinator.destroyEntity(entity);
-        }
+        // for (const auto entity: entities) {
+        //     if (auto &[slot, destroyed, isSent] = gCoordinator.getComponent<Destroy>(entity); destroyed && isSent) {
+        //         entitiesToDestroy.push_back(entity);
+        //     }
+        // }
+        //
+        // for (const auto entity: entitiesToDestroy) {
+        //     gCoordinator.destroyEntity(entity);
+        // }
     }
 };

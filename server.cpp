@@ -2,8 +2,6 @@
 // Created by Utsav Lal on 10/7/24.
 //
 
-#include "lib/systems/server.hpp"
-
 #include <thread>
 #include <memory>
 #include <csignal>
@@ -15,17 +13,20 @@
 #include "lib/ECS/coordinator.hpp"
 #include "lib/helpers/colors.hpp"
 #include "lib/helpers/constants.hpp"
+#include "lib/helpers/random.hpp"
+#include "lib/server/worker.hpp"
 #include "lib/systems/kinematic.cpp"
 #include "lib/systems/render.cpp"
 #include "lib/systems/gravity.cpp"
 #include "lib/systems/camera.cpp"
+#include "lib/systems/client.hpp"
 #include "lib/systems/collision.hpp"
 #include "lib/systems/destroy.hpp"
 #include "lib/systems/jump.hpp"
 #include "lib/systems/keyboard_movement.cpp"
 
 #include "lib/systems/move_between_2_point_system.hpp"
-#include "lib/systems/server_entity_system.hpp"
+#include "lib/systems/receiver.hpp"
 
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
 Timeline anchorTimeline(nullptr, 1000);
@@ -41,14 +42,38 @@ void platform_movement(Timeline &timeline, MoveBetween2PointsSystem &moveBetween
         lastTime = currentTime;
 
         moveBetween2PointsSystem.update(dT, platformTimeline);
+        auto elapsed_time = platformTimeline.getElapsedTime();
+        auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - currentTime); // Ensure float division
+        if (time_to_sleep > 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(time_to_sleep * 1000)));
+        }
     }
 
     std::cout << "Kill platform thread" << std::endl;
 }
+
 void handleSignal(int signal) {
     GameManager::getInstance()->gameRunning = false;
 }
 
+void server_run(zmq::context_t &context, zmq::socket_ref frontend, zmq::socket_ref backend) {
+    int max_threads = 5;
+
+    std::vector<std::unique_ptr<Worker> > workers;
+    std::vector<std::unique_ptr<std::thread> > threads;
+
+    for (int i = 0; i < max_threads; i++) {
+        workers.push_back(std::make_unique<Worker>(context, ZMQ_DEALER, "WORKER" + std::to_string(i)));
+        threads.push_back(std::make_unique<std::thread>(&Worker::work, workers[i].get()));
+        threads[i]->detach();
+    }
+
+    try {
+        zmq::proxy(zmq::socket_ref(frontend), zmq::socket_ref(backend), nullptr);
+    } catch (std::exception &e) {
+        std::cout << "Server error: " << e.what() << std::endl;
+    }
+}
 
 
 int main(int argc, char *argv[]) {
@@ -83,6 +108,8 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Destroy>();
     gCoordinator.registerComponent<Collision>();
     gCoordinator.registerComponent<Jump>();
+    gCoordinator.registerComponent<ClientEntity>();
+    gCoordinator.registerComponent<Receiver>();
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
     auto kinematicSystem = gCoordinator.registerSystem<KinematicSystem>();
@@ -90,11 +117,21 @@ int main(int argc, char *argv[]) {
     auto cameraSystem = gCoordinator.registerSystem<CameraSystem>();
     auto keyboardMovementSystem = gCoordinator.registerSystem<KeyboardMovementSystem>();
     auto moveBetween2PointsSystem = gCoordinator.registerSystem<MoveBetween2PointsSystem>();
-    auto severEntitySystem = gCoordinator.registerSystem<ServerEntitySystem>();
-    auto serverSystem = gCoordinator.registerSystem<ServerSystem>();
     auto destroySystem = gCoordinator.registerSystem<DestroySystem>();
     auto collisionSystem = gCoordinator.registerSystem<CollisionSystem>();
     auto jumpSystem = gCoordinator.registerSystem<JumpSystem>();
+    auto clientSystem = gCoordinator.registerSystem<ClientSystem>();
+    auto receiverSystem = gCoordinator.registerSystem<ReceiverSystem>();
+
+    Signature clientEntitySignature;
+    clientEntitySignature.set(gCoordinator.getComponentType<ClientEntity>());
+    clientEntitySignature.set(gCoordinator.getComponentType<Transform>());
+    clientEntitySignature.set(gCoordinator.getComponentType<Color>());
+    gCoordinator.setSystemSignature<ClientSystem>(clientEntitySignature);
+
+    Signature clientSignature;
+    clientSignature.set(gCoordinator.getComponentType<Receiver>());
+    gCoordinator.setSystemSignature<ReceiverSystem>(clientSignature);
 
     Signature movingPlatformSignature;
     movingPlatformSignature.set(gCoordinator.getComponentType<Transform>());
@@ -112,12 +149,10 @@ int main(int argc, char *argv[]) {
     serverEntitySignature.set(gCoordinator.getComponentType<ServerEntity>());
     serverEntitySignature.set(gCoordinator.getComponentType<Transform>());
     serverEntitySignature.set(gCoordinator.getComponentType<Color>());
-    gCoordinator.setSystemSignature<ServerEntitySystem>(serverEntitySignature);
 
     Signature serverSig;
     serverSig.set(gCoordinator.getComponentType<Server>());
     serverSig.set(gCoordinator.getComponentType<Destroy>());
-    gCoordinator.setSystemSignature<ServerSystem>(serverSig);
 
     Signature destroySig;
     destroySig.set(gCoordinator.getComponentType<Destroy>());
@@ -134,7 +169,43 @@ int main(int argc, char *argv[]) {
     jumpSignature.set(gCoordinator.getComponentType<Jump>());
     gCoordinator.setSystemSignature<JumpSystem>(jumpSignature);
 
+    Entity platform = gCoordinator.createEntity();
+    gCoordinator.addComponent(platform, Transform{300, 100, 100, 100});
+    gCoordinator.addComponent(platform, Color{255, 0, 0, 255});
+    gCoordinator.addComponent(platform, CKinematic{0, 0, 0, 0});
+    gCoordinator.addComponent(platform, MovingPlatform{200, 800, LEFT, 2});
+    gCoordinator.addComponent(platform, Destroy{});
+    gCoordinator.addComponent(platform, ClientEntity{true});
+
+    Entity platform2 = gCoordinator.createEntity();
+    gCoordinator.addComponent(platform2, Transform{300, 300, 100, 100});
+    gCoordinator.addComponent(platform2, Color{255, 255, 0, 255});
+    gCoordinator.addComponent(platform2, CKinematic{0, 0, 0, 0});
+    gCoordinator.addComponent(platform2, MovingPlatform{200, 800, RIGHT, 2});
+    gCoordinator.addComponent(platform2, ClientEntity{true});
+    gCoordinator.addComponent(platform2, Destroy{});
+
+    auto entity2 = gCoordinator.createEntity();
+    gCoordinator.addComponent(entity2, Transform{300, SCREEN_HEIGHT, 32, SCREEN_WIDTH * 5, 0});
+    gCoordinator.addComponent(entity2, Color{shade_color::Black});
+    gCoordinator.addComponent(entity2, ClientEntity{true});
+    gCoordinator.addComponent(entity2, Destroy{});
+
     zmq::context_t context(1);
+    zmq::socket_t frontend(context, ZMQ_ROUTER);
+    zmq::socket_t backend(context, ZMQ_DEALER);
+    frontend.bind("tcp://*:5570");
+    backend.bind("tcp://*:5571");
+    std::thread server_thread(server_run, std::ref(context), zmq::socket_ref(frontend), zmq::socket_ref(backend));
+
+    std::string identity = Random::generateRandomID(10);
+    std::cout << "Identity: " << identity << std::endl;
+
+    zmq::socket_t client_socket(context, ZMQ_DEALER);
+
+    client_socket.set(zmq::sockopt::routing_id, identity);
+    client_socket.connect("tcp://localhost:5570");
+
     Entity server = gCoordinator.createEntity();
     gCoordinator.addComponent(server, Server{7000, 7001});
 
@@ -146,48 +217,31 @@ int main(int argc, char *argv[]) {
     zmq::socket_t connect_socket(context, ZMQ_REP);
     connect_socket.bind("tcp://*:" + std::to_string(engine_constants::SERVER_CONNECT_PORT));
 
-    Entity platform = gCoordinator.createEntity();
-    gCoordinator.addComponent(platform, Transform{300, 100, 100, 100});
-    gCoordinator.addComponent(platform, Color{255, 0, 0, 255});
-    gCoordinator.addComponent(platform, CKinematic{0, 0, 0, 0});
-    gCoordinator.addComponent(platform, MovingPlatform{200, 800, LEFT, 2});
-    gCoordinator.addComponent(platform, Destroy{});
-    gCoordinator.addComponent(platform, ServerEntity{});
-
-    Entity platform2 = gCoordinator.createEntity();
-    gCoordinator.addComponent(platform2, Transform{300, 300, 100, 100});
-    gCoordinator.addComponent(platform2, Color{255, 255, 0, 255});
-    gCoordinator.addComponent(platform2, CKinematic{0, 0, 0, 0});
-    gCoordinator.addComponent(platform2, MovingPlatform{200, 800, RIGHT, 2});
-    gCoordinator.addComponent(platform2, Destroy{});
-    gCoordinator.addComponent(platform2, ServerEntity{});
-
-    auto entity2 = gCoordinator.createEntity();
-    gCoordinator.addComponent(entity2, Transform{300, SCREEN_HEIGHT, 32, SCREEN_WIDTH * 5, 0});
-    gCoordinator.addComponent(entity2, Color{shade_color::Black});
-    gCoordinator.addComponent(entity2, Destroy{});
-    gCoordinator.addComponent(entity2, ServerEntity{});
-
 
     std::thread platform_thread([&gameTimeline, &moveBetween2PointsSystem]() {
         platform_movement(gameTimeline, *moveBetween2PointsSystem);
     });
 
-    std::thread server_thread([&serverSystem, &connect_socket, &context] {
-        while (GameManager::getInstance()->gameRunning) {
-            serverSystem->update(context, connect_socket);
-        }
-    });
-
-    std::thread network_thread([&severEntitySystem, &socket] {
-        while (GameManager::getInstance()->gameRunning) {
-            severEntitySystem->update(&socket);
-        }
-    });
 
     std::thread delete_thread([&destroySystem]() {
         while (GameManager::getInstance()->gameRunning) {
             destroySystem->update();
+        }
+    });
+
+    std::thread t2([&client_socket, &clientSystem] {
+        while (GameManager::getInstance()->gameRunning) {
+            clientSystem->update(client_socket);
+        }
+    });
+
+    std::thread t1([receiverSystem, &context, &identity]() {
+        zmq::socket_t socket(context, ZMQ_DEALER);
+        std::string id = identity + "R";
+        socket.set(zmq::sockopt::routing_id, id);
+        socket.connect("tcp://localhost:5570");
+        while (GameManager::getInstance()->gameRunning) {
+            receiverSystem->update(socket);
         }
     });
 
@@ -196,14 +250,21 @@ int main(int argc, char *argv[]) {
         auto current_time = gameTimeline.getElapsedTime();
         auto dt = (current_time - last_time) / 1000.f;
         last_time = current_time;
+        dt = std::max(dt, 1 / 60.f);
 
         kinematicSystem->update(dt);
+
+        auto elapsed_time = gameTimeline.getElapsedTime();
+        auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - current_time); // Ensure float division
+        if (time_to_sleep > 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(time_to_sleep * 1000)));
+        }
     }
 
     // Create 4 Rectangle instances
     platform_thread.join();
-    network_thread.join();
     delete_thread.join();
+    t2.join();
     server_thread.join();
 
     std::cout << "Closing " << ENGINE_NAME << " Engine" << std::endl;

@@ -4,14 +4,15 @@
 #include "main.hpp"
 #include "lib/core/timeline.hpp"
 #include "lib/ECS/coordinator.hpp"
+#include "lib/enum/message_type.hpp"
 #include "lib/game/GameManager.hpp"
 #include "lib/helpers/colors.hpp"
 #include "lib/helpers/constants.hpp"
 #include "lib/helpers/ecs_helpers.hpp"
+#include "lib/helpers/random.hpp"
 #include "lib/model/components.hpp"
 #include "lib/systems/camera.cpp"
 #include "lib/systems/client.hpp"
-#include "lib/systems/client_entity_system.hpp"
 #include "lib/systems/collision.hpp"
 #include "lib/systems/destroy.hpp"
 #include "lib/systems/gravity.cpp"
@@ -19,11 +20,33 @@
 #include "lib/systems/keyboard_movement.cpp"
 #include "lib/systems/kinematic.cpp"
 #include "lib/systems/move_between_2_point_system.hpp"
+#include "lib/systems/receiver.hpp"
 #include "lib/systems/render.cpp"
 
+class ReceiverSystem;
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
 Timeline anchorTimeline(nullptr, 1000);
 Timeline gameTimeline(&anchorTimeline, 1);
+
+void platform_movement(Timeline &timeline, MoveBetween2PointsSystem &moveBetween2PointsSystem) {
+    Timeline platformTimeline(&timeline, 1);
+    int64_t lastTime = platformTimeline.getElapsedTime();
+
+    while (GameManager::getInstance()->gameRunning) {
+        int64_t currentTime = platformTimeline.getElapsedTime();
+        float dT = (currentTime - lastTime) / 1000.f;
+        lastTime = currentTime;
+
+        moveBetween2PointsSystem.update(dT, platformTimeline);
+        auto elapsed_time = platformTimeline.getElapsedTime();
+        auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - currentTime); // Ensure float division
+        if (time_to_sleep > 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(time_to_sleep * 1000)));
+        }
+    }
+
+    std::cout << "Kill platform thread" << std::endl;
+}
 
 int main(int argc, char *argv[]) {
     std::cout << ENGINE_NAME << " v" << ENGINE_VERSION << " initializing" << std::endl;
@@ -31,6 +54,17 @@ int main(int argc, char *argv[]) {
     std::cout << std::endl;
     initSDL();
     GameManager::getInstance()->gameRunning = true;
+
+    std::string identity = Random::generateRandomID(10);
+    std::cout << "Identity: " << identity << std::endl;
+
+    zmq::context_t context(1);
+    zmq::socket_t client_socket(context, ZMQ_DEALER);
+
+    client_socket.set(zmq::sockopt::routing_id, identity);
+    client_socket.connect("tcp://localhost:5570");
+
+    zmq::pollitem_t items[] = {{client_socket, 0, ZMQ_POLLIN, 0}};
 
     anchorTimeline.start();
     gameTimeline.start();
@@ -45,7 +79,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Camera>();
     gCoordinator.registerComponent<Gravity>();
     gCoordinator.registerComponent<KeyboardMovement>();
-    gCoordinator.registerComponent<Client>();
+    gCoordinator.registerComponent<Receiver>();
     gCoordinator.registerComponent<MovingPlatform>();
     gCoordinator.registerComponent<ClientEntity>();
     gCoordinator.registerComponent<Destroy>();
@@ -58,12 +92,12 @@ int main(int argc, char *argv[]) {
     auto gravitySystem = gCoordinator.registerSystem<GravitySystem>();
     auto cameraSystem = gCoordinator.registerSystem<CameraSystem>();
     auto keyboardMovementSystem = gCoordinator.registerSystem<KeyboardMovementSystem>();
-    auto clientSystem = gCoordinator.registerSystem<ClientSystem>();
     auto moveBetween2PointsSystem = gCoordinator.registerSystem<MoveBetween2PointsSystem>();
-    auto clientEntitySystem = gCoordinator.registerSystem<ClientEntitySystem>();
     auto destroySystem = gCoordinator.registerSystem<DestroySystem>();
     auto collisionSystem = gCoordinator.registerSystem<CollisionSystem>();
     auto jumpSystem = gCoordinator.registerSystem<JumpSystem>();
+    auto clientSystem = gCoordinator.registerSystem<ClientSystem>();
+    auto receiverSystem = gCoordinator.registerSystem<ReceiverSystem>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
@@ -92,13 +126,14 @@ int main(int argc, char *argv[]) {
     gCoordinator.setSystemSignature<KeyboardMovementSystem>(keyboardMovementSignature);
 
     Signature clientSignature;
-    clientSignature.set(gCoordinator.getComponentType<Client>());
-    gCoordinator.setSystemSignature<ClientSystem>(clientSignature);
+    clientSignature.set(gCoordinator.getComponentType<Receiver>());
+    gCoordinator.setSystemSignature<ReceiverSystem>(clientSignature);
 
     Signature movingPlatformSignature;
     movingPlatformSignature.set(gCoordinator.getComponentType<Transform>());
     movingPlatformSignature.set(gCoordinator.getComponentType<MovingPlatform>());
     movingPlatformSignature.set(gCoordinator.getComponentType<CKinematic>());
+    movingPlatformSignature.set(gCoordinator.getComponentType<MovingPlatform>());
     gCoordinator.setSystemSignature<MoveBetween2PointsSystem>(movingPlatformSignature);
 
     Signature clientEntitySignature;
@@ -106,7 +141,7 @@ int main(int argc, char *argv[]) {
     clientEntitySignature.set(gCoordinator.getComponentType<Transform>());
     clientEntitySignature.set(gCoordinator.getComponentType<Color>());
     clientEntitySignature.set(gCoordinator.getComponentType<Destroy>());
-    gCoordinator.setSystemSignature<ClientEntitySystem>(clientEntitySignature);
+    gCoordinator.setSystemSignature<ClientSystem>(clientEntitySignature);
 
     Signature destroySig;
     destroySig.set(gCoordinator.getComponentType<Destroy>());
@@ -141,9 +176,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(mainChar, Gravity{0, 100});
 
     auto clientEntity = gCoordinator.createEntity("CLIENT");
-    gCoordinator.addComponent(clientEntity, Client{7000, 7001});
-
-    zmq::context_t context(1);
+    gCoordinator.addComponent(clientEntity, Receiver{7000, 7001});
 
     auto last_time = gameTimeline.getElapsedTime();
 
@@ -156,38 +189,26 @@ int main(int argc, char *argv[]) {
     zmq::socket_t connect_socket(context, ZMQ_REQ);
     connect_socket.connect("tcp://localhost:" + std::to_string(engine_constants::SERVER_CONNECT_PORT));
 
-    int pub_port = std::stoi(argv[1]);
-    int slot = std::stoi(argv[2]);
-    clientSystem->connect(connect_socket, pub_socket, pub_port, slot);
 
-    std::thread listen_from_server_thread([&clientSystem, &socket, slot]() {
-        while (GameManager::getInstance()->gameRunning) {
-            clientSystem->update(socket, slot);
-        }
-    });
-
-    std::thread send_to_server_thread([&clientEntitySystem, &pub_socket, slot]() {
-        while (GameManager::getInstance()->gameRunning) {
-            clientEntitySystem->update(pub_socket, slot);
-        }
-    });
-
-    std::thread delete_thread([&destroySystem, slot]() {
+    std::thread delete_thread([&destroySystem]() {
         while (GameManager::getInstance()->gameRunning) {
             destroySystem->update();
         }
     });
 
-    std::thread keyboard_thread([&keyboardMovementSystem]() {
-        Timeline gameTimeline(&anchorTimeline, 1);
-        gameTimeline.start();
-        auto last = gameTimeline.getElapsedTime();
-
-        auto last_time = gameTimeline.getElapsedTime();
+    std::thread t1([receiverSystem, &context, &identity]() {
+        zmq::socket_t socket(context, ZMQ_DEALER);
+        std::string id = identity + "R";
+        socket.set(zmq::sockopt::routing_id, id);
+        socket.connect("tcp://localhost:5570");
         while (GameManager::getInstance()->gameRunning) {
-            auto current = gameTimeline.getElapsedTime();
-            auto dt = (current - last) / 1000.f;
-            last = current;
+            receiverSystem->update(socket);
+        }
+    });
+
+    std::thread t2([&client_socket, &clientSystem] {
+        while (GameManager::getInstance()->gameRunning) {
+            clientSystem->update(client_socket);
         }
     });
 
@@ -225,12 +246,10 @@ int main(int argc, char *argv[]) {
     /**
      * This is the cleanup code. The order is very important here since otherwise the program will crash.
      */
-    send_to_server_thread.join();
-    clientSystem->disconnect(connect_socket, pub_socket, slot);
-    listen_from_server_thread.join();
 
     delete_thread.join();
-    keyboard_thread.join();
+    t1.join();
+    t2.join();
     cleanupSDL();
     std::cout << "Closing " << ENGINE_NAME << " Engine" << std::endl;
     return 0;

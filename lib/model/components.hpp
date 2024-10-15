@@ -16,6 +16,12 @@ struct Transform {
     float h, w;
     float orientation;
     float scale;
+
+public:
+    [[nodiscard]] bool equal(const Transform &other) const {
+        return x == other.x && y == other.y && h == other.h && w == other.w && orientation == other.orientation &&
+               scale == other.scale;
+    }
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Transform, x, y, h, w, orientation, scale)
@@ -68,12 +74,12 @@ struct Server {
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Server, listen_port, publish_port)
 
 
-struct Client {
+struct Receiver {
     int listen_port;
     int publish_port;
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Client, listen_port, publish_port)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Receiver, listen_port, publish_port)
 
 struct MovingPlatform {
     float p1;
@@ -89,6 +95,7 @@ struct ServerEntity {
 
 
 struct ClientEntity {
+    int noOfTimes = 0;
 };
 
 struct Destroy {
