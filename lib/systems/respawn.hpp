@@ -33,7 +33,7 @@ public:
     }
 
 private:
-    const float DEATH_Y = SCREEN_HEIGHT;
+    const float DEATH_Y = SCREEN_HEIGHT + 100.f;
     const float RESPAWN_HEIGHT = 10.f;
 
     bool shouldRespawn(Transform &transform, Respawnable &respawnable) {

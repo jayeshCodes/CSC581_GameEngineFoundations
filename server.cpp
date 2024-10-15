@@ -131,12 +131,6 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(platform2, Destroy{});
     gCoordinator.addComponent(platform2, ServerEntity{});
 
-    auto entity2 = gCoordinator.createEntity();
-    gCoordinator.addComponent(entity2, Transform{300, SCREEN_HEIGHT, 32, SCREEN_WIDTH * 5, 0});
-    gCoordinator.addComponent(entity2, Color{shade_color::Black});
-    gCoordinator.addComponent(entity2, Destroy{});
-    gCoordinator.addComponent(entity2, ServerEntity{});
-
 
     std::thread platform_thread([&gameTimeline, &moveBetween2PointsSystem]() {
         platform_movement(gameTimeline, *moveBetween2PointsSystem);

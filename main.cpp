@@ -19,7 +19,6 @@
 #include "lib/systems/keyboard_movement.cpp"
 #include "lib/systems/kinematic.cpp"
 #include "lib/systems/move_between_2_point_system.hpp"
-#include "lib/systems/platformcollision.hpp"
 #include "lib/systems/respawn.hpp"
 #include "lib/systems/render.cpp"
 
@@ -69,7 +68,6 @@ int main(int argc, char *argv[]) {
     auto destroySystem = gCoordinator.registerSystem<DestroySystem>();
     auto collisionSystem = gCoordinator.registerSystem<CollisionSystem>();
     auto jumpSystem = gCoordinator.registerSystem<JumpSystem>();
-    auto platformCollisionSystem = gCoordinator.registerSystem<PlatformCollisionSystem>();
     auto respawnSystem = gCoordinator.registerSystem<RespawnSystem>();
 
     Signature renderSignature;
@@ -132,11 +130,6 @@ int main(int argc, char *argv[]) {
     jumpSignature.set(gCoordinator.getComponentType<Jump>());
     gCoordinator.setSystemSignature<JumpSystem>(jumpSignature);
 
-    Signature platformCollisionSignature;
-    platformCollisionSignature.set(gCoordinator.getComponentType<Transform>());
-    platformCollisionSignature.set(gCoordinator.getComponentType<Platform>());
-    gCoordinator.setSystemSignature<PlatformCollisionSystem>(platformCollisionSignature);
-
     Signature respawnSignature;
     respawnSignature.set(gCoordinator.getComponentType<Respawnable>());
     gCoordinator.setSystemSignature<RespawnSystem>(respawnSignature);
@@ -147,7 +140,7 @@ int main(int argc, char *argv[]) {
 
     // create a platform
     auto platformEntity = gCoordinator.createEntity("PLATFORM");
-    gCoordinator.addComponent(platformEntity, Transform{0, SCREEN_HEIGHT - 100.f, 100.f, SCREEN_WIDTH * 3/4.f, 0});
+    gCoordinator.addComponent(platformEntity, Transform{0, SCREEN_HEIGHT - 100.f, 500.f, SCREEN_WIDTH * 3/4.f, 0});
     gCoordinator.addComponent(platformEntity, Color{shade_color::Green});
     gCoordinator.addComponent(platformEntity, ClientEntity{});
     gCoordinator.addComponent(platformEntity, RigidBody{-1.f}); // a negative mass value indicates that the entity is immovable by other entities
@@ -174,6 +167,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(entity2, Collision{true, false});
     gCoordinator.addComponent(entity2, RigidBody{1.f});
     gCoordinator.addComponent(entity2, Gravity{0, 100});
+    gCoordinator.addComponent(entity2, Respawnable{{100.f, SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false});
 
 
 
