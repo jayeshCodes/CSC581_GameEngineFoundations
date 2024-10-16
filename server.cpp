@@ -177,7 +177,7 @@ int main(int argc, char *argv[]) {
     jumpSignature.set(gCoordinator.getComponentType<Jump>());
     gCoordinator.setSystemSignature<JumpSystem>(jumpSignature);
 
-    Entity platform = gCoordinator.createEntity(Random::generateRandomID(12));
+    Entity platform = gCoordinator.createEntity();
     gCoordinator.addComponent(platform, Transform{300, 100, 100, 100});
     gCoordinator.addComponent(platform, Color{255, 0, 0, 255});
     gCoordinator.addComponent(platform, CKinematic{0, 0, 0, 0});
@@ -185,7 +185,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(platform, Destroy{});
     gCoordinator.addComponent(platform, ClientEntity{true});
 
-    Entity platform2 = gCoordinator.createEntity(Random::generateRandomID(12));
+    Entity platform2 = gCoordinator.createEntity();
     gCoordinator.addComponent(platform2, Transform{300, 300, 100, 100});
     gCoordinator.addComponent(platform2, Color{255, 255, 0, 255});
     gCoordinator.addComponent(platform2, CKinematic{0, 0, 0, 0});
@@ -193,7 +193,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(platform2, ClientEntity{true});
     gCoordinator.addComponent(platform2, Destroy{});
 
-    auto entity2 = gCoordinator.createEntity(Random::generateRandomID(12));
+    auto entity2 = gCoordinator.createEntity();
     gCoordinator.addComponent(entity2, Transform{300, SCREEN_HEIGHT, 32, SCREEN_WIDTH * 5, 0});
     gCoordinator.addComponent(entity2, Color{shade_color::Black});
     gCoordinator.addComponent(entity2, ClientEntity{true});

@@ -10,6 +10,7 @@
 #include "component_manager.hpp"
 #include "entity_manager.hpp"
 #include "system_manager.hpp"
+#include "../helpers/random.hpp"
 
 class Coordinator {
 private:
@@ -159,6 +160,6 @@ public:
     }
 
     static std::string createKey(Entity id) {
-        return "Entity" + std::to_string(id);
+        return Random::generateRandomID(12);
     }
 };

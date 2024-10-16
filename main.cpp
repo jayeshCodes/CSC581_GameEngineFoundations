@@ -201,11 +201,11 @@ int main(int argc, char *argv[]) {
     gCoordinator.setSystemSignature<RespawnSystem>(respawnSignature);
 
 
-    Entity mainCamera = gCoordinator.createEntity("CAMERA");
+    Entity mainCamera = gCoordinator.createEntity();
     gCoordinator.addComponent(mainCamera, Camera{SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT}); // temporary values for viewport width and height
 
     // create a platform
-    auto platformEntity = gCoordinator.createEntity("PLATFORM");
+    auto platformEntity = gCoordinator.createEntity();
     gCoordinator.addComponent(platformEntity, Transform{0, SCREEN_HEIGHT - 100.f, 500.f, SCREEN_WIDTH * 3/4.f, 0});
     gCoordinator.addComponent(platformEntity, Color{shade_color::Green});
     gCoordinator.addComponent(platformEntity, ClientEntity{});
@@ -213,7 +213,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(platformEntity, Collision{true, false});
     gCoordinator.addComponent(platformEntity, CKinematic{});
 
-    auto mainChar = gCoordinator.createEntity("CHAR");
+    auto mainChar = gCoordinator.createEntity();
     gCoordinator.addComponent(mainChar, Transform{0.f, SCREEN_HEIGHT - 200.f, 32, 32, 0});
     gCoordinator.addComponent(mainChar, Color{shade_color::Blue});
     gCoordinator.addComponent(mainChar, CKinematic{});
@@ -226,7 +226,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(mainChar, RigidBody{1.f});
     gCoordinator.addComponent(mainChar, Collision{true, false});
 
-    auto entity2 = gCoordinator.createEntity("CHAR2");
+    auto entity2 = gCoordinator.createEntity();
     gCoordinator.addComponent(entity2, Transform{100.f, SCREEN_HEIGHT - 500.f, 32, 32, 0});
     gCoordinator.addComponent(entity2, Color{shade_color::Red});
     gCoordinator.addComponent(entity2, CKinematic{});
@@ -238,7 +238,7 @@ int main(int argc, char *argv[]) {
 
 
 
-    auto clientEntity = gCoordinator.createEntity("CLIENT");
+    auto clientEntity = gCoordinator.createEntity();
     gCoordinator.addComponent(clientEntity, Receiver{7000, 7001});
 
     auto last_time = gameTimeline.getElapsedTime();

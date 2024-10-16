@@ -30,7 +30,7 @@ public:
     }
 
 private:
-    void sweepAndPrune(std::vector<Entity> &entities) {
+    static void sweepAndPrune(std::vector<Entity> &entities) {
         // Sort entities based on their x position
         std::sort(entities.begin(), entities.end(), [](Entity a, Entity b) {
             auto &transformA = gCoordinator.getComponent<Transform>(a);
@@ -39,7 +39,7 @@ private:
         });
     }
 
-    void narrowPhaseCollisionAndResolution(const std::vector<Entity> &entities) {
+    static void narrowPhaseCollisionAndResolution(const std::vector<Entity> &entities) {
         for (size_t i = 0; i < entities.size(); ++i) {
             for (size_t j = i + 1; j < entities.size(); ++j) {
                 Entity entityA = entities[i];
@@ -68,20 +68,20 @@ private:
         }
     }
 
-    bool checkAABBCollision(const Transform &a, const Transform &b) {
+    static bool checkAABBCollision(const Transform &a, const Transform &b) {
         return (a.x < b.x + b.w &&
                 a.x + a.w > b.x &&
                 a.y < b.y + b.h &&
                 a.y + a.h > b.y);
     }
 
-    void handleTrigger(Entity triggerEntity, Entity otherEntity) {
+    static void handleTrigger(Entity triggerEntity, Entity otherEntity) {
         // Implement trigger logic here
         // For example, you might want to notify a game event system
         // or directly modify component states
     }
 
-    void resolveCollision(Entity entityA, Entity entityB) {
+    static void resolveCollision(Entity entityA, Entity entityB) {
         if (!hasRequiredComponents(entityA) || !hasRequiredComponents(entityB)) {
             // Log an error or handle the missing component case
             if(!hasRequiredComponents(entityA))
@@ -238,7 +238,7 @@ private:
         }
     }
 
-    bool hasRequiredComponents(Entity entity) {
+    static bool hasRequiredComponents(Entity entity) {
         return gCoordinator.hasComponent<Transform>(entity) &&
                gCoordinator.hasComponent<RigidBody>(entity) &&
                gCoordinator.hasComponent<CKinematic>(entity);
