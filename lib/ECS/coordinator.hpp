@@ -104,6 +104,21 @@ public:
         return component_manager->getComponentType<T>();
     }
 
+    // get all the entities with a certain component type
+    template<typename T>
+    std::vector<Entity> getEntitiesWithComponent() const {
+        std::shared_lock lock(mutex);
+        std::vector<Entity> entitiesWithComponent;
+
+        for(const auto &[key, entity] : entities) {
+            if(component_manager->hasComponent<T>(entity)) {
+                entitiesWithComponent.push_back(entity);
+            }
+        }
+
+        return entitiesWithComponent;
+    }
+
     template<typename T>
     std::shared_ptr<T> registerSystem() const {
         std::lock_guard<std::shared_mutex> lock(mutex);

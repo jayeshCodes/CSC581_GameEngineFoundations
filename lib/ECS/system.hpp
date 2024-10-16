@@ -4,6 +4,7 @@
 
 #pragma once
 #include <set>
+#include <mutex>
 #include "types.hpp"
 
 /**

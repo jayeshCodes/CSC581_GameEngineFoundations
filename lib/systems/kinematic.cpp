@@ -26,14 +26,14 @@ public:
 
             transform.orientation += kinematic.rotation * dt;
 
-            if (transform.y < 0) {
-                transform.y = 0;
-                kinematic.velocity.y = 0; // Stop vertical movement if at the top
-            } else if (transform.y + transform.h > SCREEN_HEIGHT) {
-                // `rect.h` is the height of the object
-                transform.y = SCREEN_HEIGHT - transform.h;
-                kinematic.velocity.y = 0; // Stop vertical movement if at the bottom
-            }
+            // if (transform.y < 0) {
+            //     transform.y = 0;
+            //     kinematic.velocity.y = 0; // Stop vertical movement if at the top
+            // } else if (transform.y + transform.h > SCREEN_HEIGHT) {
+            //     // `rect.h` is the height of the object
+            //     transform.y = SCREEN_HEIGHT - transform.h;
+            //     kinematic.velocity.y = 0; // Stop vertical movement if at the bottom
+            // }
             // if (transform.x < 0) {
             //     transform.x = 0;
             //     kinematic.velocity.x = 0;

@@ -20,6 +20,7 @@
 #include "lib/systems/keyboard_movement.cpp"
 #include "lib/systems/kinematic.cpp"
 #include "lib/systems/move_between_2_point_system.hpp"
+#include "lib/systems/respawn.hpp"
 #include "lib/systems/receiver.hpp"
 #include "lib/systems/render.cpp"
 #include <csignal>
@@ -116,6 +117,9 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Destroy>();
     gCoordinator.registerComponent<Collision>();
     gCoordinator.registerComponent<Jump>();
+    gCoordinator.registerComponent<Platform>();
+    gCoordinator.registerComponent<Respawnable>();
+    gCoordinator.registerComponent<RigidBody>();
 
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
@@ -127,6 +131,7 @@ int main(int argc, char *argv[]) {
     auto destroySystem = gCoordinator.registerSystem<DestroySystem>();
     auto collisionSystem = gCoordinator.registerSystem<CollisionSystem>();
     auto jumpSystem = gCoordinator.registerSystem<JumpSystem>();
+    auto respawnSystem = gCoordinator.registerSystem<RespawnSystem>();
     auto clientSystem = gCoordinator.registerSystem<ClientSystem>();
     auto receiverSystem = gCoordinator.registerSystem<ReceiverSystem>();
 
@@ -181,6 +186,8 @@ int main(int argc, char *argv[]) {
     Signature collisionSignature;
     collisionSignature.set(gCoordinator.getComponentType<Transform>());
     collisionSignature.set(gCoordinator.getComponentType<Collision>());
+    collisionSignature.set(gCoordinator.getComponentType<CKinematic>());
+    collisionSignature.set(gCoordinator.getComponentType<RigidBody>());
     gCoordinator.setSystemSignature<CollisionSystem>(collisionSignature);
 
     Signature jumpSignature;
@@ -189,15 +196,25 @@ int main(int argc, char *argv[]) {
     jumpSignature.set(gCoordinator.getComponentType<Jump>());
     gCoordinator.setSystemSignature<JumpSystem>(jumpSignature);
 
+    Signature respawnSignature;
+    respawnSignature.set(gCoordinator.getComponentType<Respawnable>());
+    gCoordinator.setSystemSignature<RespawnSystem>(respawnSignature);
 
-    Entity mainCamera = gCoordinator.createEntity(Random::generateRandomID(12));
-    gCoordinator.addComponent(mainCamera, Camera{
-                                  SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT
-                              });
-    // temporary values for viewport width and height
 
-    auto mainChar = gCoordinator.createEntity(Random::generateRandomID(12));
-    gCoordinator.addComponent(mainChar, Transform{0, SCREEN_HEIGHT - 32, 32, 32, 0});
+    Entity mainCamera = gCoordinator.createEntity("CAMERA");
+    gCoordinator.addComponent(mainCamera, Camera{SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT}); // temporary values for viewport width and height
+
+    // create a platform
+    auto platformEntity = gCoordinator.createEntity("PLATFORM");
+    gCoordinator.addComponent(platformEntity, Transform{0, SCREEN_HEIGHT - 100.f, 500.f, SCREEN_WIDTH * 3/4.f, 0});
+    gCoordinator.addComponent(platformEntity, Color{shade_color::Green});
+    gCoordinator.addComponent(platformEntity, ClientEntity{});
+    gCoordinator.addComponent(platformEntity, RigidBody{-1.f}); // a negative mass value indicates that the entity is immovable by other entities
+    gCoordinator.addComponent(platformEntity, Collision{true, false});
+    gCoordinator.addComponent(platformEntity, CKinematic{});
+
+    auto mainChar = gCoordinator.createEntity("CHAR");
+    gCoordinator.addComponent(mainChar, Transform{0.f, SCREEN_HEIGHT - 200.f, 32, 32, 0});
     gCoordinator.addComponent(mainChar, Color{shade_color::Blue});
     gCoordinator.addComponent(mainChar, CKinematic{});
     gCoordinator.addComponent(mainChar, KeyboardMovement{150.f});
@@ -205,6 +222,21 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(mainChar, Destroy{});
     gCoordinator.addComponent(mainChar, Jump{100.f, 1.f, false, 0.0f, true, 60.f});
     gCoordinator.addComponent(mainChar, Gravity{0, 100});
+    gCoordinator.addComponent(mainChar, Respawnable{{0, SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false});
+    gCoordinator.addComponent(mainChar, RigidBody{1.f});
+    gCoordinator.addComponent(mainChar, Collision{true, false});
+
+    auto entity2 = gCoordinator.createEntity("CHAR2");
+    gCoordinator.addComponent(entity2, Transform{100.f, SCREEN_HEIGHT - 500.f, 32, 32, 0});
+    gCoordinator.addComponent(entity2, Color{shade_color::Red});
+    gCoordinator.addComponent(entity2, CKinematic{});
+    gCoordinator.addComponent(entity2, Collision{true, false});
+    gCoordinator.addComponent(entity2, RigidBody{1.f});
+    gCoordinator.addComponent(entity2, Gravity{0, 100});
+    gCoordinator.addComponent(entity2, Respawnable{{100.f, SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false});
+
+
+
 
     auto clientEntity = gCoordinator.createEntity("CLIENT");
     gCoordinator.addComponent(clientEntity, Receiver{7000, 7001});
@@ -255,10 +287,11 @@ int main(int argc, char *argv[]) {
 
         kinematicSystem->update(dt);
         cameraSystem->update(dt);
-        // collisionSystem->update(dt);
         jumpSystem->update(dt);
         gravitySystem->update(dt);
         keyboardMovementSystem->update();
+        collisionSystem->update();
+        respawnSystem->update();
         destroySystem->update();
 
         auto main_camera = cameraSystem->getMainCamera();

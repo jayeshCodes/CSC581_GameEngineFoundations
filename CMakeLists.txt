@@ -64,6 +64,12 @@ set(SOURCES
         lib/systems/destroy.hpp
         lib/systems/collision.hpp
         lib/systems/jump.hpp
+        lib/systems/respawn.hpp
+)
+
+add_executable(shade_engine ${SOURCES} main.cpp
+        lib/systems/respawn.hpp
+)
         lib/server/worker.hpp
         lib/systems/client.hpp
         lib/systems/receiver.hpp
