@@ -11,6 +11,7 @@
 #include <zmq.hpp>
 
 #include "../enum/message_type.hpp"
+#include "../strategy/send_strategy.hpp"
 
 
 extern Coordinator gCoordinator;
@@ -27,7 +28,7 @@ public:
                                                                        timeline(nullptr, 1000), id(std::move(id)) {
     }
 
-    void work() {
+    void work(Send_Strategy *send_strategy) {
         worker.set(zmq::sockopt::routing_id, id);
         worker.connect("tcp://localhost:5571");
 
@@ -55,31 +56,24 @@ public:
                         auto &transform = gCoordinator.getComponent<Transform>(entity.second);
                         auto &color = gCoordinator.getComponent<Color>(entity.second);
 
-                        std::vector<float> message;
-                        message.reserve(10);
-                        message.emplace_back(Message::UPDATE);
-                        message.emplace_back(entity.second);
-                        message.emplace_back(transform.x);
-                        message.emplace_back(transform.y);
-                        message.emplace_back(transform.h);
-                        message.emplace_back(transform.w);
-                        message.emplace_back(color.color.r);
-                        message.emplace_back(color.color.g);
-                        message.emplace_back(color.color.b);
-                        message.emplace_back(color.color.a);
+                        auto message = send_strategy->get_message(entity.second, transform, color, Message::UPDATE);
 
                         worker.send(zmq::buffer(identity.to_string() + "R"), zmq::send_flags::sndmore);
                         worker.send(zmq::buffer(entity.first), zmq::send_flags::sndmore);
-                        worker.send(zmq::buffer(message), zmq::send_flags::none);
+                        if (std::holds_alternative<std::string>(message)) {
+                            auto str = std::get<std::string>(message);
+                            worker.send(zmq::buffer(str), zmq::send_flags::none);
+                        } else {
+                            auto vec = std::get<std::vector<float> >(message);
+                            worker.send(zmq::buffer(vec), zmq::send_flags::none);
+                        }
                     }
                 }
 
                 clients.insert(identity.to_string());
 
-                const std::vector<float> received_msg(static_cast<float *>(entity_data.data()),
-                                                      static_cast<float *>(entity_data.data()) + entity_data.size() /
-                                                      sizeof
-                                                      (float));
+                std::variant<std::vector<char>, std::vector<float> > received_msg = send_strategy->copy_message(
+                    entity_data);
 
 
                 for (const auto &clientId: clients) {
@@ -89,7 +83,13 @@ public:
 
                     worker.send(zmq::buffer(clientId + "R"), zmq::send_flags::sndmore);
                     worker.send(zmq::buffer(entity_id.to_string()), zmq::send_flags::sndmore);
-                    worker.send(zmq::buffer(received_msg), zmq::send_flags::none);
+                    if (std::holds_alternative<std::vector<float> >(received_msg)) {
+                        auto str = std::get<std::vector<float> >(received_msg);
+                        worker.send(zmq::buffer(str), zmq::send_flags::none);
+                    } else {
+                        auto vec = std::get<std::vector<char> >(received_msg);
+                        worker.send(zmq::buffer(vec), zmq::send_flags::none);
+                    }
                 }
 
 

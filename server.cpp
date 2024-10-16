@@ -15,6 +15,7 @@
 #include "lib/helpers/constants.hpp"
 #include "lib/helpers/random.hpp"
 #include "lib/server/worker.hpp"
+#include "lib/strategy/strategy_selector.hpp"
 #include "lib/systems/kinematic.cpp"
 #include "lib/systems/render.cpp"
 #include "lib/systems/gravity.cpp"
@@ -52,7 +53,7 @@ void platform_movement(Timeline &timeline, MoveBetween2PointsSystem &moveBetween
     std::cout << "Kill platform thread" << std::endl;
 }
 
-void server_run(zmq::context_t &context, zmq::socket_ref frontend, zmq::socket_ref backend) {
+void server_run(zmq::context_t &context, zmq::socket_ref frontend, zmq::socket_ref backend, Send_Strategy *send_strategy) {
     int max_threads = 5;
 
     std::vector<std::unique_ptr<Worker> > workers;
@@ -60,7 +61,7 @@ void server_run(zmq::context_t &context, zmq::socket_ref frontend, zmq::socket_r
 
     for (int i = 0; i < max_threads; i++) {
         workers.push_back(std::make_unique<Worker>(context, ZMQ_DEALER, "WORKER" + std::to_string(i)));
-        threads.push_back(std::make_unique<std::thread>(&Worker::work, workers[i].get()));
+        threads.push_back(std::make_unique<std::thread>(&Worker::work, workers[i].get(), send_strategy));
         threads[i]->detach();
     }
 
@@ -99,6 +100,12 @@ int main(int argc, char *argv[]) {
     std::cout << std::endl;
     GameManager::getInstance()->gameRunning = true;
     anchorTimeline.start();
+    std::unique_ptr<Send_Strategy> strategy = nullptr;
+    if(argv[1] != nullptr) {
+        strategy = Strategy::select_message_strategy(argv[1]);
+    } else {
+        strategy = Strategy::select_message_strategy("float");
+    }
 
     Timeline gameTimeline(&anchorTimeline, 1);
     gameTimeline.start();
@@ -185,26 +192,20 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(platform, Destroy{});
     gCoordinator.addComponent(platform, ClientEntity{true});
 
-    Entity platform2 = gCoordinator.createEntity();
-    gCoordinator.addComponent(platform2, Transform{300, 300, 100, 100});
-    gCoordinator.addComponent(platform2, Color{255, 255, 0, 255});
-    gCoordinator.addComponent(platform2, CKinematic{0, 0, 0, 0});
-    gCoordinator.addComponent(platform2, MovingPlatform{200, 800, RIGHT, 2});
-    gCoordinator.addComponent(platform2, ClientEntity{true});
-    gCoordinator.addComponent(platform2, Destroy{});
-
-    auto entity2 = gCoordinator.createEntity();
-    gCoordinator.addComponent(entity2, Transform{300, SCREEN_HEIGHT, 32, SCREEN_WIDTH * 5, 0});
-    gCoordinator.addComponent(entity2, Color{shade_color::Black});
-    gCoordinator.addComponent(entity2, ClientEntity{true});
-    gCoordinator.addComponent(entity2, Destroy{});
+    // Entity platform2 = gCoordinator.createEntity();
+    // gCoordinator.addComponent(platform2, Transform{300, 300, 100, 100});
+    // gCoordinator.addComponent(platform2, Color{255, 255, 0, 255});
+    // gCoordinator.addComponent(platform2, CKinematic{0, 0, 0, 0});
+    // gCoordinator.addComponent(platform2, MovingPlatform{200, 800, RIGHT, 2});
+    // gCoordinator.addComponent(platform2, ClientEntity{true});
+    // gCoordinator.addComponent(platform2, Destroy{});
 
     zmq::context_t context(1);
     zmq::socket_t frontend(context, ZMQ_ROUTER);
     zmq::socket_t backend(context, ZMQ_DEALER);
     frontend.bind("tcp://*:5570");
     backend.bind("tcp://*:5571");
-    std::thread server_thread(server_run, std::ref(context), zmq::socket_ref(frontend), zmq::socket_ref(backend));
+    std::thread server_thread(server_run, std::ref(context), zmq::socket_ref(frontend), zmq::socket_ref(backend), strategy.get());
 
     std::string identity = Random::generateRandomID(10);
     std::cout << "Identity: " << identity << std::endl;
@@ -230,19 +231,19 @@ int main(int argc, char *argv[]) {
         platform_movement(gameTimeline, *moveBetween2PointsSystem);
     });
 
-    std::thread t2([&client_socket, &clientSystem] {
+    std::thread t2([&client_socket, &clientSystem, &strategy] {
         while (GameManager::getInstance()->gameRunning) {
-            clientSystem->update(client_socket);
+            clientSystem->update(client_socket, strategy.get());
         }
     });
 
-    std::thread t1([receiverSystem, &context, &identity]() {
+    std::thread t1([receiverSystem, &context, &identity, &strategy]() {
         zmq::socket_t socket(context, ZMQ_DEALER);
         std::string id = identity + "R";
         socket.set(zmq::sockopt::routing_id, id);
         socket.connect("tcp://localhost:5570");
         while (GameManager::getInstance()->gameRunning) {
-            receiverSystem->update(socket);
+            receiverSystem->update(socket, strategy.get());
         }
     });
 

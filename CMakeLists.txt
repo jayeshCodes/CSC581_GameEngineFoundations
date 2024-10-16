@@ -69,12 +69,13 @@ set(SOURCES
         lib/server/worker.hpp
         lib/systems/client.hpp
         lib/systems/receiver.hpp
+        lib/strategy/send_strategy.hpp
+        lib/strategy/strategy_selector.hpp
 )
 
 add_executable(shade_engine ${SOURCES} main.cpp)
 
 add_executable(shade_engine_server ${SOURCES} server.cpp)
-
 
 find_package(SDL2 REQUIRED)
 find_package(cppzmq REQUIRED)

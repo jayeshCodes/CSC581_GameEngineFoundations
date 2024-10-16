@@ -25,6 +25,9 @@
 #include "lib/systems/render.cpp"
 #include <csignal>
 
+#include "lib/strategy/send_strategy.hpp"
+#include "lib/strategy/strategy_selector.hpp"
+
 class ReceiverSystem;
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
 Timeline anchorTimeline(nullptr, 1000);
@@ -65,19 +68,23 @@ void catch_signals() {
     });
 }
 
-void send_delete_signal(zmq::socket_t &client_socket, Entity entity) {
+void send_delete_signal(zmq::socket_t &client_socket, Entity entity, Send_Strategy *strategy) {
     for (int i = 0; i < 5; i++) {
-        std::vector<float> message;
-        message.reserve(10);
-        message.emplace_back(Message::DELETE);
-        for (int i = 0; i < 9; i++) {
-            message.emplace_back(0);
-        }
+        Transform empty_transform{0, 0, 0, 0};
+        Color empty_color{0, 0, 0, 0};
+        auto message = strategy->get_message(entity, empty_transform, empty_color, Message::DELETE);
         std::string entity_id = gCoordinator.getEntityKey(entity);
         client_socket.send(zmq::buffer(entity_id), zmq::send_flags::sndmore);
-        client_socket.send(zmq::buffer(message), zmq::send_flags::none);
+        if (std::holds_alternative<std::string>(message)) {
+            auto str = std::get<std::string>(message);
+            client_socket.send(zmq::buffer(str), zmq::send_flags::none);
+        } else {
+            auto vec = std::get<std::vector<float> >(message);
+            client_socket.send(zmq::buffer(vec), zmq::send_flags::none);
+        }
     }
 }
+
 
 int main(int argc, char *argv[]) {
     std::cout << ENGINE_NAME << " v" << ENGINE_VERSION << " initializing" << std::endl;
@@ -86,6 +93,13 @@ int main(int argc, char *argv[]) {
     initSDL();
     GameManager::getInstance()->gameRunning = true;
     catch_signals();
+
+    std::unique_ptr<Send_Strategy> strategy = nullptr;
+    if(argv[1] != nullptr) {
+        strategy = Strategy::select_message_strategy(argv[1]);
+    } else {
+        strategy = Strategy::select_message_strategy("float");
+    }
 
     std::string identity = Random::generateRandomID(10);
     std::cout << "Identity: " << identity << std::endl;
@@ -202,14 +216,17 @@ int main(int argc, char *argv[]) {
 
 
     Entity mainCamera = gCoordinator.createEntity();
-    gCoordinator.addComponent(mainCamera, Camera{SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT}); // temporary values for viewport width and height
+    gCoordinator.addComponent(mainCamera, Camera{
+                                  SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT
+                              }); // temporary values for viewport width and height
 
     // create a platform
     auto platformEntity = gCoordinator.createEntity();
-    gCoordinator.addComponent(platformEntity, Transform{0, SCREEN_HEIGHT - 100.f, 500.f, SCREEN_WIDTH * 3/4.f, 0});
+    gCoordinator.addComponent(platformEntity, Transform{0, SCREEN_HEIGHT - 100.f, 500.f, SCREEN_WIDTH * 3 / 4.f, 0});
     gCoordinator.addComponent(platformEntity, Color{shade_color::Green});
     gCoordinator.addComponent(platformEntity, ClientEntity{});
-    gCoordinator.addComponent(platformEntity, RigidBody{-1.f}); // a negative mass value indicates that the entity is immovable by other entities
+    gCoordinator.addComponent(platformEntity, RigidBody{-1.f});
+    // a negative mass value indicates that the entity is immovable by other entities
     gCoordinator.addComponent(platformEntity, Collision{true, false});
     gCoordinator.addComponent(platformEntity, CKinematic{});
 
@@ -236,8 +253,6 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(entity2, Respawnable{{100.f, SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false});
 
 
-
-
     auto clientEntity = gCoordinator.createEntity();
     gCoordinator.addComponent(clientEntity, Receiver{7000, 7001});
 
@@ -258,19 +273,19 @@ int main(int argc, char *argv[]) {
         }
     });
 
-    std::thread t1([receiverSystem, &context, &identity]() {
+    std::thread t1([receiverSystem, &context, &identity, &strategy]() {
         zmq::socket_t socket(context, ZMQ_DEALER);
         std::string id = identity + "R";
         socket.set(zmq::sockopt::routing_id, id);
         socket.connect("tcp://localhost:5570");
         while (GameManager::getInstance()->gameRunning) {
-            receiverSystem->update(socket);
+            receiverSystem->update(socket, strategy.get());
         }
     });
 
-    std::thread t2([&client_socket, &clientSystem] {
+    std::thread t2([&client_socket, &clientSystem, &strategy] {
         while (GameManager::getInstance()->gameRunning) {
-            clientSystem->update(client_socket);
+            clientSystem->update(client_socket, strategy.get());
         }
     });
 
@@ -310,7 +325,7 @@ int main(int argc, char *argv[]) {
     /**
      * This is the cleanup code. The order is very important here since otherwise the program will crash.
      */
-    send_delete_signal(client_socket, mainChar);
+    send_delete_signal(client_socket, mainChar, strategy.get());
     delete_thread.join();
     t1.join();
     t2.join();
