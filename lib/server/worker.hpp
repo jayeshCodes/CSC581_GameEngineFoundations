@@ -45,10 +45,11 @@ public:
                 worker.recv(entity_data, zmq::recv_flags::none);
 
 
-                if(clients.find(identity.to_string()) == clients.end()) {
+                if (clients.find(identity.to_string()) == clients.end()) {
                     // send all entities to new client
                     for (const auto &entity: gCoordinator.getEntityIds()) {
-                        if(!gCoordinator.hasComponent<Transform>(entity.second) || !gCoordinator.hasComponent<Color>(entity.second)) {
+                        if (!gCoordinator.hasComponent<Transform>(entity.second) || !gCoordinator.hasComponent<Color>(
+                                entity.second)) {
                             continue;
                         }
                         auto &transform = gCoordinator.getComponent<Transform>(entity.second);
@@ -67,6 +68,7 @@ public:
                         message.emplace_back(color.color.b);
                         message.emplace_back(color.color.a);
 
+                        worker.send(zmq::buffer(identity.to_string() + "R"), zmq::send_flags::sndmore);
                         worker.send(zmq::buffer(entity.first), zmq::send_flags::sndmore);
                         worker.send(zmq::buffer(message), zmq::send_flags::none);
                     }
