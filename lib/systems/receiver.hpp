@@ -38,7 +38,7 @@ public:
                 }
             }
             if (command == Message::UPDATE) {
-                std::string eId = entity_id.to_string() + "_" + std::to_string(received_msg[1]);
+                const std::string eId = entity_id.to_string();
                 auto generatedId = gCoordinator.createEntity(eId);
 
                 gCoordinator.addComponent<Transform>(generatedId, Transform{});
@@ -56,6 +56,16 @@ public:
                 color.color.g = static_cast<Uint8>(received_msg[7]);
                 color.color.b = static_cast<Uint8>(received_msg[8]);
                 color.color.a = static_cast<Uint8>(received_msg[9]);
+            }
+            if (command == Message::DELETE) {
+                std::cout << "Destroying" << std::endl;
+                std::string eId = entity_id.to_string();
+                auto entities = gCoordinator.getEntitiesStartsWith(eId);
+                for (auto entity: entities) {
+                    auto generatedId = gCoordinator.getEntityIds()[eId];
+                    gCoordinator.addComponent<Destroy>(generatedId, Destroy{});
+                    gCoordinator.getComponent<Destroy>(generatedId).destroy = true;
+                }
             }
         }
     }

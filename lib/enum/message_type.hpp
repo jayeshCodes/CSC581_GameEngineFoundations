@@ -22,7 +22,8 @@ enum P2PMessageType {
 enum Message {
     UPDATE,
     DESTROY,
-    SYNC
+    SYNC,
+    DELETE
 };
 
 #endif //MESSAGE_TYPE_HPP

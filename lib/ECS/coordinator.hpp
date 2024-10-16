@@ -121,6 +121,28 @@ public:
         return entities;
     }
 
+    std::vector<Entity> getEntitiesStartsWith(std::string searchTerm) {
+        std::vector<Entity> ans;
+        ans.reserve(MAX_ENTITIES);
+        for(auto &[key, entity]: entities) {
+            //if key starts with key
+            if(key.find(searchTerm) == 0) {
+                ans.push_back(entity);
+            }
+        }
+        return ans;
+    }
+
+    std::string getEntityKey(const Entity id) {
+        std::shared_lock lock(mutex);
+        for(auto &[key, value]: entities) {
+            if(value == id) {
+                return key;
+            }
+        }
+        return "";
+    }
+
     static std::string createKey(Entity id) {
         return "Entity" + std::to_string(id);
     }

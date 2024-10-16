@@ -26,6 +26,8 @@ class ClientSystem : public System {
         for (int i = 0; i < 9; i++) {
             message.emplace_back(0);
         }
+
+        //This entity id doesnt matter
         std::string entity_id = client_socket.get(zmq::sockopt::routing_id) + std::to_string(-123);
         client_socket.send(zmq::buffer(entity_id), zmq::send_flags::sndmore);
         client_socket.send(zmq::buffer(message), zmq::send_flags::none);
@@ -59,7 +61,7 @@ class ClientSystem : public System {
 
             previous[entity] = transform;
 
-            std::string entity_id = client_socket.get(zmq::sockopt::routing_id) + std::to_string(entity);
+            std::string entity_id = gCoordinator.getEntityKey(entity);
             client_socket.send(zmq::buffer(entity_id), zmq::send_flags::sndmore);
             client_socket.send(zmq::buffer(message), zmq::send_flags::none);
         }

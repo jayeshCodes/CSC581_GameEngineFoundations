@@ -22,6 +22,7 @@
 #include "lib/systems/move_between_2_point_system.hpp"
 #include "lib/systems/receiver.hpp"
 #include "lib/systems/render.cpp"
+#include <csignal>
 
 class ReceiverSystem;
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
@@ -48,12 +49,42 @@ void platform_movement(Timeline &timeline, MoveBetween2PointsSystem &moveBetween
     std::cout << "Kill platform thread" << std::endl;
 }
 
+void catch_signals() {
+    std::signal(SIGINT, [](int signal) {
+        GameManager::getInstance()->gameRunning = false;
+    });
+    std::signal(SIGTERM, [](int signal) {
+        GameManager::getInstance()->gameRunning = false;
+    });
+    std::signal(SIGSEGV, [](int signal) {
+        GameManager::getInstance()->gameRunning = false;
+    });
+    std::signal(SIGABRT, [](int signal) {
+        GameManager::getInstance()->gameRunning = false;
+    });
+}
+
+void send_delete_signal(zmq::socket_t &client_socket, Entity entity) {
+    for (int i = 0; i < 5; i++) {
+        std::vector<float> message;
+        message.reserve(10);
+        message.emplace_back(Message::DELETE);
+        for (int i = 0; i < 9; i++) {
+            message.emplace_back(0);
+        }
+        std::string entity_id = gCoordinator.getEntityKey(entity);
+        client_socket.send(zmq::buffer(entity_id), zmq::send_flags::sndmore);
+        client_socket.send(zmq::buffer(message), zmq::send_flags::none);
+    }
+}
+
 int main(int argc, char *argv[]) {
     std::cout << ENGINE_NAME << " v" << ENGINE_VERSION << " initializing" << std::endl;
     std::cout << "Created by Utsav and Jayesh" << std::endl;
     std::cout << std::endl;
     initSDL();
     GameManager::getInstance()->gameRunning = true;
+    catch_signals();
 
     std::string identity = Random::generateRandomID(10);
     std::cout << "Identity: " << identity << std::endl;
@@ -159,13 +190,13 @@ int main(int argc, char *argv[]) {
     gCoordinator.setSystemSignature<JumpSystem>(jumpSignature);
 
 
-    Entity mainCamera = gCoordinator.createEntity("CAMERA");
+    Entity mainCamera = gCoordinator.createEntity(Random::generateRandomID(12));
     gCoordinator.addComponent(mainCamera, Camera{
                                   SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT
                               });
     // temporary values for viewport width and height
 
-    auto mainChar = gCoordinator.createEntity("CHAR");
+    auto mainChar = gCoordinator.createEntity(Random::generateRandomID(12));
     gCoordinator.addComponent(mainChar, Transform{0, SCREEN_HEIGHT - 32, 32, 32, 0});
     gCoordinator.addComponent(mainChar, Color{shade_color::Blue});
     gCoordinator.addComponent(mainChar, CKinematic{});
@@ -192,7 +223,6 @@ int main(int argc, char *argv[]) {
 
     std::thread delete_thread([&destroySystem]() {
         while (GameManager::getInstance()->gameRunning) {
-            destroySystem->update();
         }
     });
 
@@ -229,6 +259,7 @@ int main(int argc, char *argv[]) {
         jumpSystem->update(dt);
         gravitySystem->update(dt);
         keyboardMovementSystem->update();
+        destroySystem->update();
 
         auto main_camera = cameraSystem->getMainCamera();
         auto transform = gCoordinator.getComponent<Transform>(mainChar);
@@ -246,7 +277,7 @@ int main(int argc, char *argv[]) {
     /**
      * This is the cleanup code. The order is very important here since otherwise the program will crash.
      */
-
+    send_delete_signal(client_socket, mainChar);
     delete_thread.join();
     t1.join();
     t2.join();

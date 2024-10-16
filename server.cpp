@@ -52,10 +52,6 @@ void platform_movement(Timeline &timeline, MoveBetween2PointsSystem &moveBetween
     std::cout << "Kill platform thread" << std::endl;
 }
 
-void handleSignal(int signal) {
-    GameManager::getInstance()->gameRunning = false;
-}
-
 void server_run(zmq::context_t &context, zmq::socket_ref frontend, zmq::socket_ref backend) {
     int max_threads = 5;
 
@@ -73,19 +69,31 @@ void server_run(zmq::context_t &context, zmq::socket_ref frontend, zmq::socket_r
     } catch (std::exception &e) {
         std::cout << "Server error: " << e.what() << std::endl;
     }
+    std::cout << "Kill server thread" << std::endl;
+}
+
+void catch_signals() {
+    std::signal(SIGINT, [](int signal) {
+        std::cout << "Caught SIGINT" << std::endl;
+        GameManager::getInstance()->gameRunning = false;
+    });
+    std::signal(SIGTERM, [](int signal) {
+        std::cout << "Caught SIGTERM" << std::endl;
+        GameManager::getInstance()->gameRunning = false;
+    });
+    std::signal(SIGSEGV, [](int signal) {
+        std::cout << "Caught SIGSEGV" << std::endl;
+        GameManager::getInstance()->gameRunning = false;
+    });
+    std::signal(SIGABRT, [](int signal) {
+        std::cout << "Caught SIGABRT" << std::endl;
+        GameManager::getInstance()->gameRunning = false;
+    });
 }
 
 
 int main(int argc, char *argv[]) {
     // Register signals so that we can gracefully shutdown the server
-    std::signal(SIGTERM, handleSignal);
-    std::signal(SIGINT, handleSignal);
-    std::signal(SIGILL, handleSignal);
-    std::signal(SIGABRT, handleSignal);
-    std::signal(SIGFPE, handleSignal);
-    std::signal(SIGSEGV, handleSignal);
-    std::signal(SIGTERM, handleSignal);
-
     std::cout << ENGINE_NAME << " v" << ENGINE_VERSION << " initializing server" << std::endl;
     std::cout << "Created by Utsav and Jayesh" << std::endl;
     std::cout << std::endl;
@@ -169,7 +177,7 @@ int main(int argc, char *argv[]) {
     jumpSignature.set(gCoordinator.getComponentType<Jump>());
     gCoordinator.setSystemSignature<JumpSystem>(jumpSignature);
 
-    Entity platform = gCoordinator.createEntity();
+    Entity platform = gCoordinator.createEntity(Random::generateRandomID(12));
     gCoordinator.addComponent(platform, Transform{300, 100, 100, 100});
     gCoordinator.addComponent(platform, Color{255, 0, 0, 255});
     gCoordinator.addComponent(platform, CKinematic{0, 0, 0, 0});
@@ -177,7 +185,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(platform, Destroy{});
     gCoordinator.addComponent(platform, ClientEntity{true});
 
-    Entity platform2 = gCoordinator.createEntity();
+    Entity platform2 = gCoordinator.createEntity(Random::generateRandomID(12));
     gCoordinator.addComponent(platform2, Transform{300, 300, 100, 100});
     gCoordinator.addComponent(platform2, Color{255, 255, 0, 255});
     gCoordinator.addComponent(platform2, CKinematic{0, 0, 0, 0});
@@ -185,7 +193,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(platform2, ClientEntity{true});
     gCoordinator.addComponent(platform2, Destroy{});
 
-    auto entity2 = gCoordinator.createEntity();
+    auto entity2 = gCoordinator.createEntity(Random::generateRandomID(12));
     gCoordinator.addComponent(entity2, Transform{300, SCREEN_HEIGHT, 32, SCREEN_WIDTH * 5, 0});
     gCoordinator.addComponent(entity2, Color{shade_color::Black});
     gCoordinator.addComponent(entity2, ClientEntity{true});
@@ -222,13 +230,6 @@ int main(int argc, char *argv[]) {
         platform_movement(gameTimeline, *moveBetween2PointsSystem);
     });
 
-
-    std::thread delete_thread([&destroySystem]() {
-        while (GameManager::getInstance()->gameRunning) {
-            destroySystem->update();
-        }
-    });
-
     std::thread t2([&client_socket, &clientSystem] {
         while (GameManager::getInstance()->gameRunning) {
             clientSystem->update(client_socket);
@@ -253,6 +254,7 @@ int main(int argc, char *argv[]) {
         dt = std::max(dt, 1 / 60.f);
 
         kinematicSystem->update(dt);
+        destroySystem->update();
 
         auto elapsed_time = gameTimeline.getElapsedTime();
         auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - current_time); // Ensure float division
@@ -263,7 +265,6 @@ int main(int argc, char *argv[]) {
 
     // Create 4 Rectangle instances
     platform_thread.join();
-    delete_thread.join();
     t2.join();
     server_thread.join();
 

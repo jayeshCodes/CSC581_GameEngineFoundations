@@ -67,7 +67,7 @@ public:
                         message.emplace_back(color.color.b);
                         message.emplace_back(color.color.a);
 
-                        worker.send(zmq::buffer(entity_id.to_string()), zmq::send_flags::sndmore);
+                        worker.send(zmq::buffer(entity.first), zmq::send_flags::sndmore);
                         worker.send(zmq::buffer(message), zmq::send_flags::none);
                     }
                 }
@@ -86,7 +86,7 @@ public:
                     }
 
                     worker.send(zmq::buffer(clientId + "R"), zmq::send_flags::sndmore);
-                    worker.send(zmq::buffer(identity.to_string()), zmq::send_flags::sndmore);
+                    worker.send(zmq::buffer(entity_id.to_string()), zmq::send_flags::sndmore);
                     worker.send(zmq::buffer(received_msg), zmq::send_flags::none);
                 }
 
