@@ -1,60 +1,49 @@
-//
-// Created by Jayesh Gajhbar on 10/2/24.
-//
+// RenderSystem.hpp
 
-#include <SDL_render.h>
+#include <SDL.h>
 #include "../ECS/coordinator.hpp"
 #include "../ECS/system.hpp"
 #include "../model/components.hpp"
-
-#include "../objects/shapes/rectangle.hpp"
+#include "../core/structs.hpp"
 
 extern Coordinator gCoordinator;
+extern App *app;
 
 class RenderSystem : public System {
 public:
-    void update(const Camera &camera, float playerX, float playerY) {
-        float cameraX = calculateCameraX(camera, playerX);
+    // Update method to handle rendering and camera control
+    void update(const Entity camera) const {
+        // Update camera based on the player's position
+        Camera cameraComponent{0,0,0,0, 0, 0};
+        if(camera != INVALID_ENTITY) {
+            cameraComponent = gCoordinator.getComponent<Camera>(camera);
+        }
 
+        // Loop through all entities to render them
         for (const Entity entity: entities) {
             const auto &transform = gCoordinator.getComponent<Transform>(entity);
             const auto &color = gCoordinator.getComponent<Color>(entity);
 
+            // Set the color for rendering the entity
             SDL_SetRenderDrawColor(app->renderer, color.color.r, color.color.g, color.color.b, color.color.a);
 
             // Convert world coordinates to screen coordinates
-            // float screenX, screenY;
-            // worldToScreen(transform.x, transform.y, screenX, screenY, camera, cameraX);
-
-            // SDL_FRect tRect = {
-            //     screenX,
-            //     screenY,
-            //     transform.w * camera.zoom,
-            //     transform.h * camera.zoom
-            // };
             SDL_FRect tRect = {
-                transform.x,
+                transform.x - cameraComponent.x,
                 transform.y,
                 transform.w,
                 transform.h
             };
 
+            // Draw and fill the rectangle
             SDL_RenderDrawRectF(app->renderer, &tRect);
             SDL_RenderFillRectF(app->renderer, &tRect);
         }
     }
 
 private:
-    static float calculateCameraX(const Camera &camera, float playerX) {
-        float halfViewport = camera.viewport_width / 2;
-        if (playerX > halfViewport) {
-            return playerX + 0.75f * halfViewport;
-        }
-        return 0;
-    }
-
-    static void worldToScreen(float worldX, float worldY, float &screenX, float &screenY, const Camera &camera,
-                       float cameraX) {
+    // Convert world coordinates to screen coordinates
+    static void worldToScreen(float worldX, float worldY, float &screenX, float &screenY, const Camera &camera, float cameraX) {
         // Translate X based on camera position, keep Y constant
         float translatedX = worldX - cameraX;
         float translatedY = worldY - camera.y - 100.f;

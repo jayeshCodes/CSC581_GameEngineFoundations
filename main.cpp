@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
     catch_signals();
 
     std::unique_ptr<Send_Strategy> strategy = nullptr;
-    if(argv[1] != nullptr) {
+    if (argv[1] != nullptr) {
         strategy = Strategy::select_message_strategy(argv[1]);
     } else {
         strategy = Strategy::select_message_strategy("float");
@@ -216,13 +216,11 @@ int main(int argc, char *argv[]) {
 
 
     Entity mainCamera = gCoordinator.createEntity();
-    gCoordinator.addComponent(mainCamera, Camera{
-                                  SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT
-                              }); // temporary values for viewport width and height
+    gCoordinator.addComponent(mainCamera, Camera{0, 0, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT});
 
     // create a platform
     auto platformEntity = gCoordinator.createEntity();
-    gCoordinator.addComponent(platformEntity, Transform{0, SCREEN_HEIGHT - 100.f, 500.f, SCREEN_WIDTH * 3 / 4.f, 0});
+    gCoordinator.addComponent(platformEntity, Transform{0, SCREEN_HEIGHT - 100.f, 500.f, 2000.f, 0});
     gCoordinator.addComponent(platformEntity, Color{shade_color::Green});
     gCoordinator.addComponent(platformEntity, ClientEntity{});
     gCoordinator.addComponent(platformEntity, RigidBody{-1.f});
@@ -232,7 +230,7 @@ int main(int argc, char *argv[]) {
 
     auto mainChar = gCoordinator.createEntity();
     gCoordinator.addComponent(mainChar, Transform{0.f, SCREEN_HEIGHT - 200.f, 32, 32, 0});
-    gCoordinator.addComponent(mainChar, Color{shade_color::Blue});
+    gCoordinator.addComponent(mainChar, Color{shade_color::generateRandomSolidColor()});
     gCoordinator.addComponent(mainChar, CKinematic{});
     gCoordinator.addComponent(mainChar, KeyboardMovement{150.f});
     gCoordinator.addComponent(mainChar, ClientEntity{});
@@ -257,21 +255,6 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(clientEntity, Receiver{7000, 7001});
 
     auto last_time = gameTimeline.getElapsedTime();
-
-    zmq::socket_t socket(context, ZMQ_SUB);
-    socket.connect("tcp://localhost:" + std::to_string(SERVERPORT));
-    socket.set(zmq::sockopt::subscribe, "");
-
-    zmq::socket_t pub_socket(context, ZMQ_PUB);
-
-    zmq::socket_t connect_socket(context, ZMQ_REQ);
-    connect_socket.connect("tcp://localhost:" + std::to_string(engine_constants::SERVER_CONNECT_PORT));
-
-
-    std::thread delete_thread([&destroySystem]() {
-        while (GameManager::getInstance()->gameRunning) {
-        }
-    });
 
     std::thread t1([receiverSystem, &context, &identity, &strategy]() {
         zmq::socket_t socket(context, ZMQ_DEALER);
@@ -301,7 +284,6 @@ int main(int argc, char *argv[]) {
         dt = std::max(dt, engine_constants::FRAME_RATE); // Cap the maximum dt to 60fps
 
         kinematicSystem->update(dt);
-        cameraSystem->update(dt);
         jumpSystem->update(dt);
         gravitySystem->update(dt);
         keyboardMovementSystem->update();
@@ -309,9 +291,8 @@ int main(int argc, char *argv[]) {
         respawnSystem->update();
         destroySystem->update();
 
-        auto main_camera = cameraSystem->getMainCamera();
-        auto transform = gCoordinator.getComponent<Transform>(mainChar);
-        renderSystem->update(*main_camera, transform.x, transform.y);
+        cameraSystem->update(mainChar);
+        renderSystem->update(mainCamera);
 
         auto elapsed_time = gameTimeline.getElapsedTime();
         auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - current_time); // Ensure float division
@@ -326,7 +307,6 @@ int main(int argc, char *argv[]) {
      * This is the cleanup code. The order is very important here since otherwise the program will crash.
      */
     send_delete_signal(client_socket, mainChar, strategy.get());
-    delete_thread.join();
     t1.join();
     t2.join();
     cleanupSDL();

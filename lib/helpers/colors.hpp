@@ -27,6 +27,13 @@ namespace shade_color {
     constexpr SDL_Color LightBlue = {173, 216, 230, 255};
     constexpr SDL_Color LightGreen = {144, 238, 144, 255};
     constexpr SDL_Color LightYellow = {255, 255, 224, 255};
+
+    static SDL_Color generateRandomSolidColor() {
+        Uint8 r = static_cast<Uint8>(Random::generateRandomInt(0, 255));
+        Uint8 g = static_cast<Uint8>(Random::generateRandomInt(0, 255));
+        Uint8 b = static_cast<Uint8>(Random::generateRandomInt(0, 255));
+        return {r, g, b, 255};
+    }
 }
 
 #endif //COLORS_HPP

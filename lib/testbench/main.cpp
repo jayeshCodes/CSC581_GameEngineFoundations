@@ -275,7 +275,6 @@ int main(int argc, char *argv[]) {
         dt = std::max(dt, engine_constants::FRAME_RATE); // Cap the maximum dt to 60fps
 
         kinematicSystem->update(dt);
-        cameraSystem->update(dt);
         jumpSystem->update(dt);
         gravitySystem->update(dt);
         keyboardMovementSystem->update();
@@ -284,8 +283,7 @@ int main(int argc, char *argv[]) {
         destroySystem->update();
         testingClientSystem->update(gameTimeline);
 
-        auto main_camera = cameraSystem->getMainCamera();
-        renderSystem->update(*main_camera, SCREEN_WIDTH / 2.f, 0);
+        renderSystem->update(INVALID_ENTITY);
 
         auto elapsed_time = gameTimeline.getElapsedTime();
         auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - current_time); // Ensure float division
