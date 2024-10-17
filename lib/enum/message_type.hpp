@@ -23,7 +23,8 @@ enum Message {
     UPDATE,
     DESTROY,
     SYNC,
-    DELETE
+    DELETE,
+    TEST
 };
 
 #endif //MESSAGE_TYPE_HPP

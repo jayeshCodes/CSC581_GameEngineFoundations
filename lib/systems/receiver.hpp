@@ -11,6 +11,7 @@
 extern Coordinator gCoordinator;
 
 class ReceiverSystem : public System {
+    bool testStarted = false;
 public:
     void update(zmq::socket_t &socket, Send_Strategy *send_strategy) {
         zmq::pollitem_t items[] = {{static_cast<void *>(socket), 0, ZMQ_POLLIN, 0}};
@@ -62,6 +63,19 @@ public:
                         gCoordinator.addComponent<Destroy>(generatedId, Destroy{});
                         gCoordinator.getComponent<Destroy>(generatedId).destroy = true;
                     }
+                }
+                if(command == Message::TEST) {
+                    if(testStarted) {
+                        return;
+                    }
+                    std::cout << "Test message received" << std::endl;
+                    Entity id = gCoordinator.createEntity();
+                    gCoordinator.addComponent<TestClient>(id, TestClient{});
+                    gCoordinator.getComponent<TestClient>(id).testCompleted = false;
+                    gCoordinator.getComponent<TestClient>(id).testStarted = false;
+                    gCoordinator.getComponent<TestClient>(id).entities = 1000;
+                    testStarted = true;
+                    std::cout << "Generated test client entity" << std::endl;
                 }
             } catch (std::exception &e) {
                 std::string jsonString(static_cast<char*>(copy.data()), copy.size());

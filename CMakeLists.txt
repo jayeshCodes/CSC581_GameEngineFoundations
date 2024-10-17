@@ -73,9 +73,13 @@ set(SOURCES
         lib/strategy/strategy_selector.hpp
 )
 
-add_executable(shade_engine ${SOURCES} main.cpp)
-
+add_executable(shade_engine ${SOURCES} main.cpp
+        lib/systems/testing_server.hpp
+        lib/systems/testing_client.hpp)
 add_executable(shade_engine_server ${SOURCES} server.cpp)
+
+add_executable(shade_engine_test ${SOURCES} lib/testbench/main.cpp)
+add_executable(shade_engine_test_server ${SOURCES} lib/testbench/server.cpp)
 
 find_package(SDL2 REQUIRED)
 find_package(cppzmq REQUIRED)
@@ -83,4 +87,6 @@ find_package(nlohmann_json 3.2.0 REQUIRED)
 
 target_link_libraries(shade_engine cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
 target_link_libraries(shade_engine_server cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
+target_link_libraries(shade_engine_test cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
+target_link_libraries(shade_engine_test_server cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
 

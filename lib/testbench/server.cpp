@@ -8,27 +8,28 @@
 #include <zmq.hpp>
 
 #include "main.hpp"
-#include "lib/game/GameManager.hpp"
-#include "lib/model/components.hpp"
-#include "lib/core/timeline.hpp"
-#include "lib/ECS/coordinator.hpp"
-#include "lib/helpers/colors.hpp"
-#include "lib/helpers/constants.hpp"
-#include "lib/helpers/random.hpp"
-#include "lib/server/worker.hpp"
-#include "lib/strategy/strategy_selector.hpp"
-#include "lib/systems/kinematic.cpp"
-#include "lib/systems/render.cpp"
-#include "lib/systems/gravity.cpp"
-#include "lib/systems/camera.cpp"
-#include "lib/systems/client.hpp"
-#include "lib/systems/collision.hpp"
-#include "lib/systems/destroy.hpp"
-#include "lib/systems/jump.hpp"
-#include "lib/systems/keyboard_movement.cpp"
+#include "../game/GameManager.hpp"
+#include "../model/components.hpp"
+#include "../core/timeline.hpp"
+#include "../ECS/coordinator.hpp"
+#include "../helpers/colors.hpp"
+#include "../helpers/constants.hpp"
+#include "../helpers/random.hpp"
+#include "../server/worker.hpp"
+#include "../strategy/strategy_selector.hpp"
+#include "../systems/kinematic.cpp"
+#include "../systems/render.cpp"
+#include "../systems/gravity.cpp"
+#include "../systems/camera.cpp"
+#include "../systems/client.hpp"
+#include "../systems/collision.hpp"
+#include "../systems/destroy.hpp"
+#include "../systems/jump.hpp"
+#include "../systems/keyboard_movement.cpp"
+#include "../systems/testing_server.hpp"
 
-#include "lib/systems/move_between_2_point_system.hpp"
-#include "lib/systems/receiver.hpp"
+#include "../systems/move_between_2_point_system.hpp"
+#include "../systems/receiver.hpp"
 
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
 Timeline anchorTimeline(nullptr, 1000);
@@ -54,7 +55,8 @@ void platform_movement(Timeline &timeline, MoveBetween2PointsSystem &moveBetween
     std::cout << "Kill platform thread" << std::endl;
 }
 
-void server_run(zmq::context_t &context, zmq::socket_ref frontend, zmq::socket_ref backend, Send_Strategy *send_strategy) {
+void server_run(zmq::context_t &context, zmq::socket_ref frontend, zmq::socket_ref backend,
+                Send_Strategy *send_strategy) {
     int max_threads = 5;
 
     std::vector<std::unique_ptr<Worker> > workers;
@@ -102,7 +104,7 @@ int main(int argc, char *argv[]) {
     GameManager::getInstance()->gameRunning = true;
     anchorTimeline.start();
     std::unique_ptr<Send_Strategy> strategy = nullptr;
-    if(argv[1] != nullptr) {
+    if (argv[1] != nullptr) {
         strategy = Strategy::select_message_strategy(argv[1]);
     } else {
         strategy = Strategy::select_message_strategy("float");
@@ -126,6 +128,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Jump>();
     gCoordinator.registerComponent<ClientEntity>();
     gCoordinator.registerComponent<Receiver>();
+    gCoordinator.registerComponent<TestServer>();
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
     auto kinematicSystem = gCoordinator.registerSystem<KinematicSystem>();
@@ -138,6 +141,7 @@ int main(int argc, char *argv[]) {
     auto jumpSystem = gCoordinator.registerSystem<JumpSystem>();
     auto clientSystem = gCoordinator.registerSystem<ClientSystem>();
     auto receiverSystem = gCoordinator.registerSystem<ReceiverSystem>();
+    auto testingServerSystem = gCoordinator.registerSystem<TestingServerSystem>();
 
     Signature clientEntitySignature;
     clientEntitySignature.set(gCoordinator.getComponentType<ClientEntity>());
@@ -155,6 +159,13 @@ int main(int argc, char *argv[]) {
     movingPlatformSignature.set(gCoordinator.getComponentType<CKinematic>());
     movingPlatformSignature.set(gCoordinator.getComponentType<MovingPlatform>());
     gCoordinator.setSystemSignature<MoveBetween2PointsSystem>(movingPlatformSignature);
+
+    Signature keyboardMovementSignature;
+    keyboardMovementSignature.set(gCoordinator.getComponentType<Transform>());
+    keyboardMovementSignature.set(gCoordinator.getComponentType<CKinematic>());
+    keyboardMovementSignature.set(gCoordinator.getComponentType<KeyboardMovement>());
+    keyboardMovementSignature.set(gCoordinator.getComponentType<Jump>());
+    gCoordinator.setSystemSignature<KeyboardMovementSystem>(keyboardMovementSignature);
 
     Signature kinematicSignature;
     kinematicSignature.set(gCoordinator.getComponentType<Transform>());
@@ -185,28 +196,17 @@ int main(int argc, char *argv[]) {
     jumpSignature.set(gCoordinator.getComponentType<Jump>());
     gCoordinator.setSystemSignature<JumpSystem>(jumpSignature);
 
-    Entity platform = gCoordinator.createEntity();
-    gCoordinator.addComponent(platform, Transform{300, 100, 100, 100});
-    gCoordinator.addComponent(platform, Color{255, 0, 0, 255});
-    gCoordinator.addComponent(platform, CKinematic{0, 0, 0, 0});
-    gCoordinator.addComponent(platform, MovingPlatform{200, 800, LEFT, 2});
-    gCoordinator.addComponent(platform, Destroy{});
-    gCoordinator.addComponent(platform, ClientEntity{true});
-
-    // Entity platform2 = gCoordinator.createEntity();
-    // gCoordinator.addComponent(platform2, Transform{300, 300, 100, 100});
-    // gCoordinator.addComponent(platform2, Color{255, 255, 0, 255});
-    // gCoordinator.addComponent(platform2, CKinematic{0, 0, 0, 0});
-    // gCoordinator.addComponent(platform2, MovingPlatform{200, 800, RIGHT, 2});
-    // gCoordinator.addComponent(platform2, ClientEntity{true});
-    // gCoordinator.addComponent(platform2, Destroy{});
+    Signature testingSignature;
+    testingSignature.set(gCoordinator.getComponentType<TestServer>());
+    gCoordinator.setSystemSignature<TestingServerSystem>(testingSignature);
 
     zmq::context_t context(1);
     zmq::socket_t frontend(context, ZMQ_ROUTER);
     zmq::socket_t backend(context, ZMQ_DEALER);
     frontend.bind("tcp://*:5570");
     backend.bind("tcp://*:5571");
-    std::thread server_thread(server_run, std::ref(context), zmq::socket_ref(frontend), zmq::socket_ref(backend), strategy.get());
+    std::thread server_thread(server_run, std::ref(context), zmq::socket_ref(frontend), zmq::socket_ref(backend),
+                              strategy.get());
 
     std::string identity = Random::generateRandomID(10);
     std::cout << "Identity: " << identity << std::endl;
@@ -220,12 +220,6 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(server, Server{7000, 7001});
 
     auto last_time = gameTimeline.getElapsedTime();
-
-    zmq::socket_t socket(context, ZMQ_PUB);
-    socket.bind("tcp://*:" + std::to_string(SERVERPORT));
-
-    zmq::socket_t connect_socket(context, ZMQ_REP);
-    connect_socket.bind("tcp://*:" + std::to_string(engine_constants::SERVER_CONNECT_PORT));
 
 
     std::thread platform_thread([&gameTimeline, &moveBetween2PointsSystem]() {
@@ -248,6 +242,16 @@ int main(int argc, char *argv[]) {
         }
     });
 
+    std::thread test_thread([] {
+        std::cout << "Press any key to start test..." << std::endl;
+        auto keyPress = getchar();
+        if (keyPress) {
+            std::cout << "Starting test" << std::endl;
+            Entity id = gCoordinator.createEntity();
+            gCoordinator.addComponent(id, TestServer{true});
+        }
+    });
+
 
     while (GameManager::getInstance()->gameRunning) {
         auto current_time = gameTimeline.getElapsedTime();
@@ -257,6 +261,8 @@ int main(int argc, char *argv[]) {
 
         kinematicSystem->update(dt);
         destroySystem->update();
+        keyboardMovementSystem->update();
+        testingServerSystem->update(client_socket, strategy.get());
 
         auto elapsed_time = gameTimeline.getElapsedTime();
         auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - current_time); // Ensure float division
@@ -269,6 +275,7 @@ int main(int argc, char *argv[]) {
     platform_thread.join();
     t2.join();
     server_thread.join();
+    test_thread.join();
 
     std::cout << "Closing " << ENGINE_NAME << " Engine" << std::endl;
     return 0;

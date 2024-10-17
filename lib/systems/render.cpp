@@ -23,14 +23,20 @@ public:
             SDL_SetRenderDrawColor(app->renderer, color.color.r, color.color.g, color.color.b, color.color.a);
 
             // Convert world coordinates to screen coordinates
-            float screenX, screenY;
-            worldToScreen(transform.x, transform.y, screenX, screenY, camera, cameraX);
+            // float screenX, screenY;
+            // worldToScreen(transform.x, transform.y, screenX, screenY, camera, cameraX);
 
+            // SDL_FRect tRect = {
+            //     screenX,
+            //     screenY,
+            //     transform.w * camera.zoom,
+            //     transform.h * camera.zoom
+            // };
             SDL_FRect tRect = {
-                screenX,
-                screenY,
-                transform.w * camera.zoom,
-                transform.h * camera.zoom
+                transform.x,
+                transform.y,
+                transform.w,
+                transform.h
             };
 
             SDL_RenderDrawRectF(app->renderer, &tRect);

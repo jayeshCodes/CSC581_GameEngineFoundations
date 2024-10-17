@@ -147,4 +147,17 @@ struct RigidBody {
     float gravity_scale;
 };
 
+struct TestServer {
+    bool start = false;
+};
+
+struct TestClient {
+    int entities = 1000;
+    bool testStarted = false;
+    bool testCompleted = false;
+    int iterations = 0;
+    int64_t startTime = 0;
+    int64_t endTime = 0;
+};
+
 #endif //TRANSFORM_HPP
