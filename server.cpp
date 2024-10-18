@@ -126,6 +126,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Jump>();
     gCoordinator.registerComponent<ClientEntity>();
     gCoordinator.registerComponent<Receiver>();
+    gCoordinator.registerComponent<RigidBody>();
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
     auto kinematicSystem = gCoordinator.registerSystem<KinematicSystem>();
@@ -185,13 +186,42 @@ int main(int argc, char *argv[]) {
     jumpSignature.set(gCoordinator.getComponentType<Jump>());
     gCoordinator.setSystemSignature<JumpSystem>(jumpSignature);
 
+
+    // create a platform
+    auto ground = gCoordinator.createEntity();
+    gCoordinator.addComponent(ground, Transform{0, SCREEN_HEIGHT - 100.f, 500.f, 300.f, 0});
+    gCoordinator.addComponent(ground, Color{shade_color::Blue});
+    gCoordinator.addComponent(ground, ClientEntity{});
+    gCoordinator.addComponent(ground, RigidBody{-1.f});
+    gCoordinator.addComponent(ground, Collision{true, false, CollisionLayer::OTHER});
+    gCoordinator.addComponent(ground, CKinematic{});
+
+    auto ground2 = gCoordinator.createEntity();
+    gCoordinator.addComponent(ground2, Transform{800, SCREEN_HEIGHT - 100.f, 500.f, 1000.f, 0});
+    gCoordinator.addComponent(ground2, Color{shade_color::Green});
+    gCoordinator.addComponent(ground2, ClientEntity{});
+    gCoordinator.addComponent(ground2, RigidBody{-1.f});
+    gCoordinator.addComponent(ground2, Collision{true, false, CollisionLayer::OTHER});
+    gCoordinator.addComponent(ground2, CKinematic{});
+
     Entity platform = gCoordinator.createEntity();
-    gCoordinator.addComponent(platform, Transform{300, 100, 100, 100});
-    gCoordinator.addComponent(platform, Color{255, 0, 0, 255});
+    gCoordinator.addComponent(platform, Transform{300, SCREEN_HEIGHT - 100.f, 50, 200});
+    gCoordinator.addComponent(platform, Color{shade_color::Red});
     gCoordinator.addComponent(platform, CKinematic{0, 0, 0, 0});
-    gCoordinator.addComponent(platform, MovingPlatform{200, 800, LEFT, 2});
+    gCoordinator.addComponent(platform, MovingPlatform{300, 800 - 200, LEFT, 2});
     gCoordinator.addComponent(platform, Destroy{});
     gCoordinator.addComponent(platform, ClientEntity{true});
+    gCoordinator.addComponent(platform, RigidBody{-1.f});
+    gCoordinator.addComponent(platform, Collision{true, false, CollisionLayer::MOVING_PLATFORM});
+
+    // Entity platform2 = gCoordinator.createEntity();
+    // gCoordinator.addComponent(platform2, Transform{300, 500, 100, 400});
+    // gCoordinator.addComponent(platform2, Color{shade_color::Brown});
+    // gCoordinator.addComponent(platform2, CKinematic{0, 0, 0, 0});
+    // gCoordinator.addComponent(platform2, Destroy{});
+    // gCoordinator.addComponent(platform2, ClientEntity{true});
+    // gCoordinator.addComponent(platform2, Collision{true, false, CollisionLayer::OTHER});
+    // gCoordinator.addComponent(platform2, RigidBody{-1});
 
     // Entity platform2 = gCoordinator.createEntity();
     // gCoordinator.addComponent(platform2, Transform{300, 300, 100, 100});

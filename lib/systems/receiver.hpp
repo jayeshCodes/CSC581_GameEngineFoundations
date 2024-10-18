@@ -12,6 +12,7 @@ extern Coordinator gCoordinator;
 
 class ReceiverSystem : public System {
     bool testStarted = false;
+
 public:
     void update(zmq::socket_t &socket, Send_Strategy *send_strategy) {
         zmq::pollitem_t items[] = {{static_cast<void *>(socket), 0, ZMQ_POLLIN, 0}};
@@ -27,7 +28,8 @@ public:
             copy.copy(entity_data);
 
             try {
-                auto [command, received_transform, received_color] = send_strategy->parse_message(copy);
+                auto [command, received_transform, received_color, rigidbody, collision] = send_strategy->
+                        parse_message(copy);
                 if (command == Message::SYNC) {
                     std::cout << "Syncing" << std::endl;
                     auto ids = gCoordinator.getEntityIds();
@@ -43,16 +45,22 @@ public:
 
                     gCoordinator.addComponent<Transform>(generatedId, Transform{});
                     gCoordinator.addComponent<Color>(generatedId, Color{});
+                    gCoordinator.addComponent<RigidBody>(generatedId, RigidBody{-1});
+                    gCoordinator.addComponent<Collision>(generatedId, Collision{false, false});
+                    gCoordinator.addComponent<CKinematic>(generatedId, CKinematic{});
 
                     auto &transform = gCoordinator.getComponent<Transform>(generatedId);
                     auto &color = gCoordinator.getComponent<Color>(generatedId);
-
+                    auto &rigidBody = gCoordinator.getComponent<RigidBody>(generatedId);
+                    auto &collisionComponent = gCoordinator.getComponent<Collision>(generatedId);
 
                     transform = received_transform;
                     color.color = {
                         received_color.color.r, received_color.color.g, received_color.color.b,
                         received_color.color.a
                     };
+                    rigidBody = rigidbody;
+                    collisionComponent = collision;
                 }
                 if (command == Message::DELETE) {
                     std::cout << "Destroying" << std::endl;
@@ -64,8 +72,8 @@ public:
                         gCoordinator.getComponent<Destroy>(generatedId).destroy = true;
                     }
                 }
-                if(command == Message::TEST) {
-                    if(testStarted) {
+                if (command == Message::TEST) {
+                    if (testStarted) {
                         return;
                     }
                     std::cout << "Test message received" << std::endl;
@@ -78,7 +86,7 @@ public:
                     std::cout << "Generated test client entity" << std::endl;
                 }
             } catch (std::exception &e) {
-                std::string jsonString(static_cast<char*>(copy.data()), copy.size());
+                std::string jsonString(static_cast<char *>(copy.data()), copy.size());
                 std::cerr << "Error parsing message: " << jsonString << std::endl;
             }
         }

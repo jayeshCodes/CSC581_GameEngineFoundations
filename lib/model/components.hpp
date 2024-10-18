@@ -74,12 +74,7 @@ struct Server {
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Server, listen_port, publish_port)
 
 
-struct Receiver {
-    int listen_port;
-    int publish_port;
-};
-
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Receiver, listen_port, publish_port)
+struct Receiver {};
 
 struct MovingPlatform {
     float p1;
@@ -113,9 +108,16 @@ enum class CollisionShape {
     CIRCLE
 };
 
+enum CollisionLayer {
+    OTHER = 0,
+    PLAYER,
+    MOVING_PLATFORM,
+};
+
 struct Collision {
     bool isCollider;
     bool isTrigger;
+    CollisionLayer layer;
 };
 
 // Jump
@@ -140,6 +142,9 @@ struct Respawnable {
     bool isRespawn = false;
 };
 
+/**
+ * If mass is -1 then the object is considered to be static
+ */
 struct RigidBody {
     float mass;
     float drag;

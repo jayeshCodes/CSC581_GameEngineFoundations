@@ -34,7 +34,10 @@ class ClientSystem : public System {
     void sync(zmq::socket_t &client_socket, Send_Strategy *send_strategy) {
         Transform empty_transform{0, 0, 0, 0};
         Color empty_color{0, 0, 0, 0};
-        auto message = send_strategy->get_message(0, empty_transform, empty_color, Message::SYNC);
+        Collision empty_collision{0, 0};
+        RigidBody empty_rigid_body{0};
+        auto message = send_strategy->get_message(0, empty_transform, empty_color, Message::SYNC, empty_rigid_body,
+                                                  empty_collision);
 
         //This entity id doesnt matter
         std::string entity_id = client_socket.get(zmq::sockopt::routing_id) + std::to_string(-123);
@@ -49,13 +52,21 @@ class ClientSystem : public System {
             auto &transform = gCoordinator.getComponent<Transform>(entity);
             auto &color = gCoordinator.getComponent<Color>(entity);
             auto &clientEntity = gCoordinator.getComponent<ClientEntity>(entity);
+            Collision collision{false, false};
+            RigidBody rigid_body{0};
+            if (gCoordinator.hasComponent<Collision>(entity)) {
+                collision = gCoordinator.getComponent<Collision>(entity);
+            }
+            if (gCoordinator.hasComponent<RigidBody>(entity)) {
+                rigid_body = gCoordinator.getComponent<RigidBody>(entity);
+            }
 
             if (previous[entity].equal(transform) && clientEntity.noOfTimes == 0) {
                 continue;
             }
             clientEntity.noOfTimes--;
             clientEntity.noOfTimes = std::max(0, clientEntity.noOfTimes);
-            auto message = send_strategy->get_message(entity, transform, color, Message::UPDATE);
+            auto message = send_strategy->get_message(entity, transform, color, Message::UPDATE, rigid_body, collision);
             previous[entity] = transform;
 
             std::string entity_id = gCoordinator.getEntityKey(entity);

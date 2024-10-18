@@ -15,10 +15,11 @@ public:
     virtual ~Send_Strategy() = default;
 
     virtual std::variant<std::vector<float>, std::string> get_message(Entity entity, Transform &transform, Color &color,
-                                                                      Message messageType)
+                                                                      Message messageType, RigidBody &rigidBody,
+                                                                      Collision &collision)
     = 0;
 
-    virtual std::tuple<Message, Transform, Color> parse_message(zmq::message_t &message) = 0;
+    virtual std::tuple<Message, Transform, Color, RigidBody, Collision> parse_message(zmq::message_t &message) = 0;
 
     virtual std::variant<std::vector<char>, std::vector<float> > copy_message(zmq::message_t &message) = 0;
 };
@@ -26,9 +27,10 @@ public:
 class Float_Strategy : public Send_Strategy {
 public:
     std::variant<std::vector<float>, std::string> get_message(Entity entity, Transform &transform, Color &color,
-                                                              Message messageType) final {
+                                                              Message messageType, RigidBody &rigid_body,
+                                                              Collision &collision) final {
         std::vector<float> message;
-        message.reserve(10);
+        message.reserve(14);
         message.emplace_back(messageType);
         message.emplace_back(entity);
         message.emplace_back(transform.x);
@@ -39,16 +41,22 @@ public:
         message.emplace_back(color.color.g);
         message.emplace_back(color.color.b);
         message.emplace_back(color.color.a);
+        message.emplace_back(rigid_body.mass);
+        message.emplace_back(collision.isCollider);
+        message.emplace_back(collision.isTrigger);
+        message.emplace_back(collision.layer);
         return message;
     }
 
-    std::tuple<Message, Transform, Color> parse_message(zmq::message_t &message) final {
+    std::tuple<Message, Transform, Color, RigidBody, Collision> parse_message(zmq::message_t &message) final {
         const std::vector<float> received_msg(static_cast<float *>(message.data()),
                                               static_cast<float *>(message.data()) + message.size() / sizeof
                                               (float));
         auto messageType = static_cast<Message>(received_msg[0]);
         Transform transform{};
         Color color{};
+        RigidBody rigid_body{};
+        Collision collision{};
         transform.x = received_msg[2];
         transform.y = received_msg[3];
         transform.h = received_msg[4];
@@ -57,7 +65,11 @@ public:
         color.color.g = static_cast<Uint8>(received_msg[7]);
         color.color.b = static_cast<Uint8>(received_msg[8]);
         color.color.a = static_cast<Uint8>(received_msg[9]);
-        return std::make_tuple(messageType, transform, color);
+        rigid_body.mass = received_msg[10];
+        collision.isCollider = static_cast<bool>(received_msg[11]);
+        collision.isTrigger = static_cast<bool>(received_msg[12]);
+        collision.layer = static_cast<CollisionLayer>(static_cast<int>(received_msg[13]));
+        return std::make_tuple(messageType, transform, color, rigid_body, collision);
     }
 
     std::variant<std::vector<char>, std::vector<float> > copy_message(zmq::message_t &message) override {
@@ -72,7 +84,8 @@ public:
 class JSON_Strategy : public Send_Strategy {
 public:
     std::variant<std::vector<float>, std::string> get_message(Entity entity, Transform &transform, Color &color,
-                                                              Message messageType) override {
+                                                              Message messageType, RigidBody &rigid_body,
+                                                              Collision &collision) override {
         // Get the message
         nlohmann::json message;
         message["m"] = messageType;
@@ -85,10 +98,14 @@ public:
         message["c"]["g"] = color.color.g;
         message["c"]["b"] = color.color.b;
         message["c"]["a"] = color.color.a;
+        message["rb"]["m"] = rigid_body.mass;
+        message["co"]["c"] = collision.isCollider;
+        message["co"]["t"] = collision.isTrigger;
+        message["co"]["l"] = collision.layer;
         return message.dump();
     }
 
-    std::tuple<Message, Transform, Color> parse_message(zmq::message_t &message) override {
+    std::tuple<Message, Transform, Color, RigidBody, Collision> parse_message(zmq::message_t &message) override {
         // parse message
         try {
             std::string jsonString(static_cast<char *>(message.data()), message.size());
@@ -96,6 +113,8 @@ public:
             auto messageType = static_cast<Message>(received_msg["m"].get<int>());
             Transform transform{};
             Color color{};
+            RigidBody rigid_body{};
+            Collision collision{};
             transform.x = received_msg["t"]["x"].get<float>();
             transform.y = received_msg["t"]["y"].get<float>();
             transform.h = received_msg["t"]["h"].get<float>();
@@ -104,7 +123,11 @@ public:
             color.color.g = static_cast<Uint8>(received_msg["c"]["g"].get<int>());
             color.color.b = static_cast<Uint8>(received_msg["c"]["b"].get<int>());
             color.color.a = static_cast<Uint8>(received_msg["c"]["a"].get<int>());
-            return std::make_tuple(messageType, transform, color);
+            rigid_body.mass = received_msg["rb"]["m"].get<float>();
+            collision.isCollider = received_msg["co"]["c"].get<bool>();
+            collision.isTrigger = received_msg["co"]["t"].get<bool>();
+            collision.layer = static_cast<CollisionLayer>(received_msg["co"]["l"].get<int>());
+            return std::make_tuple(messageType, transform, color, rigid_body, collision);
         } catch (std::exception &e) {
             throw std::runtime_error("Error parsing JSON message");
         }

@@ -72,7 +72,10 @@ void send_delete_signal(zmq::socket_t &client_socket, Entity entity, Send_Strate
     for (int i = 0; i < 5; i++) {
         Transform empty_transform{0, 0, 0, 0};
         Color empty_color{0, 0, 0, 0};
-        auto message = strategy->get_message(entity, empty_transform, empty_color, Message::DELETE);
+        Collision empty_collision{0, 0};
+        RigidBody empty_rigid_body{0};
+        auto message = strategy->get_message(entity, empty_transform, empty_color, Message::DELETE, empty_rigid_body,
+                                             empty_collision);
         std::string entity_id = gCoordinator.getEntityKey(entity);
         client_socket.send(zmq::buffer(entity_id), zmq::send_flags::sndmore);
         if (std::holds_alternative<std::string>(message)) {
@@ -218,16 +221,6 @@ int main(int argc, char *argv[]) {
     Entity mainCamera = gCoordinator.createEntity();
     gCoordinator.addComponent(mainCamera, Camera{0, 0, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT});
 
-    // create a platform
-    auto platformEntity = gCoordinator.createEntity();
-    gCoordinator.addComponent(platformEntity, Transform{0, SCREEN_HEIGHT - 100.f, 500.f, 2000.f, 0});
-    gCoordinator.addComponent(platformEntity, Color{shade_color::Green});
-    gCoordinator.addComponent(platformEntity, ClientEntity{});
-    gCoordinator.addComponent(platformEntity, RigidBody{-1.f});
-    // a negative mass value indicates that the entity is immovable by other entities
-    gCoordinator.addComponent(platformEntity, Collision{true, false});
-    gCoordinator.addComponent(platformEntity, CKinematic{});
-
     auto mainChar = gCoordinator.createEntity();
     gCoordinator.addComponent(mainChar, Transform{0.f, SCREEN_HEIGHT - 200.f, 32, 32, 0});
     gCoordinator.addComponent(mainChar, Color{shade_color::generateRandomSolidColor()});
@@ -239,23 +232,14 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(mainChar, Gravity{0, 100});
     gCoordinator.addComponent(mainChar, Respawnable{{0, SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false});
     gCoordinator.addComponent(mainChar, RigidBody{1.f});
-    gCoordinator.addComponent(mainChar, Collision{true, false});
-
-    auto entity2 = gCoordinator.createEntity();
-    gCoordinator.addComponent(entity2, Transform{100.f, SCREEN_HEIGHT - 500.f, 32, 32, 0});
-    gCoordinator.addComponent(entity2, Color{shade_color::Red});
-    gCoordinator.addComponent(entity2, CKinematic{});
-    gCoordinator.addComponent(entity2, Collision{true, false});
-    gCoordinator.addComponent(entity2, RigidBody{1.f});
-    gCoordinator.addComponent(entity2, Gravity{0, 100});
-    gCoordinator.addComponent(entity2, Respawnable{{100.f, SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false});
-
+    gCoordinator.addComponent(mainChar, Collision{true, false, CollisionLayer::PLAYER});
 
     auto clientEntity = gCoordinator.createEntity();
-    gCoordinator.addComponent(clientEntity, Receiver{7000, 7001});
+    gCoordinator.addComponent(clientEntity, Receiver{});
 
     auto last_time = gameTimeline.getElapsedTime();
 
+    // Start the message receiver thread
     std::thread t1([receiverSystem, &context, &identity, &strategy]() {
         zmq::socket_t socket(context, ZMQ_DEALER);
         std::string id = identity + "R";
@@ -266,6 +250,7 @@ int main(int argc, char *argv[]) {
         }
     });
 
+    // Start the message sending thread
     std::thread t2([&client_socket, &clientSystem, &strategy] {
         while (GameManager::getInstance()->gameRunning) {
             clientSystem->update(client_socket, strategy.get());
@@ -290,7 +275,6 @@ int main(int argc, char *argv[]) {
         collisionSystem->update();
         respawnSystem->update();
         destroySystem->update();
-
         cameraSystem->update(mainChar);
         renderSystem->update(mainCamera);
 

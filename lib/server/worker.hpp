@@ -55,8 +55,16 @@ public:
                         }
                         auto &transform = gCoordinator.getComponent<Transform>(entity.second);
                         auto &color = gCoordinator.getComponent<Color>(entity.second);
-
-                        auto message = send_strategy->get_message(entity.second, transform, color, Message::UPDATE);
+                        RigidBody rigidBody{0};
+                        Collision collision{false, false};
+                        if(gCoordinator.hasComponent<RigidBody>(entity.second)) {
+                            rigidBody = gCoordinator.getComponent<RigidBody>(entity.second);
+                        }
+                        if(gCoordinator.hasComponent<Collision>(entity.second)) {
+                            collision = gCoordinator.getComponent<Collision>(entity.second);
+                        }
+                        auto message = send_strategy->get_message(entity.second, transform, color, Message::UPDATE,
+                                                                  rigidBody, collision);
 
                         worker.send(zmq::buffer(identity.to_string() + "R"), zmq::send_flags::sndmore);
                         worker.send(zmq::buffer(entity.first), zmq::send_flags::sndmore);
