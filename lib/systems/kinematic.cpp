@@ -26,6 +26,12 @@ public:
 
             transform.orientation += kinematic.rotation * dt;
 
+            if(transform.y > SCREEN_HEIGHT) {
+                transform.y = 0;
+            } else if(transform.y < 0) {
+                transform.y = SCREEN_HEIGHT;
+            }
+
             // if (transform.y < 0) {
             //     transform.y = 0;
             //     kinematic.velocity.y = 0; // Stop vertical movement if at the top
