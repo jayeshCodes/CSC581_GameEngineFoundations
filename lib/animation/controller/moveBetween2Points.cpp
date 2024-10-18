@@ -14,7 +14,7 @@ MoveBetween2Points::MoveBetween2Points(float point1, float point2, MovementState
 void MoveBetween2Points::moveBetween2Points(Object &object) {
     float currentX = object.rect.x;
     switch (state) {
-        case LEFT:
+        case TO:
             if (currentX <= left) {
                 state = STOP;
                 currTime = timeline.getElapsedTime();
@@ -23,7 +23,7 @@ void MoveBetween2Points::moveBetween2Points(Object &object) {
             }
         object.velocity.x = -200;
         break;
-        case RIGHT:
+        case FRO:
             if (currentX >= right) {
                 state = STOP;
                 currTime = timeline.getElapsedTime();
@@ -36,9 +36,9 @@ void MoveBetween2Points::moveBetween2Points(Object &object) {
             Uint32 passedTime = timeline.getElapsedTime();
         if ((passedTime - currTime) / 1000.f > waitTime) {
             if (currentX <= left) {
-                state = RIGHT;
+                state = FRO;
             } else {
-                state = LEFT;
+                state = TO;
             }
         }
         break;

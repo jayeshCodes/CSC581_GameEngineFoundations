@@ -118,7 +118,7 @@ void Server::process_messages() {
 void Server::platform_movement(Timeline &globalServerTimeline) {
     Timeline platformTimeline(&globalServerTimeline, 1);
     int64_t lastTime = platformTimeline.getElapsedTime();
-    MoveBetween2Points m(100.f, 400.f, LEFT, 2, platformTimeline);
+    MoveBetween2Points m(100.f, 400.f, TO, 2, platformTimeline);
     auto platform = Factory::createRectangle({255, 0, 0, 255}, {300, SCREEN_HEIGHT * 3 / 4.f, SCREEN_WIDTH / 2.f, 100},
                                              true, 100000.f, 0.8);
     while (GameManager::getInstance()->gameRunning) {

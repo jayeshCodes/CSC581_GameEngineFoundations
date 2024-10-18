@@ -136,7 +136,7 @@ void Host::move_platform(std::unique_ptr<Rectangle> &platform, Timeline &anchorT
     if (!GameManager::getInstance()->isServer) return;
     Timeline platformTimeline(&anchorTimeline, 1);
     int64_t lastTime = platformTimeline.getElapsedTime();
-    MoveBetween2Points m(100.f, 900.f, LEFT, 2, platformTimeline);
+    MoveBetween2Points m(100.f, 900.f, TO, 2, platformTimeline);
     while (GameManager::getInstance()->gameRunning) {
         int64_t currentTime = platformTimeline.getElapsedTime();
         float dT = (currentTime - lastTime) / 1000.f;

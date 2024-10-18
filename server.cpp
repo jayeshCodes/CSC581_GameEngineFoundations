@@ -208,7 +208,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(platform, Transform{300, SCREEN_HEIGHT - 100.f, 50, 200});
     gCoordinator.addComponent(platform, Color{shade_color::Red});
     gCoordinator.addComponent(platform, CKinematic{0, 0, 0, 0});
-    gCoordinator.addComponent(platform, MovingPlatform{300, 800 - 200, LEFT, 2});
+    gCoordinator.addComponent(platform, MovingPlatform{300, 800 - 200, TO, 2, HORIZONTAL});
     gCoordinator.addComponent(platform, Destroy{});
     gCoordinator.addComponent(platform, ClientEntity{true});
     gCoordinator.addComponent(platform, RigidBody{-1.f});

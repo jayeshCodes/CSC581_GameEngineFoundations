@@ -8,8 +8,8 @@
 #include "../../objects/object.hpp"
 
 enum MovementState {
-    LEFT,
-    RIGHT,
+    TO,
+    FRO,
     STOP
 };
 

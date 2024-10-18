@@ -76,11 +76,17 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Server, listen_port, publish_port)
 
 struct Receiver {};
 
+enum MovementType {
+    HORIZONTAL,
+    VERTICAL
+};
+
 struct MovingPlatform {
     float p1;
     float p2;
     MovementState state;
     int wait_time;
+    MovementType movementType;
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(MovingPlatform, p1, p2, state, wait_time)

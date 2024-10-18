@@ -219,6 +219,7 @@ private:
                     if(movableKinematic.velocity.x == 0 and immovableLayer == CollisionLayer::MOVING_PLATFORM) {
                         // This is a hack where we move the player along with the platform
                         movableTransform.x = immovableTransform.x + (immovableTransform.w / 2);
+                        movableTransform.y = immovableTransform.y - (immovableTransform.h / 2);
                     }
                 }
             } else if (fromLeft) {
