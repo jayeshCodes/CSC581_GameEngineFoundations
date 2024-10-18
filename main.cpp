@@ -228,7 +228,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(mainChar, KeyboardMovement{150.f});
     gCoordinator.addComponent(mainChar, ClientEntity{});
     gCoordinator.addComponent(mainChar, Destroy{});
-    gCoordinator.addComponent(mainChar, Jump{100.f, 1.f, false, 0.0f, true, 60.f});
+    gCoordinator.addComponent(mainChar, Jump{50.f, 1.f, false, 0.0f, true, 120.f});
     gCoordinator.addComponent(mainChar, Gravity{0, 100});
     gCoordinator.addComponent(mainChar, Respawnable{{0, SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false});
     gCoordinator.addComponent(mainChar, RigidBody{1.f});
