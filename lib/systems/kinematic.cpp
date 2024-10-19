@@ -26,11 +26,21 @@ public:
 
             transform.orientation += kinematic.rotation * dt;
 
+            // Uncomment this if running test bench because otherwise objects will mysteriously disapped xD
+
             // if(transform.y > SCREEN_HEIGHT) {
             //     transform.y = 0;
             // } else if(transform.y < 0) {
             //     transform.y = SCREEN_HEIGHT;
             // }
+            //
+            // if(transform.x > SCREEN_WIDTH) {
+            //     transform.x = 0;
+            // } else if(transform.x < 0) {
+            //     transform.x = SCREEN_WIDTH;
+            // }
+
+            // We dont do this anymore because we have collision in the system and we want the player to die
 
             // if (transform.y < 0) {
             //     transform.y = 0;

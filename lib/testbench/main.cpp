@@ -72,7 +72,10 @@ void send_delete_signal(zmq::socket_t &client_socket, Entity entity, Send_Strate
     for (int i = 0; i < 5; i++) {
         Transform empty_transform{0, 0, 0, 0};
         Color empty_color{0, 0, 0, 0};
-        auto message = strategy->get_message(entity, empty_transform, empty_color, Message::DELETE);
+        Collision empty_collision{false, false};
+        RigidBody empty_rigidbody{0};
+        auto message = strategy->get_message(entity, empty_transform, empty_color, Message::DELETE, empty_rigidbody,
+                                             empty_collision);
         std::string entity_id = gCoordinator.getEntityKey(entity);
         client_socket.send(zmq::buffer(entity_id), zmq::send_flags::sndmore);
         if (std::holds_alternative<std::string>(message)) {
@@ -228,18 +231,9 @@ int main(int argc, char *argv[]) {
 
 
     auto clientEntity = gCoordinator.createEntity();
-    gCoordinator.addComponent(clientEntity, Receiver{7000, 7001});
+    gCoordinator.addComponent(clientEntity, Receiver{});
 
     auto last_time = gameTimeline.getElapsedTime();
-
-    zmq::socket_t socket(context, ZMQ_SUB);
-    socket.connect("tcp://localhost:" + std::to_string(SERVERPORT));
-    socket.set(zmq::sockopt::subscribe, "");
-
-    zmq::socket_t pub_socket(context, ZMQ_PUB);
-
-    zmq::socket_t connect_socket(context, ZMQ_REQ);
-    connect_socket.connect("tcp://localhost:" + std::to_string(engine_constants::SERVER_CONNECT_PORT));
 
 
     std::thread delete_thread([&destroySystem]() {
@@ -275,13 +269,10 @@ int main(int argc, char *argv[]) {
         dt = std::max(dt, engine_constants::FRAME_RATE); // Cap the maximum dt to 60fps
 
         kinematicSystem->update(dt);
-        jumpSystem->update(dt);
         gravitySystem->update(dt);
-        keyboardMovementSystem->update();
-        collisionSystem->update();
-        respawnSystem->update();
-        destroySystem->update();
         testingClientSystem->update(gameTimeline);
+        receiverSystem->update(client_socket, strategy.get());
+
 
         renderSystem->update(INVALID_ENTITY);
 

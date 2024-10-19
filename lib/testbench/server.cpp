@@ -129,6 +129,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<ClientEntity>();
     gCoordinator.registerComponent<Receiver>();
     gCoordinator.registerComponent<TestServer>();
+    gCoordinator.registerComponent<RigidBody>();
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
     auto kinematicSystem = gCoordinator.registerSystem<KinematicSystem>();
@@ -166,6 +167,11 @@ int main(int argc, char *argv[]) {
     keyboardMovementSignature.set(gCoordinator.getComponentType<KeyboardMovement>());
     keyboardMovementSignature.set(gCoordinator.getComponentType<Jump>());
     gCoordinator.setSystemSignature<KeyboardMovementSystem>(keyboardMovementSignature);
+
+    Signature gravitySignature;
+    gravitySignature.set(gCoordinator.getComponentType<Transform>());
+    gravitySignature.set(gCoordinator.getComponentType<Gravity>());
+    gCoordinator.setSystemSignature<GravitySystem>(gravitySignature);
 
     Signature kinematicSignature;
     kinematicSignature.set(gCoordinator.getComponentType<Transform>());
@@ -263,6 +269,7 @@ int main(int argc, char *argv[]) {
         destroySystem->update();
         keyboardMovementSystem->update();
         testingServerSystem->update(client_socket, strategy.get());
+        gravitySystem->update(dt);
 
         auto elapsed_time = gameTimeline.getElapsedTime();
         auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - current_time); // Ensure float division

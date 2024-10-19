@@ -76,12 +76,11 @@ public:
                     if (testStarted) {
                         return;
                     }
-                    std::cout << "Test message received" << std::endl;
+                    std::cout << "Starting Testing" << std::endl;
                     Entity id = gCoordinator.createEntity();
                     gCoordinator.addComponent<TestClient>(id, TestClient{});
                     gCoordinator.getComponent<TestClient>(id).testCompleted = false;
                     gCoordinator.getComponent<TestClient>(id).testStarted = false;
-                    gCoordinator.getComponent<TestClient>(id).entities = 1000;
                     testStarted = true;
                     std::cout << "Generated test client entity" << std::endl;
                 }
