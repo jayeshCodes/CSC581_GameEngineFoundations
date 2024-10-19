@@ -8,41 +8,19 @@ set(SOURCES
         lib/core/init.cpp
         lib/core/input.cpp
         lib/core/structs.cpp
-        lib/objects/shapes/rectangle.cpp
-        lib/objects/shapes/rectangle.hpp
-        lib/objects/object.cpp
-        lib/objects/object.hpp
-        lib/objects/factory.cpp
-        lib/objects/factory.hpp
         lib/core/timer.hpp
         lib/core/timer.cpp
-        lib/core/kinematic.hpp
-        lib/core/physics/physics.hpp
-        lib/core/physics/physics.cpp
-        lib/core/physics/gravity.hpp
-        lib/core/physics/gravity.cpp
-        lib/core/physics/keyMovement.cpp
-        lib/core/physics/keyMovement.hpp
         lib/generic/singleton.cpp
         lib/generic/singleton.hpp
         lib/game/GameManager.cpp
         lib/game/GameManager.hpp
-        lib/animation/controller/moveBetween2Points.cpp
-        lib/animation/controller/moveBetween2Points.hpp
         lib/helpers/random.hpp
         lib/helpers/network_constants.hpp
         lib/core/timeline.hpp
         lib/core/timeline.cpp
-        lib/generic/safe_queue.hpp
         lib/enum/message_type.hpp
         lib/helpers/colors.hpp
         lib/helpers/constants.hpp
-        lib/network/p2p/host.cpp
-        lib/network/p2p/host.hpp
-        lib/network/client_server/client.cpp
-        lib/network/client_server/client.hpp
-        lib/network/client_server/server.cpp
-        lib/network/client_server/server.hpp
         lib/ECS/types.hpp
         lib/ECS/entity_manager.hpp
         lib/ECS/component_manager.hpp
@@ -57,9 +35,7 @@ set(SOURCES
         lib/systems/camera.cpp
         lib/systems/keyboard_movement.cpp
         lib/systems/camera.cpp
-        lib/generic/packed_map.hpp
         lib/systems/move_between_2_point_system.hpp
-        lib/model/data.hpp
         lib/helpers/ecs_helpers.hpp
         lib/systems/destroy.hpp
         lib/systems/collision.hpp
@@ -71,15 +47,18 @@ set(SOURCES
         lib/systems/receiver.hpp
         lib/strategy/send_strategy.hpp
         lib/strategy/strategy_selector.hpp
+        lib/systems/testing_server.hpp
+        lib/systems/testing_client.hpp
 )
 
-add_executable(shade_engine ${SOURCES} main.cpp
-        lib/systems/testing_server.hpp
-        lib/systems/testing_client.hpp)
+add_executable(shade_engine ${SOURCES} main.cpp)
 add_executable(shade_engine_server ${SOURCES} server.cpp)
 
-add_executable(shade_engine_test ${SOURCES} lib/testbench/main.cpp)
-add_executable(shade_engine_test_server ${SOURCES} lib/testbench/server.cpp)
+add_executable(platformer ${SOURCES} game/section_1_2/main.cpp)
+add_executable(platformer_server ${SOURCES} game/section_1_2/server.cpp)
+
+add_executable(shade_engine_test ${SOURCES} game/section_3/main.cpp)
+add_executable(shade_engine_test_server ${SOURCES} game/section_3/server.cpp)
 
 find_package(SDL2 REQUIRED)
 find_package(cppzmq REQUIRED)
@@ -89,4 +68,6 @@ target_link_libraries(shade_engine cppzmq SDL2::SDL2 nlohmann_json::nlohmann_jso
 target_link_libraries(shade_engine_server cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
 target_link_libraries(shade_engine_test cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
 target_link_libraries(shade_engine_test_server cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
+target_link_libraries(platformer cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
+target_link_libraries(platformer_server cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
 
