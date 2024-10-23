@@ -19,9 +19,6 @@ private:
     bool paused; // Is the timeline currently paused?
     Timeline* anchor; // Pointer to another timeline (e.g., system time or another timeline)
 
-    // Get current system time (or anchor time if anchored)
-    int64_t getCurrentTime();
-
 public:
     // Constructor
     explicit Timeline(Timeline* anchor_timeline = nullptr, double tic_interval = 1);
@@ -44,6 +41,9 @@ public:
     bool isPaused();
 
     void changeTic(double new_tic);
+
+    // Get current system time (or anchor time if anchored)
+    int64_t getCurrentTime(); // changed visibility to public
 };
 
 #endif // TIMELINE_H

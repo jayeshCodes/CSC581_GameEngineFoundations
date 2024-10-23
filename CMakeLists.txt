@@ -71,15 +71,25 @@ set(SOURCES
         lib/systems/receiver.hpp
         lib/strategy/send_strategy.hpp
         lib/strategy/strategy_selector.hpp
+        lib/EMS/event.hpp
+        lib/EMS/event_manager.hpp
 )
 
 add_executable(shade_engine ${SOURCES} main.cpp
         lib/systems/testing_server.hpp
-        lib/systems/testing_client.hpp)
-add_executable(shade_engine_server ${SOURCES} server.cpp)
+        lib/systems/testing_client.hpp
+        lib/EMS/event.hpp
+        lib/EMS/event_manager.hpp)
+add_executable(shade_engine_server ${SOURCES} server.cpp
+        lib/EMS/event.hpp
+        lib/EMS/event_manager.hpp)
 
-add_executable(shade_engine_test ${SOURCES} lib/testbench/main.cpp)
-add_executable(shade_engine_test_server ${SOURCES} lib/testbench/server.cpp)
+add_executable(shade_engine_test ${SOURCES} lib/testbench/main.cpp
+        lib/EMS/event.hpp
+        lib/EMS/event_manager.hpp)
+add_executable(shade_engine_test_server ${SOURCES} lib/testbench/server.cpp
+        lib/EMS/event.hpp
+        lib/EMS/event_manager.hpp)
 
 find_package(SDL2 REQUIRED)
 find_package(cppzmq REQUIRED)
