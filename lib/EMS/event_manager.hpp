@@ -26,13 +26,15 @@ private:
     std::mutex handlersMutex;
     Timeline *timeline;
 
+
+public:
     EventManager() {
         timeline = new Timeline(nullptr, 1);
     }
 
-public:
+
     template<typename T>
-    void subscribe(EventHandler handler) {
+    void subscribe(EventHandler &handler) {
         std::lock_guard<std::mutex> lock(handlersMutex);
         handlers[std::type_index(typeid(T))].push_back(handler);
     }
