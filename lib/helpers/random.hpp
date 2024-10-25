@@ -32,6 +32,20 @@ public:
         return id;
     }
 
+    static int generateRandomInt(const int min, const int max) {
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        static std::uniform_int_distribution<> dis(min, max);
+        return dis(gen);
+    }
+
+    static double generateRandomFloat(const float min, const float max) {
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        static std::uniform_real_distribution<> dis(min, max);
+        return std::round(dis(gen) * 100.0) / 100.0;
+    }
+
 };
 
 #endif //RANDOM_HPP

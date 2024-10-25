@@ -55,6 +55,10 @@ private:
                     continue;
                 }
 
+                if(collisionA.layer == collisionB.layer) {
+                    continue;
+                }
+
                 // Perform AABB collision detection
                 if (checkAABBCollision(transformA, transformB)) {
                     // Handle collision
@@ -96,6 +100,8 @@ private:
         auto &rigidBodyB = gCoordinator.getComponent<RigidBody>(entityB);
         auto &kinematicA = gCoordinator.getComponent<CKinematic>(entityA);
         auto &kinematicB = gCoordinator.getComponent<CKinematic>(entityB);
+        auto &collisionA = gCoordinator.getComponent<Collision>(entityA);
+        auto &collisionB = gCoordinator.getComponent<Collision>(entityB);
 
 
         // Check if either object is immovable
@@ -195,6 +201,9 @@ private:
             auto& movableTransform = immovableA ? transformB : transformA;
             auto& immovableTransform = immovableA ? transformA : transformB;
             auto& movableKinematic = immovableA ? kinematicB : kinematicA;
+            auto& immovableKinematic = immovableA ? kinematicA : kinematicB;
+            auto& movableLayer = immovableA ? collisionB.layer : collisionA.layer;
+            auto& immovableLayer = immovableA ? collisionA.layer : collisionB.layer;
 
             // Determine the direction of collision
             bool fromTop = movableTransform.y + movableTransform.h - overlapY <= immovableTransform.y;
@@ -207,6 +216,11 @@ private:
                 movableTransform.y = immovableTransform.y - movableTransform.h - epsilon;
                 if (movableKinematic.velocity.y > 0) {
                     movableKinematic.velocity.y = 0;  // Only stop downward movement
+                    if(movableKinematic.velocity.x == 0 and immovableLayer == CollisionLayer::MOVING_PLATFORM) {
+                        // This is a hack where we move the player along with the platform
+                        movableTransform.x = immovableTransform.x + (immovableTransform.w / 2);
+                        movableTransform.y = immovableTransform.y - (immovableTransform.h / 2);
+                    }
                 }
             } else if (fromLeft) {
                 // Movable object is to the left of immovable object

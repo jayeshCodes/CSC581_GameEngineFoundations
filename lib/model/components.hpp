@@ -74,18 +74,19 @@ struct Server {
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Server, listen_port, publish_port)
 
 
-struct Receiver {
-    int listen_port;
-    int publish_port;
-};
+struct Receiver {};
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Receiver, listen_port, publish_port)
+enum MovementType {
+    HORIZONTAL,
+    VERTICAL
+};
 
 struct MovingPlatform {
     float p1;
     float p2;
     MovementState state;
     int wait_time;
+    MovementType movementType;
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(MovingPlatform, p1, p2, state, wait_time)
@@ -113,9 +114,16 @@ enum class CollisionShape {
     CIRCLE
 };
 
+enum CollisionLayer {
+    OTHER = 0,
+    PLAYER,
+    MOVING_PLATFORM,
+};
+
 struct Collision {
     bool isCollider;
     bool isTrigger;
+    CollisionLayer layer;
 };
 
 // Jump
@@ -140,11 +148,27 @@ struct Respawnable {
     bool isRespawn = false;
 };
 
+/**
+ * If mass is -1 then the object is considered to be static
+ */
 struct RigidBody {
     float mass;
     float drag;
     float angular_drag;
     float gravity_scale;
+};
+
+struct TestServer {
+    bool start = false;
+};
+
+struct TestClient {
+    int entities = 1000;
+    bool testStarted = false;
+    bool testCompleted = false;
+    int iterations = 0;
+    int64_t startTime = 0;
+    int64_t endTime = 0;
 };
 
 #endif //TRANSFORM_HPP
