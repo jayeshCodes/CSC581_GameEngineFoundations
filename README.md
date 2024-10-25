@@ -45,6 +45,8 @@ build menu.
 
 1. After running step 4 above, run `./platformer_server {param}` to start the server from the `/build` folder
 2. Once server is running, run `./platformer {param}` to start the game
+3. If you want to run the testbench executables you can run `shade_engine_test_server {params}` and
+   `shade_engine_test {params}` respectively in order
 
 # Clean Up
 
