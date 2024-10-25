@@ -4,7 +4,7 @@
 #include "main.hpp"
 #include "lib/core/timeline.hpp"
 #include "lib/ECS/coordinator.hpp"
-#include "lib/enum/message_type.hpp"
+#include "lib/enum/enum.hpp"
 #include "lib/game/GameManager.hpp"
 #include "lib/helpers/colors.hpp"
 #include "lib/helpers/constants.hpp"

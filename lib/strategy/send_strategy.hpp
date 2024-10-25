@@ -7,7 +7,7 @@
 #include <variant>
 
 #include "../ECS/types.hpp"
-#include "../enum/message_type.hpp"
+#include "../enum/enum.hpp"
 #include "../model/components.hpp"
 
 class Send_Strategy {

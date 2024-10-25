@@ -18,7 +18,7 @@ set(SOURCES
         lib/helpers/network_constants.hpp
         lib/core/timeline.hpp
         lib/core/timeline.cpp
-        lib/enum/message_type.hpp
+        lib/enum/enum.hpp
         lib/helpers/colors.hpp
         lib/helpers/constants.hpp
         lib/ECS/types.hpp
@@ -47,18 +47,10 @@ set(SOURCES
         lib/systems/receiver.hpp
         lib/strategy/send_strategy.hpp
         lib/strategy/strategy_selector.hpp
-        lib/systems/testing_server.hpp
-        lib/systems/testing_client.hpp
 )
 
 add_executable(shade_engine ${SOURCES} main.cpp)
 add_executable(shade_engine_server ${SOURCES} server.cpp)
-
-add_executable(platformer ${SOURCES} game/section_1_2/main.cpp)
-add_executable(platformer_server ${SOURCES} game/section_1_2/server.cpp)
-
-add_executable(shade_engine_test ${SOURCES} game/section_3/main.cpp)
-add_executable(shade_engine_test_server ${SOURCES} game/section_3/server.cpp)
 
 find_package(SDL2 REQUIRED)
 find_package(cppzmq REQUIRED)
@@ -66,8 +58,3 @@ find_package(nlohmann_json 3.2.0 REQUIRED)
 
 target_link_libraries(shade_engine cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
 target_link_libraries(shade_engine_server cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
-target_link_libraries(shade_engine_test cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
-target_link_libraries(shade_engine_test_server cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
-target_link_libraries(platformer cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
-target_link_libraries(platformer_server cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
-

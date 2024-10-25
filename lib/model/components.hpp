@@ -7,9 +7,7 @@
 #include <SDL.h>
 #include <zmq.hpp>
 #include <nlohmann/json.hpp>
-
-#include "../animation/controller/moveBetween2Points.hpp"
-#include "../ECS/types.hpp"
+#include "../enum/enum.hpp"
 
 struct Transform {
     float x, y;
@@ -76,10 +74,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Server, listen_port, publish_port)
 
 struct Receiver {};
 
-enum MovementType {
-    HORIZONTAL,
-    VERTICAL
-};
+
 
 struct MovingPlatform {
     float p1;
