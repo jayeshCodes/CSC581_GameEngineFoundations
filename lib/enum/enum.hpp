@@ -5,19 +5,6 @@
 #ifndef MESSAGE_TYPE_HPP
 #define MESSAGE_TYPE_HPP
 
-enum MessageType {
-    CHAR_1,
-    CHAR_2,
-    CHAR_3,
-    PLATFORM
-};
-
-enum P2PMessageType {
-    P2P_CHARACTER_1,
-    P2P_CHARACTER_2,
-    P2P_CHARACTER_3,
-    P2P_PLATFORM
-};
 
 enum Message {
     UPDATE,
@@ -25,6 +12,17 @@ enum Message {
     SYNC,
     DELETE,
     TEST
+};
+
+enum MovementState {
+    TO,
+    FRO,
+    STOP
+};
+
+enum MovementType {
+    HORIZONTAL,
+    VERTICAL
 };
 
 #endif //MESSAGE_TYPE_HPP

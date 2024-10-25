@@ -8,41 +8,19 @@ set(SOURCES
         lib/core/init.cpp
         lib/core/input.cpp
         lib/core/structs.cpp
-        lib/objects/shapes/rectangle.cpp
-        lib/objects/shapes/rectangle.hpp
-        lib/objects/object.cpp
-        lib/objects/object.hpp
-        lib/objects/factory.cpp
-        lib/objects/factory.hpp
         lib/core/timer.hpp
         lib/core/timer.cpp
-        lib/core/kinematic.hpp
-        lib/core/physics/physics.hpp
-        lib/core/physics/physics.cpp
-        lib/core/physics/gravity.hpp
-        lib/core/physics/gravity.cpp
-        lib/core/physics/keyMovement.cpp
-        lib/core/physics/keyMovement.hpp
         lib/generic/singleton.cpp
         lib/generic/singleton.hpp
         lib/game/GameManager.cpp
         lib/game/GameManager.hpp
-        lib/animation/controller/moveBetween2Points.cpp
-        lib/animation/controller/moveBetween2Points.hpp
         lib/helpers/random.hpp
         lib/helpers/network_constants.hpp
         lib/core/timeline.hpp
         lib/core/timeline.cpp
-        lib/generic/safe_queue.hpp
-        lib/enum/message_type.hpp
+        lib/enum/enum.hpp
         lib/helpers/colors.hpp
         lib/helpers/constants.hpp
-        lib/network/p2p/host.cpp
-        lib/network/p2p/host.hpp
-        lib/network/client_server/client.cpp
-        lib/network/client_server/client.hpp
-        lib/network/client_server/server.cpp
-        lib/network/client_server/server.hpp
         lib/ECS/types.hpp
         lib/ECS/entity_manager.hpp
         lib/ECS/component_manager.hpp
@@ -57,9 +35,7 @@ set(SOURCES
         lib/systems/camera.cpp
         lib/systems/keyboard_movement.cpp
         lib/systems/camera.cpp
-        lib/generic/packed_map.hpp
         lib/systems/move_between_2_point_system.hpp
-        lib/model/data.hpp
         lib/helpers/ecs_helpers.hpp
         lib/systems/destroy.hpp
         lib/systems/collision.hpp
@@ -75,21 +51,8 @@ set(SOURCES
         lib/EMS/event_manager.hpp
 )
 
-add_executable(shade_engine ${SOURCES} main.cpp
-        lib/systems/testing_server.hpp
-        lib/systems/testing_client.hpp
-        lib/EMS/event.hpp
-        lib/EMS/event_manager.hpp)
-add_executable(shade_engine_server ${SOURCES} server.cpp
-        lib/EMS/event.hpp
-        lib/EMS/event_manager.hpp)
-
-add_executable(shade_engine_test ${SOURCES} lib/testbench/main.cpp
-        lib/EMS/event.hpp
-        lib/EMS/event_manager.hpp)
-add_executable(shade_engine_test_server ${SOURCES} lib/testbench/server.cpp
-        lib/EMS/event.hpp
-        lib/EMS/event_manager.hpp)
+add_executable(shade_engine ${SOURCES} main.cpp)
+add_executable(shade_engine_server ${SOURCES} server.cpp)
 
 find_package(SDL2 REQUIRED)
 find_package(cppzmq REQUIRED)
@@ -97,6 +60,3 @@ find_package(nlohmann_json 3.2.0 REQUIRED)
 
 target_link_libraries(shade_engine cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
 target_link_libraries(shade_engine_server cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
-target_link_libraries(shade_engine_test cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
-target_link_libraries(shade_engine_test_server cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
-

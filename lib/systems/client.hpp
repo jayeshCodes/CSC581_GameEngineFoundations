@@ -10,7 +10,7 @@
 
 #include "../ECS/coordinator.hpp"
 #include "../ECS/system.hpp"
-#include "../enum/message_type.hpp"
+#include "../enum/enum.hpp"
 #include "../model/components.hpp"
 #include "../strategy/send_strategy.hpp"
 

@@ -10,7 +10,7 @@
 #include <utility>
 #include <zmq.hpp>
 
-#include "../enum/message_type.hpp"
+#include "../enum/enum.hpp"
 #include "../strategy/send_strategy.hpp"
 
 
