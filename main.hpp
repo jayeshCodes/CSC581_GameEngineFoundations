@@ -6,11 +6,13 @@
 #include <memory>
 
 #include "lib/ECS/coordinator.hpp"
+#include "lib/EMS/event_coordinator.hpp"
 
 // SDL render and window context
 extern App *app;
 
 std::atomic<bool> gameRunning{false};
+EventCoordinator eventCoordinator;
 Coordinator gCoordinator;
 constexpr int SERVERPORT = 8000;
 

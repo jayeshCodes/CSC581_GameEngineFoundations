@@ -49,6 +49,8 @@ set(SOURCES
         lib/strategy/strategy_selector.hpp
         lib/EMS/event.hpp
         lib/EMS/event_manager.hpp
+        lib/EMS/event_coordinator.hpp
+        lib/data_structures/ThreadSafePriorityQueue.hpp
 )
 
 add_executable(shade_engine ${SOURCES} main.cpp)

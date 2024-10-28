@@ -219,20 +219,23 @@ int main(int argc, char *argv[]) {
 
 
     Entity mainCamera = gCoordinator.createEntity();
-    gCoordinator.addComponent(mainCamera, Camera{0, 0, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT});
+    gCoordinator.addComponent(mainCamera, Camera{.x=0, 0, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT});
 
     auto mainChar = gCoordinator.createEntity();
-    gCoordinator.addComponent(mainChar, Transform{0.f, SCREEN_HEIGHT - 200.f, 32, 32, 0});
-    gCoordinator.addComponent(mainChar, Color{shade_color::generateRandomSolidColor()});
+    gCoordinator.addComponent(mainChar, Transform{.x=0.f, SCREEN_HEIGHT - 200.f, 32, 32, 0});
+    gCoordinator.addComponent(mainChar, Color{.color=shade_color::generateRandomSolidColor()});
     gCoordinator.addComponent(mainChar, CKinematic{});
-    gCoordinator.addComponent(mainChar, KeyboardMovement{150.f});
+    gCoordinator.addComponent(mainChar, KeyboardMovement{.speed=150.f});
     gCoordinator.addComponent(mainChar, ClientEntity{});
     gCoordinator.addComponent(mainChar, Destroy{});
-    gCoordinator.addComponent(mainChar, Jump{50.f, 1.f, false, 0.0f, true, 120.f});
-    gCoordinator.addComponent(mainChar, Gravity{0, 100});
-    gCoordinator.addComponent(mainChar, Respawnable{{0, SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false});
-    gCoordinator.addComponent(mainChar, RigidBody{1.f});
-    gCoordinator.addComponent(mainChar, Collision{true, false, CollisionLayer::PLAYER});
+    gCoordinator.addComponent(mainChar, Jump{.maxJumpHeight=50.f, 1.f, false, 0.0f, true, 120.f});
+    gCoordinator.addComponent(mainChar, Gravity{.gravX=0, 100});
+    gCoordinator.addComponent(mainChar, Respawnable{.lastSafePosition={.x=0, SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false});
+    gCoordinator.addComponent(mainChar, RigidBody{.mass=1.f});
+    gCoordinator.addComponent(mainChar, Collision{.isCollider=true, false, CollisionLayer::PLAYER});
+
+    Event event{EntityCreated, "Main Char created"};
+    eventCoordinator.emit(std::make_shared<Event>(event));
 
     auto clientEntity = gCoordinator.createEntity();
     gCoordinator.addComponent(clientEntity, Receiver{});
@@ -274,7 +277,6 @@ int main(int argc, char *argv[]) {
         keyboardMovementSystem->update();
         collisionSystem->update();
         respawnSystem->update();
-        destroySystem->update();
         cameraSystem->update(mainChar);
         renderSystem->update(mainCamera);
 

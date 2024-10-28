@@ -6,70 +6,87 @@
 #define EVENT_MANAGER_HPP
 
 #include <functional>
+#include <iostream>
+#include <mutex>
 #include <queue>
+#include <typeindex>
 #include <unordered_map>
 #include <vector>
-#include <memory>
-#include <typeindex>
-#include <mutex>
 #include "event.hpp"
-#include "../core/timeline.hpp"
 
-using EventHandler = std::function<void(const Event &)>;
+#include "../core/timeline.hpp"
+#include "../data_structures/ThreadSafePriorityQueue.hpp"
+
+enum Priority { LOW, MEDIUM, HIGH };
+
+struct EventData {
+    std::shared_ptr<Event> event;
+    int64_t timestamp;
+    Priority priority;
+
+    EventData(std::shared_ptr<Event> evt, const int64_t time, const Priority prio)
+        : event(std::move(evt)), timestamp(time), priority(prio) {}
+};
+
+using EventHandler = std::function<void(std::shared_ptr<Event>)>;
 using EventTypeId = std::type_index;
+using QueuedEvent = std::shared_ptr<EventData>; // Event, timestamp, priority
+constexpr int MAX_EVENTS = 100000;
+
+struct CompareQueuedEvent {
+    bool operator()(const QueuedEvent &a, const QueuedEvent &b) const {
+        if (a->timestamp != b->timestamp) {
+            return a < b; // Compare timestamps
+        }
+        return a > b; // Compare priorities
+    }
+};
 
 class EventManager {
 private:
     std::unordered_map<EventTypeId, std::vector<EventHandler> > handlers;
-    std::queue<std::unique_ptr<Event> > eventQueue;
+    ThreadSafePriorityQueue<QueuedEvent, CompareQueuedEvent> eventQueue;
     std::mutex queueMutex;
     std::mutex handlersMutex;
-    Timeline *timeline;
-
 
 public:
-    EventManager() {
-        timeline = new Timeline(nullptr, 1);
+    void subscribe(const EventHandler &handler, EventType eventType) {
+        std::lock_guard lock(handlersMutex);
+        handlers[std::type_index(typeid(eventType))].push_back(handler);
     }
 
-
-    template<typename T>
-    void subscribe(EventHandler &handler) {
-        std::lock_guard<std::mutex> lock(handlersMutex);
-        handlers[std::type_index(typeid(T))].push_back(handler);
-    }
-
-    template<typename T>
-    void unsubscribe(EventHandler handler) {
-        std::lock_guard<std::mutex> lock(handlersMutex);
-        auto &eventHandlers = handlers[std::type_index(typeid(T))];
+    void unsubscribe(const EventHandler handler, EventType eventType) {
+        std::lock_guard lock(handlersMutex);
+        auto typeId = std::type_index(typeid(eventType));
+        if (!handlers.contains(typeId)) {
+            std::cerr << "Error: Invalid eventType" << std::endl;
+            return;
+        }
+        auto &eventHandlers = handlers[typeId];
         // Basic remove implementation for now
-        eventHandlers.erase(
-            std::remove_if(eventHandlers.begin(), eventHandlers.end(),
-                           [&handler](const EventHandler &h) {
-                               return h.target_type() == handler.target_type();
-                           }),
-            eventHandlers.end()
-        );
+        std::erase_if(eventHandlers,
+                      [&handler](const EventHandler &h) {
+                          return h.target_type() == handler.target_type();
+                      });
     }
 
     // use for immediate event processing
-    template<typename T>
-    void emit(const T &event) {
-        std::lock_guard<std::mutex> lock(handlersMutex);
-        auto typeId = std::type_index(typeid(T));
-        if (handlers.find(typeId) != handlers.end()) {
+    void emit(const std::shared_ptr<Event> &event) {
+        auto typeId = std::type_index(typeid(event->type));
+        if (handlers.contains(typeId)) {
             for (auto &handler: handlers[typeId]) {
-                handler(event);
+                handler(std::make_shared<Event>(*event));
             }
         }
     }
 
-    template<typename T>
-    void queueEvent(std::unique_ptr<T> event) {
-        std::lock_guard<std::mutex> lock(queueMutex);
-        event->timeStamp = timeline->getCurrentTime();
-        eventQueue.push(std::move(event));
+
+    void queueEvent(const std::shared_ptr<EventData>& event) {
+        if(eventQueue.size() > MAX_EVENTS) {
+            std::cout << "We cannot raise more events since event queue is full!!!" << std::endl;
+            return;
+        }
+        eventQueue.push(event);
     }
 };
 

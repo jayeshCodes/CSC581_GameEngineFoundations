@@ -265,16 +265,9 @@ int main(int argc, char *argv[]) {
     client_socket.connect("tcp://localhost:5570");
 
     Entity server = gCoordinator.createEntity();
-    gCoordinator.addComponent(server, Server{7000, 7001});
+    gCoordinator.addComponent(server, Server{.listen_port=7000, 7001});
 
     auto last_time = gameTimeline.getElapsedTime();
-
-    zmq::socket_t socket(context, ZMQ_PUB);
-    socket.bind("tcp://*:" + std::to_string(SERVERPORT));
-
-    zmq::socket_t connect_socket(context, ZMQ_REP);
-    connect_socket.bind("tcp://*:" + std::to_string(engine_constants::SERVER_CONNECT_PORT));
-
 
     std::thread platform_thread([&gameTimeline, &moveBetween2PointsSystem]() {
         platform_movement(gameTimeline, *moveBetween2PointsSystem);
@@ -304,7 +297,6 @@ int main(int argc, char *argv[]) {
         dt = std::max(dt, 1 / 60.f);
 
         kinematicSystem->update(dt);
-        destroySystem->update();
 
         auto elapsed_time = gameTimeline.getElapsedTime();
         auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - current_time); // Ensure float division

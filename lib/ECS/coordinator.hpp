@@ -10,7 +10,6 @@
 #include "component_manager.hpp"
 #include "entity_manager.hpp"
 #include "system_manager.hpp"
-#include "../EMS/event_manager.hpp"
 #include "../helpers/random.hpp"
 
 class Coordinator {
@@ -18,7 +17,6 @@ private:
     std::unique_ptr<ComponentManager> component_manager;
     std::unique_ptr<EntityManager> entity_manager;
     std::unique_ptr<SystemManager> system_manager;
-    std::unique_ptr<EventManager> event_manager;
     std::unordered_map<std::string, Entity> entities;
     mutable std::shared_mutex mutex;
 
@@ -27,7 +25,6 @@ public:
         component_manager = std::make_unique<ComponentManager>();
         entity_manager = std::make_unique<EntityManager>();
         system_manager = std::make_unique<SystemManager>();
-        event_manager = std::make_unique<EventManager>();
     }
 
     Entity createEntity() {
