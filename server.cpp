@@ -297,6 +297,7 @@ int main(int argc, char *argv[]) {
         dt = std::max(dt, 1 / 60.f);
 
         kinematicSystem->update(dt);
+        destroySystem->update();
 
         auto elapsed_time = gameTimeline.getElapsedTime();
         auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - current_time); // Ensure float division

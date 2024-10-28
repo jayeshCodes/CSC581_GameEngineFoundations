@@ -10,12 +10,34 @@
 
 // all the events in the game engine will inherit from this class
 enum EventType {
-    EntityCreated,
+    EntityRespawn,
+    EntityDeath,
+    EntityCollided,
+    EntityInput,
+};
+
+struct EntityRespawnData {
+    Entity entity;
+};
+
+struct EntityDeathData {
+    Entity entity;
+    Transform respawnPosition;
+};
+
+struct EntityCollidedData {
+    Entity entityA;
+    Entity entityB;
+};
+
+struct EntityInputData {
+    Entity entity;
+    SDL_Keycode key;
 };
 
 struct Event {
     EventType type;
-    std::variant<std::string> data;
+    std::variant<EntityRespawnData, EntityDeathData, EntityCollidedData, EntityInputData> data;
 };
 
 

@@ -44,7 +44,7 @@ struct CompareQueuedEvent {
 
 class EventManager {
 private:
-    std::unordered_map<EventTypeId, std::vector<EventHandler> > handlers;
+    std::unordered_map<EventType, std::vector<EventHandler> > handlers;
     ThreadSafePriorityQueue<QueuedEvent, CompareQueuedEvent> eventQueue;
     std::mutex queueMutex;
     std::mutex handlersMutex;
@@ -52,17 +52,16 @@ private:
 public:
     void subscribe(const EventHandler &handler, EventType eventType) {
         std::lock_guard lock(handlersMutex);
-        handlers[std::type_index(typeid(eventType))].push_back(handler);
+        handlers[eventType].push_back(handler);
     }
 
     void unsubscribe(const EventHandler handler, EventType eventType) {
         std::lock_guard lock(handlersMutex);
-        auto typeId = std::type_index(typeid(eventType));
-        if (!handlers.contains(typeId)) {
+        if (!handlers.contains(eventType)) {
             std::cerr << "Error: Invalid eventType" << std::endl;
             return;
         }
-        auto &eventHandlers = handlers[typeId];
+        auto &eventHandlers = handlers[eventType];
         // Basic remove implementation for now
         std::erase_if(eventHandlers,
                       [&handler](const EventHandler &h) {
@@ -73,8 +72,8 @@ public:
     // use for immediate event processing
     void emit(const std::shared_ptr<Event> &event) {
         auto typeId = std::type_index(typeid(event->type));
-        if (handlers.contains(typeId)) {
-            for (auto &handler: handlers[typeId]) {
+        if (handlers.contains(event->type)) {
+            for (auto &handler: handlers[event->type]) {
                 handler(std::make_shared<Event>(*event));
             }
         }

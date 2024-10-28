@@ -9,22 +9,20 @@
 #include "../model/components.hpp"
 
 extern Coordinator gCoordinator;
-extern EventCoordinator eventCoordinator;
 
 class DestroySystem : public System {
-    EventHandler entityCreatedHandler = [](const std::shared_ptr<Event> &event) {
-        if (event->type == EventType::EntityCreated) {
-            const auto entityCreatedEvent = std::get<std::string>(event->data);
-            std::cout << "Entity created: " << entityCreatedEvent << std::endl;
-        }
-    };
-
 public:
-    DestroySystem() {
-        eventCoordinator.subscribe(entityCreatedHandler, EventType::EntityCreated);
-    }
+    void update() const {
+        std::vector<Entity> entitiesToDestroy;
 
-    ~DestroySystem() {
-        eventCoordinator.unsubscribe(entityCreatedHandler, EventType::EntityCreated);
+        for (const auto entity: entities) {
+            if (auto &[slot, destroyed, isSent] = gCoordinator.getComponent<Destroy>(entity); destroyed) {
+                entitiesToDestroy.push_back(entity);
+            }
+        }
+
+        for (const auto entity: entitiesToDestroy) {
+            gCoordinator.destroyEntity(entity);
+        }
     }
 };

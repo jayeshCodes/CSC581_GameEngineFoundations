@@ -1,71 +1,40 @@
 //
-// Created by Jayesh Gajbhar on 10/14/24.
+// Created by Utsav Lal on 10/28/24.
 //
 
-#ifndef RESPAWN_HPP
-#define RESPAWN_HPP
-
-#include "../ECS/system.hpp"
-#include "../model/components.hpp"
+#pragma once
 #include "../ECS/coordinator.hpp"
+#include "../ECS/system.hpp"
+#include "../EMS/event_coordinator.hpp"
 
 extern Coordinator gCoordinator;
+extern EventCoordinator eventCoordinator;
 
 class RespawnSystem : public System {
-public:
-    void update() {
-        std::vector<Entity> entities = gCoordinator.getEntitiesWithComponent<Respawnable>();
-
-        for (auto &entity: entities) {
-            if (!hasRequiredComponents(entity)) {
-                std::cerr << "Entity missing required components for respawn" << std::endl;
-                return;
-            }
-
-            auto &transform = gCoordinator.getComponent<Transform>(entity);
-            auto &respawnable = gCoordinator.getComponent<Respawnable>(entity);
-            auto &collision = gCoordinator.getComponent<Collision>(entity);
-
-            if (shouldRespawn(transform, respawnable)) {
-                respawn(entity, transform, respawnable);
-            }
-        }
-    }
-
 private:
-    const float DEATH_Y = SCREEN_HEIGHT + 100.f;
-    const float RESPAWN_HEIGHT = 10.f;
-
-    bool shouldRespawn(Transform &transform, Respawnable &respawnable) {
-        return transform.y > DEATH_Y || respawnable.isRespawn;
-    }
-
-    void respawn (Entity &entity, Transform &transform, Respawnable& respawnable) {
-        transform.x = respawnable.lastSafePosition.x;
-        transform.y = respawnable.lastSafePosition.y + RESPAWN_HEIGHT;
-
-        // reset velocity
-        if(gCoordinator.hasComponent<CKinematic>(entity)) {
+    EventHandler respawnHandler = [this](const std::shared_ptr<Event> &event) {
+        if (event->type == EventType::EntityDeath) {
+            const auto &data = std::get<EntityDeathData>(event->data);
+            auto entity = data.entity;
+            auto &transform = gCoordinator.getComponent<Transform>(entity);
             auto &kinematic = gCoordinator.getComponent<CKinematic>(entity);
-            kinematic.velocity.x = 0;
-            kinematic.velocity.y = 0;
-            kinematic.acceleration.x = 0;
-            kinematic.acceleration.y = 0;
+            auto respawnTransform = data.respawnPosition;
+            transform = respawnTransform;
+            kinematic.velocity = {0, 0}; // Reset velocity on respawn
+            kinematic.acceleration = {0, 0}; // Reset acceleration on respawn
+
+            // Emit respawn event
+            Event respawnEvent{EntityRespawn, EntityRespawnData{entity}};
+            eventCoordinator.emit(std::make_shared<Event>(respawnEvent));
         }
+    };
 
-        respawnable.isRespawn = false;
+public:
+    RespawnSystem() {
+        eventCoordinator.subscribe(respawnHandler, EventType::EntityDeath);
     }
 
-    void updateLastSafePosition (Entity &entity, Transform &transform, Respawnable &respawnable) {
-        respawnable.lastSafePosition.x = transform.x;
-        respawnable.lastSafePosition.y = transform.y;
-    }
-
-    bool hasRequiredComponents(Entity entity) {
-        return gCoordinator.hasComponent<Transform>(entity) &&
-               gCoordinator.hasComponent<Respawnable>(entity) &&
-               gCoordinator.hasComponent<Collision>(entity);
+    ~RespawnSystem() {
+        eventCoordinator.unsubscribe(respawnHandler, EventType::EntityDeath);
     }
 };
-
-#endif //RESPAWN_HPP

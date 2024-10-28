@@ -20,13 +20,14 @@
 #include "lib/systems/keyboard_movement.cpp"
 #include "lib/systems/kinematic.cpp"
 #include "lib/systems/move_between_2_point_system.hpp"
-#include "lib/systems/respawn.hpp"
+#include "lib/systems/death.hpp"
 #include "lib/systems/receiver.hpp"
 #include "lib/systems/render.cpp"
 #include <csignal>
 
 #include "lib/strategy/send_strategy.hpp"
 #include "lib/strategy/strategy_selector.hpp"
+#include "lib/systems/respawn.hpp"
 
 class ReceiverSystem;
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
@@ -148,9 +149,10 @@ int main(int argc, char *argv[]) {
     auto destroySystem = gCoordinator.registerSystem<DestroySystem>();
     auto collisionSystem = gCoordinator.registerSystem<CollisionSystem>();
     auto jumpSystem = gCoordinator.registerSystem<JumpSystem>();
-    auto respawnSystem = gCoordinator.registerSystem<RespawnSystem>();
+    auto deathSystem = gCoordinator.registerSystem<DeathSystem>();
     auto clientSystem = gCoordinator.registerSystem<ClientSystem>();
     auto receiverSystem = gCoordinator.registerSystem<ReceiverSystem>();
+    auto respawnSystem = gCoordinator.registerSystem<RespawnSystem>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
@@ -215,7 +217,9 @@ int main(int argc, char *argv[]) {
 
     Signature respawnSignature;
     respawnSignature.set(gCoordinator.getComponentType<Respawnable>());
-    gCoordinator.setSystemSignature<RespawnSystem>(respawnSignature);
+    respawnSignature.set(gCoordinator.getComponentType<Transform>());
+    respawnSignature.set(gCoordinator.getComponentType<Collision>());
+    gCoordinator.setSystemSignature<DeathSystem>(respawnSignature);
 
 
     Entity mainCamera = gCoordinator.createEntity();
@@ -233,9 +237,6 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(mainChar, Respawnable{.lastSafePosition={.x=0, SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false});
     gCoordinator.addComponent(mainChar, RigidBody{.mass=1.f});
     gCoordinator.addComponent(mainChar, Collision{.isCollider=true, false, CollisionLayer::PLAYER});
-
-    Event event{EntityCreated, "Main Char created"};
-    eventCoordinator.emit(std::make_shared<Event>(event));
 
     auto clientEntity = gCoordinator.createEntity();
     gCoordinator.addComponent(clientEntity, Receiver{});
@@ -276,7 +277,8 @@ int main(int argc, char *argv[]) {
         gravitySystem->update(dt);
         keyboardMovementSystem->update();
         collisionSystem->update();
-        respawnSystem->update();
+        deathSystem->update();
+        destroySystem->update();
         cameraSystem->update(mainChar);
         renderSystem->update(mainCamera);
 
