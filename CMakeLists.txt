@@ -51,11 +51,14 @@ set(SOURCES
         lib/EMS/event_manager.hpp
         lib/EMS/event_coordinator.hpp
         lib/data_structures/ThreadSafePriorityQueue.hpp
+        lib/systems/keyboard.hpp
 )
 
 add_executable(shade_engine ${SOURCES} main.cpp
-        lib/systems/respawn.hpp)
-add_executable(shade_engine_server ${SOURCES} server.cpp)
+        lib/systems/respawn.hpp
+        lib/systems/keyboard.hpp)
+add_executable(shade_engine_server ${SOURCES} server.cpp
+        lib/systems/keyboard.hpp)
 
 find_package(SDL2 REQUIRED)
 find_package(cppzmq REQUIRED)
