@@ -60,8 +60,8 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Gravity, gravX, gravY);
 
 struct KeyboardMovement {
     float speed;
-    boolean movingLeft = false;
-    boolean movingRight = false;
+    bool movingLeft = false;
+    bool movingRight = false;
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(KeyboardMovement, speed)
