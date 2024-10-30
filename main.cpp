@@ -28,7 +28,9 @@
 #include "lib/strategy/send_strategy.hpp"
 #include "lib/strategy/strategy_selector.hpp"
 #include "lib/systems/event_system.hpp"
+#include "lib/systems/keyboard.hpp"
 #include "lib/systems/respawn.hpp"
+#include "lib/systems/collision_handler.hpp"
 
 class ReceiverSystem;
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
@@ -153,6 +155,8 @@ int main(int argc, char *argv[]) {
     auto clientSystem = gCoordinator.registerSystem<ClientSystem>();
     auto receiverSystem = gCoordinator.registerSystem<ReceiverSystem>();
     auto respawnSystem = gCoordinator.registerSystem<RespawnSystem>();
+    auto keyboardSystem = gCoordinator.registerSystem<KeyboardSystem>();
+    auto collisonHandlerSystem = gCoordinator.registerSystem<CollisionHandlerSystem>();
     auto eventSystem = gCoordinator.registerSystem<EventSystem>();
 
     Signature renderSignature;
