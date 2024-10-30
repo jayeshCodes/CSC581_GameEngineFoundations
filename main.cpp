@@ -27,6 +27,7 @@
 
 #include "lib/strategy/send_strategy.hpp"
 #include "lib/strategy/strategy_selector.hpp"
+#include "lib/systems/keyboard.hpp"
 #include "lib/systems/respawn.hpp"
 
 class ReceiverSystem;
@@ -153,6 +154,7 @@ int main(int argc, char *argv[]) {
     auto clientSystem = gCoordinator.registerSystem<ClientSystem>();
     auto receiverSystem = gCoordinator.registerSystem<ReceiverSystem>();
     auto respawnSystem = gCoordinator.registerSystem<RespawnSystem>();
+    auto keyboardSystem = gCoordinator.registerSystem<KeyboardSystem>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());

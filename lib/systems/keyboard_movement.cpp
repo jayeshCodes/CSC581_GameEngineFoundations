@@ -5,9 +5,11 @@
 #include "../ECS/coordinator.hpp"
 #include "../ECS/system.hpp"
 #include "../model/components.hpp"
+#include "../EMS/event_coordinator.hpp"
 #include <thread>
 
 extern Coordinator gCoordinator;
+extern EventCoordinator eventCoordinator;
 
 class KeyboardMovementSystem : public System {
 public:
@@ -26,20 +28,20 @@ public:
             //     kinematic.velocity.y = -keyboard.speed;
             // }
             if (state[SDL_SCANCODE_A]) {
-                kinematic.velocity.x = -keyboard.speed;
+                Event event{EventType::EntityInput, EntityInputData{entity, SDLK_a}};
+                eventCoordinator.emit(std::make_shared<Event>(event));
+
             }
             // if (state[SDL_SCANCODE_S]) {
             //     kinematic.velocity.y = keyboard.speed;
             // }
             if (state[SDL_SCANCODE_D]) {
-                kinematic.velocity.x = keyboard.speed;
+                Event event{EventType::EntityInput, EntityInputData{entity, SDLK_d}};
+                eventCoordinator.emit(std::make_shared<Event>(event));
             }
             if (state[SDL_SCANCODE_SPACE] && !jump.isJumping && jump.canJump) {
-                // Initialize jump
-                jump.isJumping = true;
-                jump.jumpTime = 0.f;
-                jump.canJump = false;
-                kinematic.velocity.y = -jump.initialJumpVelocity; // Add an initial upward velocity
+                Event event{EventType::EntityInput, EntityInputData{entity, SDLK_SPACE}};
+                eventCoordinator.emit(std::make_shared<Event>(event));
             }
         }
     }

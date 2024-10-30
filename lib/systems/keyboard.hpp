@@ -80,14 +80,6 @@ public:
         keyboard.movingRight = false;
         kinematic.velocity.x = 0;
     }
-
-
-    void update() const {
-        // Process all keyboard events
-        for (const auto &event: eventCoordinator.getEvents(EventType::EntityInput)) {
-            keyboardHandler(event);
-        }
-    }
 };
 
 #endif //KEYBOARD_HPP
