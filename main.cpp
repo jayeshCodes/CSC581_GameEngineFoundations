@@ -30,6 +30,7 @@
 #include "lib/systems/keyboard.hpp"
 #include "lib/systems/respawn.hpp"
 #include "lib/systems/collision_handler.hpp"
+#include "lib/systems/trigger_handler.hpp"
 
 class ReceiverSystem;
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
@@ -157,6 +158,7 @@ int main(int argc, char *argv[]) {
     auto respawnSystem = gCoordinator.registerSystem<RespawnSystem>();
     auto keyboardSystem = gCoordinator.registerSystem<KeyboardSystem>();
     auto collisonHandlerSystem = gCoordinator.registerSystem<CollisionHandlerSystem>();
+    auto triggerHandlerSystem = gCoordinator.registerSystem<TriggerHandlerSystem>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
@@ -241,6 +243,16 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(mainChar, Respawnable{.lastSafePosition={.x=0, SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false});
     gCoordinator.addComponent(mainChar, RigidBody{.mass=1.f});
     gCoordinator.addComponent(mainChar, Collision{.isCollider=true, false, CollisionLayer::PLAYER});
+
+    auto trigger = gCoordinator.createEntity();
+    gCoordinator.addComponent(trigger, Transform{.x=100.f, SCREEN_HEIGHT - 150.f, 32, 32, 0});
+    gCoordinator.addComponent(trigger, Color{.color=shade_color::Black});
+    gCoordinator.addComponent(trigger, CKinematic{});
+    gCoordinator.addComponent(trigger, ClientEntity{});
+    gCoordinator.addComponent(trigger, Destroy{});
+    gCoordinator.addComponent(trigger, RigidBody{.mass=-1.f});
+    gCoordinator.addComponent(trigger, Collision{false, true, CollisionLayer::OTHER});
+
 
     auto clientEntity = gCoordinator.createEntity();
     gCoordinator.addComponent(clientEntity, Receiver{});
