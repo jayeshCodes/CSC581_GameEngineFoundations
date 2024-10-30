@@ -13,21 +13,17 @@ class ThreadSafePriorityQueue {
 private:
     std::priority_queue<T, std::vector<T>, Compare> pq;
     mutable std::mutex mtx;
-    std::condition_variable cv;
 
 public:
     // Insert an element into the priority queue
     void push(const T& item) {
         std::lock_guard<std::mutex> lock(mtx);
         pq.push(std::move(item));
-        cv.notify_one(); // Notify one waiting thread
     }
 
     // Retrieve and remove the highest-priority element from the queue
     bool pop(T& item) {
         std::unique_lock<std::mutex> lock(mtx);
-        cv.wait(lock, [this] { return !pq.empty(); }); // Wait until queue is not empty
-
         if (pq.empty()) return false;
 
         item = pq.top();

@@ -31,6 +31,10 @@ public:
         EventData eventData(std::move(event), time, priority);
         eventManager->queueEvent(std::make_shared<EventData>(eventData));
     }
+
+    void processEventsInQueue(const int64_t timestamp) const {
+        eventManager->processEventQueue(timestamp);
+    }
 };
 
 #endif //EVENT_COORDINATOR_HPP

@@ -24,6 +24,7 @@
 #include "lib/systems/client.hpp"
 #include "lib/systems/collision.hpp"
 #include "lib/systems/destroy.hpp"
+#include "lib/systems/event_system.hpp"
 #include "lib/systems/jump.hpp"
 #include "lib/systems/keyboard_movement.cpp"
 
@@ -31,9 +32,6 @@
 #include "lib/systems/receiver.hpp"
 
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
-Timeline anchorTimeline(nullptr, 1000);
-
-
 void platform_movement(Timeline &timeline, MoveBetween2PointsSystem &moveBetween2PointsSystem) {
     Timeline platformTimeline(&timeline, 1);
     int64_t lastTime = platformTimeline.getElapsedTime();
@@ -139,6 +137,7 @@ int main(int argc, char *argv[]) {
     auto jumpSystem = gCoordinator.registerSystem<JumpSystem>();
     auto clientSystem = gCoordinator.registerSystem<ClientSystem>();
     auto receiverSystem = gCoordinator.registerSystem<ReceiverSystem>();
+    auto eventSystem = gCoordinator.registerSystem<EventSystem>();
 
     Signature clientEntitySignature;
     clientEntitySignature.set(gCoordinator.getComponentType<ClientEntity>());
@@ -298,6 +297,7 @@ int main(int argc, char *argv[]) {
 
         kinematicSystem->update(dt);
         destroySystem->update();
+        eventSystem->update();
 
         auto elapsed_time = gameTimeline.getElapsedTime();
         auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - current_time); // Ensure float division

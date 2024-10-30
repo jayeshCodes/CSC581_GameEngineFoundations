@@ -87,6 +87,18 @@ public:
         }
         eventQueue.push(event);
     }
+
+    void processEventQueue(int64_t time) {
+        QueuedEvent queuedEvent;
+        while(eventQueue.pop(queuedEvent)) {
+            if(queuedEvent->timestamp <= time) {
+                emit(queuedEvent->event);
+            } else {
+                eventQueue.push(queuedEvent); // Reinsert if not ready to process
+                break;
+            }
+        }
+    }
 };
 
 #endif //EVENT_MANAGER_HPP

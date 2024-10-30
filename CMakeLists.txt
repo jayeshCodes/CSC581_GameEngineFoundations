@@ -52,6 +52,7 @@ set(SOURCES
         lib/EMS/event_coordinator.hpp
         lib/data_structures/ThreadSafePriorityQueue.hpp
         lib/systems/keyboard.hpp
+        lib/systems/event_system.hpp
 )
 
 add_executable(shade_engine ${SOURCES} main.cpp

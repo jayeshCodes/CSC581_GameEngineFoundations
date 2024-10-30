@@ -11,6 +11,10 @@
 // SDL render and window context
 extern App *app;
 
+inline Timeline anchorTimeline(nullptr, 1000);
+inline Timeline gameTimeline(&anchorTimeline, 1);
+inline Timeline eventTimeline(&anchorTimeline, 1);
+
 std::atomic<bool> gameRunning{false};
 EventCoordinator eventCoordinator;
 Coordinator gCoordinator;

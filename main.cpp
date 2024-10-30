@@ -27,12 +27,12 @@
 
 #include "lib/strategy/send_strategy.hpp"
 #include "lib/strategy/strategy_selector.hpp"
+#include "lib/systems/event_system.hpp"
 #include "lib/systems/respawn.hpp"
 
 class ReceiverSystem;
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
-Timeline anchorTimeline(nullptr, 1000);
-Timeline gameTimeline(&anchorTimeline, 1);
+
 
 void platform_movement(Timeline &timeline, MoveBetween2PointsSystem &moveBetween2PointsSystem) {
     Timeline platformTimeline(&timeline, 1);
@@ -153,6 +153,7 @@ int main(int argc, char *argv[]) {
     auto clientSystem = gCoordinator.registerSystem<ClientSystem>();
     auto receiverSystem = gCoordinator.registerSystem<ReceiverSystem>();
     auto respawnSystem = gCoordinator.registerSystem<RespawnSystem>();
+    auto eventSystem = gCoordinator.registerSystem<EventSystem>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
@@ -281,6 +282,7 @@ int main(int argc, char *argv[]) {
         destroySystem->update();
         cameraSystem->update(mainChar);
         renderSystem->update(mainCamera);
+        eventSystem->update();
 
         auto elapsed_time = gameTimeline.getElapsedTime();
         auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - current_time); // Ensure float division
