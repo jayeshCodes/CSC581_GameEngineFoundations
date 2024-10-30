@@ -72,14 +72,6 @@ public:
         // unsubscribe keyboard events when the system is destroyed
         eventCoordinator.unsubscribe(keyboardHandler, EventType::EntityDeath);
     }
-
-    void reset(Entity entity) {
-        auto &keyboard = gCoordinator.getComponent<KeyboardMovement>(entity);
-        auto &kinematic = gCoordinator.getComponent<CKinematic>(entity);
-        keyboard.movingLeft = false;
-        keyboard.movingRight = false;
-        kinematic.velocity.x = 0;
-    }
 };
 
 #endif //KEYBOARD_HPP

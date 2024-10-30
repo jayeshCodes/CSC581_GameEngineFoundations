@@ -53,16 +53,19 @@ set(SOURCES
         lib/data_structures/ThreadSafePriorityQueue.hpp
         lib/systems/keyboard.hpp
         lib/systems/collision_handler.hpp
+        lib/systems/trigger_handler.hpp
         lib/systems/event_system.hpp
 )
 
 add_executable(shade_engine ${SOURCES} main.cpp
         lib/systems/respawn.hpp
         lib/systems/keyboard.hpp
-        lib/systems/collision_handler.hpp)
+        lib/systems/collision_handler.hpp
+        lib/systems/trigger_handler.hpp)
 add_executable(shade_engine_server ${SOURCES} server.cpp
         lib/systems/keyboard.hpp
-        lib/systems/collision_handler.hpp)
+        lib/systems/collision_handler.hpp
+        lib/systems/trigger_handler.hpp)
 
 find_package(SDL2 REQUIRED)
 find_package(cppzmq REQUIRED)

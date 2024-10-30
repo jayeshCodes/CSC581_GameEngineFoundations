@@ -51,21 +51,21 @@ private:
                 auto &collisionA = gCoordinator.getComponent<Collision>(entityA);
                 auto &collisionB = gCoordinator.getComponent<Collision>(entityB);
 
-                // Check if both entities are colliders
-                if (!collisionA.isCollider || !collisionB.isCollider) {
-                    continue;
-                }
 
-                if(collisionA.layer == collisionB.layer) {
+                if (collisionA.layer == collisionB.layer) {
                     continue;
                 }
 
                 // Perform AABB collision detection
                 if (checkAABBCollision(transformA, transformB)) {
                     // Handle collision
-                    if (collisionA.isTrigger || collisionB.isTrigger) {
+                    if (collisionA.isTrigger) {
                         handleTrigger(entityA, entityB);
-                    } else {
+                    }
+                    if (collisionB.isTrigger) {
+                        handleTrigger(entityB, entityA);
+                    }
+                    if (!collisionA.isTrigger && !collisionB.isTrigger) {
                         resolveCollision(entityA, entityB);
                     }
                 }
@@ -81,25 +81,23 @@ private:
     }
 
     static void handleTrigger(Entity triggerEntity, Entity otherEntity) {
-        // Implement trigger logic here
-        // For example, you might want to notify a game event system
-        // or directly modify component states
+        Event event{EventType::EntityTriggered, EntityTriggeredData{triggerEntity, otherEntity}};
+        eventCoordinator.emit(std::make_shared<Event>(event));
     }
 
     static void resolveCollision(Entity entityA, Entity entityB) {
         if (!hasRequiredComponents(entityA) || !hasRequiredComponents(entityB)) {
             // Log an error or handle the missing component case
-            if(!hasRequiredComponents(entityA))
-                std::cerr << "Error: Entity " << entityA << " is missing required components for collision resolution." << std::endl;
+            if (!hasRequiredComponents(entityA))
+                std::cerr << "Error: Entity " << entityA << " is missing required components for collision resolution."
+                        << std::endl;
             if (!hasRequiredComponents(entityB))
-                std::cerr << "Error: Entity " << entityB << " is missing required components for collision resolution." << std::endl;
+                std::cerr << "Error: Entity " << entityB << " is missing required components for collision resolution."
+                        << std::endl;
             return;
         }
         Event event{EventType::EntityCollided, EntityCollidedData{entityA, entityB}};
         eventCoordinator.emit(std::make_shared<Event>(event));
-
-
-
     }
 
     static bool hasRequiredComponents(Entity entity) {

@@ -14,6 +14,7 @@ enum EventType {
     EntityDeath,
     EntityCollided,
     EntityInput,
+    EntityTriggered
 };
 
 struct EntityRespawnData {
@@ -30,6 +31,11 @@ struct EntityCollidedData {
     Entity entityB;
 };
 
+struct EntityTriggeredData {
+    Entity triggerEntity;
+    Entity otherEntity;
+};
+
 struct EntityInputData {
     Entity entity;
     SDL_Keycode key;
@@ -37,7 +43,7 @@ struct EntityInputData {
 
 struct Event {
     EventType type;
-    std::variant<EntityRespawnData, EntityDeathData, EntityCollidedData, EntityInputData> data;
+    std::variant<EntityRespawnData, EntityDeathData, EntityCollidedData, EntityInputData, EntityTriggeredData> data;
 };
 
 
