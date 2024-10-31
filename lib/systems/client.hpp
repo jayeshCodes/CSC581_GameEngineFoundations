@@ -11,6 +11,7 @@
 #include "../ECS/coordinator.hpp"
 #include "../ECS/system.hpp"
 #include "../enum/enum.hpp"
+#include "../helpers/network_helper.hpp"
 #include "../model/components.hpp"
 #include "../strategy/send_strategy.hpp"
 
@@ -19,17 +20,6 @@ extern Coordinator gCoordinator;
 class ClientSystem : public System {
     std::map<Entity, Transform> previous;
     bool connected = false;
-
-    static void check_type_and_send(const std::variant<std::vector<float>, std::string> &message,
-                                    zmq::socket_t &client_socket) {
-        if (std::holds_alternative<std::string>(message)) {
-            const auto str = std::get<std::string>(message);
-            client_socket.send(zmq::buffer(str), zmq::send_flags::none);
-        } else {
-            auto vec = std::get<std::vector<float> >(message);
-            client_socket.send(zmq::buffer(vec), zmq::send_flags::none);
-        }
-    }
 
     void sync(zmq::socket_t &client_socket, Send_Strategy *send_strategy) {
         Transform empty_transform{0, 0, 0, 0};
@@ -41,8 +31,7 @@ class ClientSystem : public System {
 
         //This entity id doesnt matter
         std::string entity_id = client_socket.get(zmq::sockopt::routing_id) + std::to_string(-123);
-        client_socket.send(zmq::buffer(entity_id), zmq::send_flags::sndmore);
-        check_type_and_send(message, client_socket);
+        NetworkHelper::sendMessageClient(client_socket, entity_id, message);
         std::cout << "Sending SYNC" << std::endl;
         connected = true;
     }
@@ -70,8 +59,7 @@ class ClientSystem : public System {
             previous[entity] = transform;
 
             std::string entity_id = gCoordinator.getEntityKey(entity);
-            client_socket.send(zmq::buffer(entity_id), zmq::send_flags::sndmore);
-            check_type_and_send(message, client_socket);
+            NetworkHelper::sendMessageClient(client_socket, entity_id, message);
         }
     }
 

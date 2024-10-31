@@ -76,19 +76,12 @@ void send_delete_signal(zmq::socket_t &client_socket, Entity entity, Send_Strate
     for (int i = 0; i < 5; i++) {
         Transform empty_transform{0, 0, 0, 0};
         Color empty_color{0, 0, 0, 0};
-        Collision empty_collision{0, 0};
+        Collision empty_collision{false, false};
         RigidBody empty_rigid_body{0};
         auto message = strategy->get_message(entity, empty_transform, empty_color, Message::DELETE, empty_rigid_body,
                                              empty_collision);
         std::string entity_id = gCoordinator.getEntityKey(entity);
-        client_socket.send(zmq::buffer(entity_id), zmq::send_flags::sndmore);
-        if (std::holds_alternative<std::string>(message)) {
-            auto str = std::get<std::string>(message);
-            client_socket.send(zmq::buffer(str), zmq::send_flags::none);
-        } else {
-            auto vec = std::get<std::vector<float> >(message);
-            client_socket.send(zmq::buffer(vec), zmq::send_flags::none);
-        }
+        NetworkHelper::sendMessageClient(client_socket, entity_id, message);
     }
 }
 
@@ -230,28 +223,30 @@ int main(int argc, char *argv[]) {
 
 
     Entity mainCamera = gCoordinator.createEntity();
-    gCoordinator.addComponent(mainCamera, Camera{.x=0, 0, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT});
+    gCoordinator.addComponent(mainCamera, Camera{.x = 0, 0, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT});
 
     auto mainChar = gCoordinator.createEntity();
-    gCoordinator.addComponent(mainChar, Transform{.x=0.f, SCREEN_HEIGHT - 200.f, 32, 32, 0});
-    gCoordinator.addComponent(mainChar, Color{.color=shade_color::generateRandomSolidColor()});
+    gCoordinator.addComponent(mainChar, Transform{.x = 0.f, SCREEN_HEIGHT - 200.f, 32, 32, 0});
+    gCoordinator.addComponent(mainChar, Color{.color = shade_color::generateRandomSolidColor()});
     gCoordinator.addComponent(mainChar, CKinematic{});
-    gCoordinator.addComponent(mainChar, KeyboardMovement{.speed=150.f});
+    gCoordinator.addComponent(mainChar, KeyboardMovement{.speed = 150.f});
     gCoordinator.addComponent(mainChar, ClientEntity{});
     gCoordinator.addComponent(mainChar, Destroy{});
-    gCoordinator.addComponent(mainChar, Jump{.maxJumpHeight=50.f, 1.f, false, 0.0f, true, 120.f});
-    gCoordinator.addComponent(mainChar, Gravity{.gravX=0, 100});
-    gCoordinator.addComponent(mainChar, Respawnable{.lastSafePosition={.x=0, SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false});
-    gCoordinator.addComponent(mainChar, RigidBody{.mass=1.f});
-    gCoordinator.addComponent(mainChar, Collision{.isCollider=true, false, CollisionLayer::PLAYER});
+    gCoordinator.addComponent(mainChar, Jump{.maxJumpHeight = 50.f, 1.f, false, 0.0f, true, 120.f});
+    gCoordinator.addComponent(mainChar, Gravity{.gravX = 0, 100});
+    gCoordinator.addComponent(mainChar, Respawnable{
+                                  .lastSafePosition = {.x = 0, SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false
+                              });
+    gCoordinator.addComponent(mainChar, RigidBody{.mass = 1.f});
+    gCoordinator.addComponent(mainChar, Collision{.isCollider = true, false, CollisionLayer::PLAYER});
 
     auto trigger = gCoordinator.createEntity();
-    gCoordinator.addComponent(trigger, Transform{.x=100.f, SCREEN_HEIGHT - 150.f, 32, 32, 0});
-    gCoordinator.addComponent(trigger, Color{.color=shade_color::Black});
+    gCoordinator.addComponent(trigger, Transform{.x = 100.f, SCREEN_HEIGHT - 150.f, 32, 32, 0});
+    gCoordinator.addComponent(trigger, Color{.color = shade_color::Black});
     gCoordinator.addComponent(trigger, CKinematic{});
     gCoordinator.addComponent(trigger, ClientEntity{});
     gCoordinator.addComponent(trigger, Destroy{});
-    gCoordinator.addComponent(trigger, RigidBody{.mass=-1.f});
+    gCoordinator.addComponent(trigger, RigidBody{.mass = -1.f});
     gCoordinator.addComponent(trigger, Collision{false, true, CollisionLayer::OTHER});
 
 

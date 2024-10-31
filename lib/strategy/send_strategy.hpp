@@ -22,6 +22,10 @@ public:
     virtual std::tuple<Message, Transform, Color, RigidBody, Collision> parse_message(zmq::message_t &message) = 0;
 
     virtual std::variant<std::vector<char>, std::vector<float> > copy_message(zmq::message_t &message) = 0;
+
+    virtual Event parse_event(zmq::message_t &message) = 0;
+
+    virtual std::variant<std::vector<float>, std::string> get_event(Event& event) = 0;
 };
 
 class Float_Strategy : public Send_Strategy {
@@ -78,6 +82,14 @@ public:
                                  sizeof
                                  (float));
         return received_msg;
+    }
+
+    std::variant<std::vector<float>, std::string> get_event(Event &event) override {
+        return std::string("Hellow");
+    }
+
+    Event parse_event(zmq::message_t &message) override {
+        return Event{};
     }
 };
 
@@ -139,6 +151,20 @@ public:
                                  sizeof
                                  (char));
         return received_msg;
+    }
+
+    std::variant<std::vector<float>, std::string> get_event(Event &event) override {
+        nlohmann::json event_json;
+        to_json(event_json, event);
+        return event_json.dump();
+    }
+
+    Event parse_event(zmq::message_t &message) override {
+        std::string jsonString(static_cast<char *>(message.data()), message.size());
+        const nlohmann::json received_msg = nlohmann::json::parse(jsonString);
+        Event event;
+        from_json(received_msg, event);
+        return event;
     }
 };
 

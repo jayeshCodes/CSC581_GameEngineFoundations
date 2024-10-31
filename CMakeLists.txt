@@ -61,7 +61,8 @@ add_executable(shade_engine ${SOURCES} main.cpp
         lib/systems/respawn.hpp
         lib/systems/keyboard.hpp
         lib/systems/collision_handler.hpp
-        lib/systems/trigger_handler.hpp)
+        lib/systems/trigger_handler.hpp
+        lib/helpers/network_helper.hpp)
 add_executable(shade_engine_server ${SOURCES} server.cpp
         lib/systems/keyboard.hpp
         lib/systems/collision_handler.hpp

@@ -5,6 +5,7 @@
 #pragma once
 #include "../ECS/coordinator.hpp"
 #include "../ECS/system.hpp"
+#include "../helpers/network_helper.hpp"
 #include "../model/components.hpp"
 #include "../strategy/send_strategy.hpp"
 
@@ -18,14 +19,9 @@ public:
         zmq::pollitem_t items[] = {{static_cast<void *>(socket), 0, ZMQ_POLLIN, 0}};
         zmq::poll(items, 1, std::chrono::milliseconds(17));
         if (items[0].revents & ZMQ_POLLIN) {
-            zmq::message_t entity_id;
-            zmq::message_t entity_data;
-
-            socket.recv(entity_id, zmq::recv_flags::none);
-            socket.recv(entity_data, zmq::recv_flags::none);
-
             zmq::message_t copy;
-            copy.copy(entity_data);
+            std::string entity_id;
+            NetworkHelper::receiveMessageClient( socket, copy, entity_id);
 
             try {
                 auto [command, received_transform, received_color, rigidbody, collision] = send_strategy->
@@ -40,7 +36,7 @@ public:
                     }
                 }
                 if (command == Message::UPDATE) {
-                    const std::string eId = entity_id.to_string();
+                    const std::string eId = entity_id;
                     auto generatedId = gCoordinator.createEntity(eId);
 
                     gCoordinator.addComponent<Transform>(generatedId, Transform{});
@@ -64,7 +60,7 @@ public:
                 }
                 if (command == Message::DELETE) {
                     std::cout << "Destroying" << std::endl;
-                    std::string eId = entity_id.to_string();
+                    std::string eId = entity_id;
                     auto entities = gCoordinator.getEntitiesStartsWith(eId);
                     for (auto entity: entities) {
                         auto generatedId = gCoordinator.getEntityIds()[eId];

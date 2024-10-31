@@ -11,6 +11,7 @@
 #include <zmq.hpp>
 
 #include "../enum/enum.hpp"
+#include "../helpers/network_helper.hpp"
 #include "../strategy/send_strategy.hpp"
 
 
@@ -38,12 +39,8 @@ public:
                 zmq::message_t entity_id;
                 zmq::message_t entity_data;
 
-                zmq::message_t entity_id_copy;
-                zmq::message_t entity_data_copy;
 
-                worker.recv(identity, zmq::recv_flags::none);
-                worker.recv(entity_id, zmq::recv_flags::none);
-                worker.recv(entity_data, zmq::recv_flags::none);
+                NetworkHelper::receiveMessageServer(worker, identity, entity_id, entity_data);
 
 
                 if (clients.find(identity.to_string()) == clients.end()) {
@@ -66,15 +63,7 @@ public:
                         auto message = send_strategy->get_message(entity.second, transform, color, Message::UPDATE,
                                                                   rigidBody, collision);
 
-                        worker.send(zmq::buffer(identity.to_string() + "R"), zmq::send_flags::sndmore);
-                        worker.send(zmq::buffer(entity.first), zmq::send_flags::sndmore);
-                        if (std::holds_alternative<std::string>(message)) {
-                            auto str = std::get<std::string>(message);
-                            worker.send(zmq::buffer(str), zmq::send_flags::none);
-                        } else {
-                            auto vec = std::get<std::vector<float> >(message);
-                            worker.send(zmq::buffer(vec), zmq::send_flags::none);
-                        }
+                        NetworkHelper::sendMessageServer(worker, identity.to_string(), entity.first, message);
                     }
                 }
 
@@ -89,15 +78,7 @@ public:
                         continue;
                     }
 
-                    worker.send(zmq::buffer(clientId + "R"), zmq::send_flags::sndmore);
-                    worker.send(zmq::buffer(entity_id.to_string()), zmq::send_flags::sndmore);
-                    if (std::holds_alternative<std::vector<float> >(received_msg)) {
-                        auto str = std::get<std::vector<float> >(received_msg);
-                        worker.send(zmq::buffer(str), zmq::send_flags::none);
-                    } else {
-                        auto vec = std::get<std::vector<char> >(received_msg);
-                        worker.send(zmq::buffer(vec), zmq::send_flags::none);
-                    }
+                    NetworkHelper::sendMessageServer(worker, clientId, entity_id.to_string(), received_msg);
                 }
 
 
