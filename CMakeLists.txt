@@ -55,18 +55,12 @@ set(SOURCES
         lib/systems/collision_handler.hpp
         lib/systems/trigger_handler.hpp
         lib/systems/event_system.hpp
+        lib/systems/respawn.hpp
+        lib/helpers/network_helper.hpp
 )
 
-add_executable(shade_engine ${SOURCES} main.cpp
-        lib/systems/respawn.hpp
-        lib/systems/keyboard.hpp
-        lib/systems/collision_handler.hpp
-        lib/systems/trigger_handler.hpp
-        lib/helpers/network_helper.hpp)
-add_executable(shade_engine_server ${SOURCES} server.cpp
-        lib/systems/keyboard.hpp
-        lib/systems/collision_handler.hpp
-        lib/systems/trigger_handler.hpp)
+add_executable(shade_engine ${SOURCES} main.cpp)
+add_executable(shade_engine_server ${SOURCES} server.cpp)
 
 find_package(SDL2 REQUIRED)
 find_package(cppzmq REQUIRED)

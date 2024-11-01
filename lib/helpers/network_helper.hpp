@@ -10,6 +10,8 @@
 
 
 namespace NetworkHelper {
+    const std::string EVENT_ENTITY_ID = "ThisIsAnEvent";
+
     inline void sendMessageClient(zmq::socket_t &socket, const std::string &entity_id,
                                   const std::variant<std::vector<float>, std::string> &message
     ) {
@@ -67,5 +69,20 @@ namespace NetworkHelper {
         auto _1 =socket.recv(entity_id, zmq::recv_flags::none);
         auto _2 = socket.recv(entity_data, zmq::recv_flags::none);
 
+    }
+
+    inline void sendEventClient(zmq::socket_t &socket, const std::shared_ptr<Event> &event) {
+        nlohmann::json eventJson;
+        to_json(eventJson, *event);
+        const std::string entity_id = EVENT_ENTITY_ID;
+        sendMessageClient(socket, entity_id, eventJson.dump());
+    }
+
+    inline void receiveEventClient(zmq::socket_t &socket, const std::shared_ptr<Event> &event) {
+        std::string entity_id;
+        zmq::message_t message;
+        receiveMessageClient(socket, message, entity_id);
+        const nlohmann::json eventJson = nlohmann::json::parse(message.to_string());
+        from_json(eventJson, *event);
     }
 } // namespace NetworkHelper

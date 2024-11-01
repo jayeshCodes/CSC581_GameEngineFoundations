@@ -16,6 +16,7 @@
 
 #include "../core/timeline.hpp"
 #include "../data_structures/ThreadSafePriorityQueue.hpp"
+#include "../helpers/network_helper.hpp"
 
 enum Priority { LOW, MEDIUM, HIGH };
 
@@ -79,6 +80,16 @@ public:
         }
     }
 
+    void emitToServer(zmq::socket_t& socket, const std::shared_ptr<Event> &event) {
+        NetworkHelper::sendEventClient(socket, event);
+    }
+
+    void receiveFromServer(zmq::socket_t socket) {
+        std::shared_ptr<Event> event;
+        NetworkHelper::receiveEventClient(socket, event);
+        emit(event);
+    }
+
 
     void queueEvent(const std::shared_ptr<EventData>& event) {
         if(eventQueue.size() > MAX_EVENTS) {
@@ -99,6 +110,8 @@ public:
             }
         }
     }
+
+
 };
 
 #endif //EVENT_MANAGER_HPP

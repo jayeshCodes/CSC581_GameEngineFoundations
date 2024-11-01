@@ -27,6 +27,10 @@ public:
         eventManager->emit(event);
     }
 
+    void emitServer(zmq::socket_t& socket, const std::shared_ptr<Event>& event) const {
+        eventManager->emitToServer(socket, event);
+    }
+
     void queueEvent(std::shared_ptr<Event> event, const int64_t time, const Priority priority) const {
         EventData eventData(std::move(event), time, priority);
         eventManager->queueEvent(std::make_shared<EventData>(eventData));
