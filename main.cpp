@@ -8,7 +8,6 @@
 #include "lib/game/GameManager.hpp"
 #include "lib/helpers/colors.hpp"
 #include "lib/helpers/constants.hpp"
-#include "lib/helpers/ecs_helpers.hpp"
 #include "lib/helpers/random.hpp"
 #include "lib/model/components.hpp"
 #include "lib/systems/camera.cpp"

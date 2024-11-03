@@ -39,33 +39,29 @@ public:
                 zmq::message_t entity_data;
 
 
-                NetworkHelper::receiveMessageServer(worker, identity, entity_id, entity_data);
-
-                {
+                NetworkHelper::receiveMessageServer(worker, identity, entity_id, entity_data); {
                     std::shared_lock<std::shared_mutex> read_lock(mutex);
                     if (clients.find(identity.to_string()) == clients.end()) {
                         read_lock.unlock();
 
-                        std::unique_lock<std::shared_mutex> write_lock(mutex);
-                        clients.insert(identity.to_string());
-                        write_lock.unlock();
 
                         // send all entities to new client
-                        std::cout << "------------------" << std::endl;
                         for (const auto &entity: gCoordinator.getEntityIds()) {
-                            std::cout << entity.first << std::endl;
-                            auto message = send_strategy->get_message(entity.second, Message::CREATE);
+                            for (int i = 0; i < 5; i++) {
+                                auto message = send_strategy->get_message(entity.second, Message::CREATE);
 
-                            NetworkHelper::sendMessageServer(worker, identity.to_string(), entity.first, message);
+                                NetworkHelper::sendMessageServer(worker, identity.to_string(), entity.first, message);
+                            }
                         }
-                        std::cout << std::endl;
                     }
+                } {
+                    std::unique_lock<std::shared_mutex> write_lock(mutex);
+                    clients.insert(identity.to_string());
+                    write_lock.unlock();
                 }
 
 
-                std::string received_msg = send_strategy->copy_message(entity_data);
-
-                {
+                std::string received_msg = send_strategy->copy_message(entity_data); {
                     std::shared_lock<std::shared_mutex> read_lock(mutex);
                     for (const auto &clientId: clients) {
                         if (clientId == identity.to_string()) {

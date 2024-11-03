@@ -85,7 +85,6 @@ private:
         const nlohmann::json eventJson = nlohmann::json::parse(copy.to_string());
         auto event = std::make_shared<Event>();
         from_json(eventJson, *event);
-        std::cout << eventJson.dump(4) << std::endl;
         eventCoordinator.emit(event);
     }
 

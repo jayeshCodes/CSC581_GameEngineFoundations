@@ -36,7 +36,6 @@ set(SOURCES
         lib/systems/keyboard_movement.cpp
         lib/systems/camera.cpp
         lib/systems/move_between_2_point_system.hpp
-        lib/helpers/ecs_helpers.hpp
         lib/systems/destroy.hpp
         lib/systems/collision.hpp
         lib/systems/jump.hpp
