@@ -8,12 +8,7 @@
 
 namespace Strategy {
     static std::unique_ptr<Send_Strategy> select_message_strategy(const std::string &messageFormat) {
-        if (messageFormat == "json") {
-            std::cout << "Sending message in JSON format" << std::endl;
-            return std::make_unique<JSON_Strategy>();
-        }
-        std::cout << "Sending message in float format" << std::endl;
-        return std::make_unique<Float_Strategy>();
+        return std::make_unique<JSON_Strategy>();
     }
 }
 

@@ -4,156 +4,106 @@
 
 #ifndef SEND_STRATEGY_HPP
 #define SEND_STRATEGY_HPP
-#include <variant>
 
 #include "../ECS/types.hpp"
 #include "../enum/enum.hpp"
 #include "../model/components.hpp"
+#include "../model/data_model.hpp"
+
 
 class Send_Strategy {
 public:
     virtual ~Send_Strategy() = default;
 
-    virtual std::variant<std::vector<float>, std::string> get_message(Entity entity, Transform &transform, Color &color,
-                                                                      Message messageType, RigidBody &rigidBody,
-                                                                      Collision &collision)
-    = 0;
+    virtual std::string get_message(Entity entity, Message type) = 0;
 
-    virtual std::tuple<Message, Transform, Color, RigidBody, Collision> parse_message(zmq::message_t &message) = 0;
+    virtual SimpleMessage parse_message(zmq::message_t &message) = 0;
 
-    virtual std::variant<std::vector<char>, std::vector<float> > copy_message(zmq::message_t &message) = 0;
+    virtual std::string copy_message(zmq::message_t &message) = 0;
 
     virtual Event parse_event(zmq::message_t &message) = 0;
 
-    virtual std::variant<std::vector<float>, std::string> get_event(Event& event) = 0;
+    virtual std::string get_event(Event &event) = 0;
 };
 
-class Float_Strategy : public Send_Strategy {
-public:
-    std::variant<std::vector<float>, std::string> get_message(Entity entity, Transform &transform, Color &color,
-                                                              Message messageType, RigidBody &rigid_body,
-                                                              Collision &collision) final {
-        std::vector<float> message;
-        message.reserve(14);
-        message.emplace_back(messageType);
-        message.emplace_back(entity);
-        message.emplace_back(transform.x);
-        message.emplace_back(transform.y);
-        message.emplace_back(transform.h);
-        message.emplace_back(transform.w);
-        message.emplace_back(color.color.r);
-        message.emplace_back(color.color.g);
-        message.emplace_back(color.color.b);
-        message.emplace_back(color.color.a);
-        message.emplace_back(rigid_body.mass);
-        message.emplace_back(collision.isCollider);
-        message.emplace_back(collision.isTrigger);
-        message.emplace_back(collision.layer);
-        return message;
-    }
-
-    std::tuple<Message, Transform, Color, RigidBody, Collision> parse_message(zmq::message_t &message) final {
-        const std::vector<float> received_msg(static_cast<float *>(message.data()),
-                                              static_cast<float *>(message.data()) + message.size() / sizeof
-                                              (float));
-        auto messageType = static_cast<Message>(received_msg[0]);
-        Transform transform{};
-        Color color{};
-        RigidBody rigid_body{};
-        Collision collision{};
-        transform.x = received_msg[2];
-        transform.y = received_msg[3];
-        transform.h = received_msg[4];
-        transform.w = received_msg[5];
-        color.color.r = static_cast<Uint8>(received_msg[6]);
-        color.color.g = static_cast<Uint8>(received_msg[7]);
-        color.color.b = static_cast<Uint8>(received_msg[8]);
-        color.color.a = static_cast<Uint8>(received_msg[9]);
-        rigid_body.mass = received_msg[10];
-        collision.isCollider = static_cast<bool>(received_msg[11]);
-        collision.isTrigger = static_cast<bool>(received_msg[12]);
-        collision.layer = static_cast<CollisionLayer>(static_cast<int>(received_msg[13]));
-        return std::make_tuple(messageType, transform, color, rigid_body, collision);
-    }
-
-    std::variant<std::vector<char>, std::vector<float> > copy_message(zmq::message_t &message) override {
-        std::vector received_msg(static_cast<float *>(message.data()),
-                                 static_cast<float *>(message.data()) + message.size() /
-                                 sizeof
-                                 (float));
-        return received_msg;
-    }
-
-    std::variant<std::vector<float>, std::string> get_event(Event &event) override {
-        return std::string("Hellow");
-    }
-
-    Event parse_event(zmq::message_t &message) override {
-        return Event{};
-    }
-};
+extern Coordinator gCoordinator;
 
 class JSON_Strategy : public Send_Strategy {
 public:
-    std::variant<std::vector<float>, std::string> get_message(Entity entity, Transform &transform, Color &color,
-                                                              Message messageType, RigidBody &rigid_body,
-                                                              Collision &collision) override {
+    std::string get_message(Entity entity, Message type) override {
         // Get the message
-        nlohmann::json message;
-        message["m"] = messageType;
-        message["e"] = entity;
-        message["t"]["x"] = std::round(transform.x * 100) / 100.0;
-        message["t"]["y"] = std::round(transform.y * 100) / 100.0;
-        message["t"]["h"] = std::round(transform.h * 100) / 100.0;
-        message["t"]["w"] = std::round(transform.w * 100) / 100.0;
-        message["c"]["r"] = color.color.r;
-        message["c"]["g"] = color.color.g;
-        message["c"]["b"] = color.color.b;
-        message["c"]["a"] = color.color.a;
-        message["rb"]["m"] = rigid_body.mass;
-        message["co"]["c"] = collision.isCollider;
-        message["co"]["t"] = collision.isTrigger;
-        message["co"]["l"] = collision.layer;
-        return message.dump();
+        SimpleMessage json_message{};
+        nlohmann::json json;
+        json_message.type = type;
+        json_message.entity_key = gCoordinator.getEntityKey(entity);
+        if (type == SYNC || type == DELETE) {
+            json = json_message;
+        }
+        else if (type == CREATE) {
+            if (gCoordinator.hasComponent<Transform>(entity)) {
+                json_message.components.emplace_back(gCoordinator.getComponent<Transform>(entity));
+            }
+            if (gCoordinator.hasComponent<Color>(entity)) {
+                json_message.components.emplace_back(gCoordinator.getComponent<Color>(entity));
+            }
+            if (gCoordinator.hasComponent<RigidBody>(entity)) {
+                json_message.components.emplace_back(gCoordinator.getComponent<RigidBody>(entity));
+            }
+            if (gCoordinator.hasComponent<Collision>(entity)) {
+                json_message.components.emplace_back(gCoordinator.getComponent<Collision>(entity));
+            }
+            if (gCoordinator.hasComponent<CKinematic>(entity)) {
+                json_message.components.emplace_back(gCoordinator.getComponent<CKinematic>(entity));
+            }
+            if (gCoordinator.hasComponent<MovingPlatform>(entity)) {
+                json_message.components.emplace_back(gCoordinator.getComponent<MovingPlatform>(entity));
+            }
+            if (gCoordinator.hasComponent<Destroy>(entity)) {
+                json_message.components.emplace_back(gCoordinator.getComponent<Destroy>(entity));
+            }
+            if (gCoordinator.hasComponent<Jump>(entity)) {
+                json_message.components.emplace_back(gCoordinator.getComponent<Jump>(entity));
+            }
+            if (gCoordinator.hasComponent<Respawnable>(entity)) {
+                json_message.components.emplace_back(gCoordinator.getComponent<Respawnable>(entity));
+            }
+            if (gCoordinator.hasComponent<Camera>(entity)) {
+                json_message.components.emplace_back(gCoordinator.getComponent<Camera>(entity));
+            }
+            if (gCoordinator.hasComponent<KeyboardMovement>(entity)) {
+                json_message.components.emplace_back(gCoordinator.getComponent<KeyboardMovement>(entity));
+            }
+            if (gCoordinator.hasComponent<Gravity>(entity)) {
+                json_message.components.emplace_back(gCoordinator.getComponent<Gravity>(entity));
+            }
+            json = json_message;
+        }
+        else if (type == UPDATE) {
+            if (gCoordinator.hasComponent<Transform>(entity)) {
+                json_message.components.emplace_back(gCoordinator.getComponent<Transform>(entity));
+            }
+            json = json_message;
+        }
+        return json.dump();
     }
 
-    std::tuple<Message, Transform, Color, RigidBody, Collision> parse_message(zmq::message_t &message) override {
-        // parse message
+    SimpleMessage parse_message(zmq::message_t &message) override {
         try {
             std::string jsonString(static_cast<char *>(message.data()), message.size());
-            nlohmann::json received_msg = nlohmann::json::parse(jsonString);
-            auto messageType = static_cast<Message>(received_msg["m"].get<int>());
-            Transform transform{};
-            Color color{};
-            RigidBody rigid_body{};
-            Collision collision{};
-            transform.x = received_msg["t"]["x"].get<float>();
-            transform.y = received_msg["t"]["y"].get<float>();
-            transform.h = received_msg["t"]["h"].get<float>();
-            transform.w = received_msg["t"]["w"].get<float>();
-            color.color.r = static_cast<Uint8>(received_msg["c"]["r"].get<int>());
-            color.color.g = static_cast<Uint8>(received_msg["c"]["g"].get<int>());
-            color.color.b = static_cast<Uint8>(received_msg["c"]["b"].get<int>());
-            color.color.a = static_cast<Uint8>(received_msg["c"]["a"].get<int>());
-            rigid_body.mass = received_msg["rb"]["m"].get<float>();
-            collision.isCollider = received_msg["co"]["c"].get<bool>();
-            collision.isTrigger = received_msg["co"]["t"].get<bool>();
-            collision.layer = static_cast<CollisionLayer>(received_msg["co"]["l"].get<int>());
-            return std::make_tuple(messageType, transform, color, rigid_body, collision);
+            const nlohmann::json received_msg = nlohmann::json::parse(jsonString);
+            SimpleMessage jMsg = received_msg;
+            return jMsg;
         } catch (std::exception &e) {
             throw std::runtime_error("Error parsing JSON message");
         }
     }
 
-    std::variant<std::vector<char>, std::vector<float> > copy_message(zmq::message_t &message) override {
-        std::vector received_msg(static_cast<char *>(message.data()),
-                                 static_cast<char *>(message.data()) + message.size() /
-                                 sizeof
-                                 (char));
-        return received_msg;
+    std::string copy_message(zmq::message_t &message) override {
+        std::string jsonString(static_cast<char *>(message.data()), message.size());
+        return jsonString;
     }
 
-    std::variant<std::vector<float>, std::string> get_event(Event &event) override {
+    std::string get_event(Event &event) override {
         nlohmann::json event_json;
         to_json(event_json, event);
         return event_json.dump();

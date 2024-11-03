@@ -31,6 +31,7 @@
 #include "lib/systems/keyboard.hpp"
 #include "lib/systems/respawn.hpp"
 #include "lib/systems/collision_handler.hpp"
+#include "lib/systems/entity_created_handler.hpp"
 #include "lib/systems/trigger_handler.hpp"
 
 class ReceiverSystem;
@@ -74,12 +75,7 @@ void catch_signals() {
 
 void send_delete_signal(zmq::socket_t &client_socket, Entity entity, Send_Strategy *strategy) {
     for (int i = 0; i < 5; i++) {
-        Transform empty_transform{0, 0, 0, 0};
-        Color empty_color{0, 0, 0, 0};
-        Collision empty_collision{false, false};
-        RigidBody empty_rigid_body{0};
-        auto message = strategy->get_message(entity, empty_transform, empty_color, Message::DELETE, empty_rigid_body,
-                                             empty_collision);
+        auto message = strategy->get_message(entity, Message::DELETE);
         std::string entity_id = gCoordinator.getEntityKey(entity);
         NetworkHelper::sendMessageClient(client_socket, entity_id, message);
     }
@@ -131,7 +127,6 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Destroy>();
     gCoordinator.registerComponent<Collision>();
     gCoordinator.registerComponent<Jump>();
-    gCoordinator.registerComponent<Platform>();
     gCoordinator.registerComponent<Respawnable>();
     gCoordinator.registerComponent<RigidBody>();
 
@@ -153,6 +148,7 @@ int main(int argc, char *argv[]) {
     auto collisonHandlerSystem = gCoordinator.registerSystem<CollisionHandlerSystem>();
     auto triggerHandlerSystem = gCoordinator.registerSystem<TriggerHandlerSystem>();
     auto eventSystem = gCoordinator.registerSystem<EventSystem>();
+    auto entityCreatedSystem = gCoordinator.registerSystem<EntityCreatedHandler>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
@@ -230,7 +226,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(mainChar, Color{.color = shade_color::generateRandomSolidColor()});
     gCoordinator.addComponent(mainChar, CKinematic{});
     gCoordinator.addComponent(mainChar, KeyboardMovement{.speed = 150.f});
-    gCoordinator.addComponent(mainChar, ClientEntity{});
+    gCoordinator.addComponent(mainChar, ClientEntity{.synced = false});
     gCoordinator.addComponent(mainChar, Destroy{});
     gCoordinator.addComponent(mainChar, Jump{.maxJumpHeight = 50.f, 1.f, false, 0.0f, true, 120.f});
     gCoordinator.addComponent(mainChar, Gravity{.gravX = 0, 100});
@@ -240,11 +236,17 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(mainChar, RigidBody{.mass = 1.f});
     gCoordinator.addComponent(mainChar, Collision{.isCollider = true, false, CollisionLayer::PLAYER});
 
+    std::cout << "MainChar: " << gCoordinator.getEntityKey(mainChar) << std::endl;
+
+    Event entityCreatedEvent{EntityCreated, {}};
+    entityCreatedEvent.data = EntityCreatedData{mainChar, strategy->get_message(mainChar, Message::CREATE)};
+    eventCoordinator.emitServer(client_socket, std::make_shared<Event>(entityCreatedEvent));
+    gCoordinator.getComponent<ClientEntity>(mainChar).synced = true;
+
     auto trigger = gCoordinator.createEntity();
     gCoordinator.addComponent(trigger, Transform{.x = 100.f, SCREEN_HEIGHT - 150.f, 32, 32, 0});
     gCoordinator.addComponent(trigger, Color{.color = shade_color::Black});
     gCoordinator.addComponent(trigger, CKinematic{});
-    gCoordinator.addComponent(trigger, ClientEntity{});
     gCoordinator.addComponent(trigger, Destroy{});
     gCoordinator.addComponent(trigger, RigidBody{.mass = -1.f});
     gCoordinator.addComponent(trigger, Collision{false, true, CollisionLayer::OTHER});

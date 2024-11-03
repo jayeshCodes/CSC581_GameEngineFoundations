@@ -24,6 +24,7 @@
 #include "lib/systems/client.hpp"
 #include "lib/systems/collision.hpp"
 #include "lib/systems/destroy.hpp"
+#include "lib/systems/entity_created_handler.hpp"
 #include "lib/systems/event_system.hpp"
 #include "lib/systems/jump.hpp"
 #include "lib/systems/keyboard_movement.cpp"
@@ -57,10 +58,12 @@ void server_run(zmq::context_t &context, zmq::socket_ref frontend, zmq::socket_r
 
     std::vector<std::unique_ptr<Worker> > workers;
     std::vector<std::unique_ptr<std::thread> > threads;
+    std::unordered_set<std::string> clients;
+    std::shared_mutex clients_mutex;
 
     for (int i = 0; i < max_threads; i++) {
         workers.push_back(std::make_unique<Worker>(context, ZMQ_DEALER, "WORKER" + std::to_string(i)));
-        threads.push_back(std::make_unique<std::thread>(&Worker::work, workers[i].get(), send_strategy));
+        threads.push_back(std::make_unique<std::thread>(&Worker::work, workers[i].get(), send_strategy, std::ref(clients), std::ref(clients_mutex)));
         threads[i]->detach();
     }
 
@@ -125,6 +128,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<ClientEntity>();
     gCoordinator.registerComponent<Receiver>();
     gCoordinator.registerComponent<RigidBody>();
+    gCoordinator.registerComponent<Respawnable>();
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
     auto kinematicSystem = gCoordinator.registerSystem<KinematicSystem>();
@@ -138,6 +142,7 @@ int main(int argc, char *argv[]) {
     auto clientSystem = gCoordinator.registerSystem<ClientSystem>();
     auto receiverSystem = gCoordinator.registerSystem<ReceiverSystem>();
     auto eventSystem = gCoordinator.registerSystem<EventSystem>();
+    auto entityCreatedSystem = gCoordinator.registerSystem<EntityCreatedHandler>();
 
     Signature clientEntitySignature;
     clientEntitySignature.set(gCoordinator.getComponentType<ClientEntity>());
@@ -190,26 +195,32 @@ int main(int argc, char *argv[]) {
     auto ground = gCoordinator.createEntity();
     gCoordinator.addComponent(ground, Transform{0, SCREEN_HEIGHT - 100.f, 500.f, 300.f, 0});
     gCoordinator.addComponent(ground, Color{shade_color::Green});
-    gCoordinator.addComponent(ground, ClientEntity{});
+    gCoordinator.addComponent(ground, ClientEntity{.synced = true});
     gCoordinator.addComponent(ground, RigidBody{-1.f});
     gCoordinator.addComponent(ground, Collision{true, false, CollisionLayer::OTHER});
     gCoordinator.addComponent(ground, CKinematic{});
 
+    std::cout << "Ground1: " << gCoordinator.getEntityKey(ground) << std::endl;
+
     auto ground2 = gCoordinator.createEntity();
-    gCoordinator.addComponent(ground2, Transform{800, SCREEN_HEIGHT - 300.f, 500.f, 1000.f, 0});
+    gCoordinator.addComponent(ground2, Transform{800, SCREEN_HEIGHT - 100.f, 500.f, 1000.f, 0});
     gCoordinator.addComponent(ground2, Color{shade_color::Green});
-    gCoordinator.addComponent(ground2, ClientEntity{});
+    gCoordinator.addComponent(ground2, ClientEntity{.synced = true});
     gCoordinator.addComponent(ground2, RigidBody{-1.f});
     gCoordinator.addComponent(ground2, Collision{true, false, CollisionLayer::OTHER});
     gCoordinator.addComponent(ground2, CKinematic{});
 
+    std::cout << "Ground2: " << gCoordinator.getEntityKey(ground2) << std::endl;
+
     auto ground3 = gCoordinator.createEntity();
     gCoordinator.addComponent(ground3, Transform{1000, SCREEN_HEIGHT / 2.f - 50.f, 50.f, 700.f, 0});
     gCoordinator.addComponent(ground3, Color{shade_color::Black});
-    gCoordinator.addComponent(ground3, ClientEntity{});
+    gCoordinator.addComponent(ground3, ClientEntity{.synced = true});
     gCoordinator.addComponent(ground3, RigidBody{-1.f});
     gCoordinator.addComponent(ground3, Collision{true, false, CollisionLayer::OTHER});
     gCoordinator.addComponent(ground3, CKinematic{});
+
+    std::cout << "Ground3: " << gCoordinator.getEntityKey(ground3) << std::endl;
 
     Entity platform = gCoordinator.createEntity();
     gCoordinator.addComponent(platform, Transform{300, SCREEN_HEIGHT - 100.f, 50, 200});
@@ -217,9 +228,11 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(platform, CKinematic{0, 0, 0, 0});
     gCoordinator.addComponent(platform, MovingPlatform{300, 800 - 200, TO, 2, HORIZONTAL});
     gCoordinator.addComponent(platform, Destroy{});
-    gCoordinator.addComponent(platform, ClientEntity{true});
+    gCoordinator.addComponent(platform, ClientEntity{.synced = true});
     gCoordinator.addComponent(platform, RigidBody{-1.f});
     gCoordinator.addComponent(platform, Collision{true, false, CollisionLayer::MOVING_PLATFORM});
+
+    std::cout << "Platform: " << gCoordinator.getEntityKey(platform) << std::endl;
 
     Entity platform2 = gCoordinator.createEntity();
     gCoordinator.addComponent(platform2, Transform{300, 500, 50, 200});
@@ -227,9 +240,11 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(platform2, CKinematic{0, 0, 0, 0});
     gCoordinator.addComponent(platform2, MovingPlatform{100, 400, TO, 2, VERTICAL});
     gCoordinator.addComponent(platform2, Destroy{});
-    gCoordinator.addComponent(platform2, ClientEntity{true});
+    gCoordinator.addComponent(platform2, ClientEntity{.synced = true});
     gCoordinator.addComponent(platform2, RigidBody{-1.f});
     gCoordinator.addComponent(platform2, Collision{true, false, CollisionLayer::MOVING_PLATFORM});
+
+    std::cout << "Platform2: " << gCoordinator.getEntityKey(platform2) << std::endl;
 
     // Entity platform2 = gCoordinator.createEntity();
     // gCoordinator.addComponent(platform2, Transform{300, 500, 100, 400});
