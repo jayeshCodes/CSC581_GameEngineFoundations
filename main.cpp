@@ -186,6 +186,7 @@ int main(int argc, char *argv[]) {
     keyboardMovementSignature.set(gCoordinator.getComponentType<CKinematic>());
     keyboardMovementSignature.set(gCoordinator.getComponentType<KeyboardMovement>());
     keyboardMovementSignature.set(gCoordinator.getComponentType<Jump>());
+    keyboardMovementSignature.set(gCoordinator.getComponentType<Dash>());
     gCoordinator.setSystemSignature<KeyboardMovementSystem>(keyboardMovementSignature);
 
     Signature clientSignature;

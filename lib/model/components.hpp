@@ -8,7 +8,9 @@
 #include <zmq.hpp>
 #include <nlohmann/json.hpp>
 #include "../enum/enum.hpp"
-#include <chrono>
+#include "../core/timeline.hpp"
+
+inline Timeline timeline;
 
 struct Transform {
     float x, y;
@@ -67,9 +69,9 @@ struct KeyboardMovement {
     bool movingDown = false;
 
     // Double tap detection
-    std::chrono::steady_clock::time_point lastLeftTapTime = std::chrono::steady_clock::now();
-    std::chrono::steady_clock::time_point lastRightTapTime = std::chrono::steady_clock::now();
-    std::chrono::steady_clock::time_point lastSpaceTapTime = std::chrono::steady_clock::now();
+    int64_t lastLeftTapTime = timeline.getElapsedTime();
+    int64_t lastRightTapTime = timeline.getElapsedTime();
+    int64_t lastSpaceTapTime = timeline.getElapsedTime();
     bool wasLeftReleased = true;
     bool wasRightReleased = true;
     bool wasSpaceReleased = true;

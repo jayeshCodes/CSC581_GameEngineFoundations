@@ -9,8 +9,8 @@
 #include "../ECS/system.hpp"
 #include "../EMS/event_coordinator.hpp"
 #include "../model/components.hpp"
-#include <chrono> // for the dash functionality - can replace with a timeline based system in the future
 
+extern Timeline anchorTimeline;
 extern Coordinator gCoordinator;
 extern EventCoordinator eventCoordinator;
 
@@ -27,7 +27,7 @@ private:
             auto &stomp = gCoordinator.getComponent<Stomp>(entity);
 
             // Get current time for double-tap detection
-            auto currentTime = std::chrono::steady_clock::now();
+            auto currentTime = anchorTimeline.getElapsedTime();
 
             switch (data.key) {
                 // handle keypress events
@@ -38,9 +38,7 @@ private:
 
                     // Double-tap detection for left dash
                     if (keyboard.wasLeftReleased) {
-                        auto timeSinceLastTap = std::chrono::duration_cast<std::chrono::duration<float> >(
-                            currentTime - keyboard.lastLeftTapTime
-                        ).count();
+                        auto timeSinceLastTap = (currentTime - keyboard.lastLeftTapTime) / 1000.f;
 
 
                         if (timeSinceLastTap <= keyboard.doubleTapThreshold &&
@@ -62,9 +60,7 @@ private:
 
                     // Double-tap detection for right dash
                     if (keyboard.wasRightReleased) {
-                        auto timeSinceLastTap = std::chrono::duration_cast<std::chrono::duration<float> >(
-                            currentTime - keyboard.lastRightTapTime
-                        ).count();
+                        auto timeSinceLastTap = (currentTime - keyboard.lastRightTapTime) / 1000.f;
 
 
                         if (timeSinceLastTap <= keyboard.doubleTapThreshold &&
