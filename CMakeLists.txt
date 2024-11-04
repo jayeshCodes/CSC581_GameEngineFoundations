@@ -36,7 +36,6 @@ set(SOURCES
         lib/systems/keyboard_movement.cpp
         lib/systems/camera.cpp
         lib/systems/move_between_2_point_system.hpp
-        lib/helpers/ecs_helpers.hpp
         lib/systems/destroy.hpp
         lib/systems/collision.hpp
         lib/systems/jump.hpp
@@ -59,7 +58,9 @@ set(SOURCES
         lib/helpers/network_helper.hpp
 )
 
-add_executable(shade_engine ${SOURCES} main.cpp)
+add_executable(shade_engine ${SOURCES} main.cpp
+        lib/model/data_model.hpp
+        lib/systems/entity_created_handler.hpp)
 add_executable(shade_engine_server ${SOURCES} server.cpp)
 
 find_package(SDL2 REQUIRED)

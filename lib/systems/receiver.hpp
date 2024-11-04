@@ -17,9 +17,8 @@ class ReceiverSystem : public System {
 private:
     void handleNormalMessage(Send_Strategy *send_strategy, zmq::message_t &copy, std::string &entity_id) {
         try {
-            auto [command, received_transform, received_color, rigidbody, collision] = send_strategy->
-                    parse_message(copy);
-            if (command == Message::SYNC) {
+            SimpleMessage receivedMessage = send_strategy->parse_message(copy);
+            if (receivedMessage.type == Message::SYNC) {
                 std::cout << "Syncing" << std::endl;
                 auto ids = gCoordinator.getEntityIds();
                 for (const auto &id: ids) {
@@ -28,49 +27,53 @@ private:
                     }
                 }
             }
-            if (command == Message::UPDATE) {
-                const std::string eId = entity_id;
-                auto generatedId = gCoordinator.createEntity(eId);
+            if (receivedMessage.type == Message::UPDATE) {
+                auto generatedId = gCoordinator.createEntity(receivedMessage.entity_key);
 
-                gCoordinator.addComponent<Transform>(generatedId, Transform{});
-                gCoordinator.addComponent<Color>(generatedId, Color{});
-                gCoordinator.addComponent<RigidBody>(generatedId, RigidBody{-1});
-                gCoordinator.addComponent<Collision>(generatedId, Collision{false, false});
-                gCoordinator.addComponent<CKinematic>(generatedId, CKinematic{});
+                auto received_transform = std::get<Transform>(receivedMessage.components[0]);
+
+                if (!gCoordinator.hasComponent<Transform>(generatedId)) { return; }
 
                 auto &transform = gCoordinator.getComponent<Transform>(generatedId);
-                auto &color = gCoordinator.getComponent<Color>(generatedId);
-                auto &rigidBody = gCoordinator.getComponent<RigidBody>(generatedId);
-                auto &collisionComponent = gCoordinator.getComponent<Collision>(generatedId);
 
                 transform = received_transform;
-                color.color = {
-                    received_color.color.r, received_color.color.g, received_color.color.b,
-                    received_color.color.a
-                };
-                rigidBody = rigidbody;
-                collisionComponent = collision;
             }
-            if (command == Message::DELETE) {
-                std::string eId = entity_id;
-                auto entities = gCoordinator.getEntitiesStartsWith(eId);
+            if (receivedMessage.type == Message::DELETE) {
+                auto entities = gCoordinator.getEntitiesStartsWith(receivedMessage.entity_key);
                 for (auto entity: entities) {
-                    auto generatedId = gCoordinator.getEntityIds()[eId];
+                    auto generatedId = gCoordinator.getEntityIds()[receivedMessage.entity_key];
                     gCoordinator.addComponent<Destroy>(generatedId, Destroy{});
                     gCoordinator.getComponent<Destroy>(generatedId).destroy = true;
                 }
             }
-            if (command == Message::TEST) {
-                if (testStarted) {
-                    return;
+            if (receivedMessage.type == Message::CREATE) {
+                auto generatedId = gCoordinator.createEntity(receivedMessage.entity_key);
+                for (auto &component: receivedMessage.components) {
+                    if (std::holds_alternative<Transform>(component)) {
+                        auto received_transform = std::get<Transform>(component);
+                        gCoordinator.addComponent<Transform>(generatedId, received_transform);
+                    }
+                    if (std::holds_alternative<Color>(component)) {
+                        auto received_color = std::get<Color>(component);
+                        gCoordinator.addComponent<Color>(generatedId, received_color);
+                    }
+                    if (std::holds_alternative<RigidBody>(component)) {
+                        auto received_rigidBody = std::get<RigidBody>(component);
+                        gCoordinator.addComponent<RigidBody>(generatedId, received_rigidBody);
+                    }
+                    if (std::holds_alternative<Collision>(component)) {
+                        auto received_collision = std::get<Collision>(component);
+                        gCoordinator.addComponent<Collision>(generatedId, received_collision);
+                    }
+                    if (std::holds_alternative<CKinematic>(component)) {
+                        auto received_kinematic = std::get<CKinematic>(component);
+                        gCoordinator.addComponent<CKinematic>(generatedId, CKinematic{});
+                    }
+                    if (std::holds_alternative<Destroy>(component)) {
+                        auto received_destroy = std::get<Destroy>(component);
+                        gCoordinator.addComponent<Destroy>(generatedId, received_destroy);
+                    }
                 }
-                std::cout << "Starting Testing" << std::endl;
-                Entity id = gCoordinator.createEntity();
-                gCoordinator.addComponent<TestClient>(id, TestClient{});
-                gCoordinator.getComponent<TestClient>(id).testCompleted = false;
-                gCoordinator.getComponent<TestClient>(id).testStarted = false;
-                testStarted = true;
-                std::cout << "Generated test client entity" << std::endl;
             }
         } catch (std::exception &e) {
             std::string jsonString(static_cast<char *>(copy.data()), copy.size());
@@ -93,7 +96,7 @@ public:
             zmq::message_t copy;
             std::string entity_id;
             NetworkHelper::receiveMessageClient(socket, copy, entity_id);
-            if(entity_id == NetworkHelper::EVENT_ENTITY_ID) {
+            if (entity_id == NetworkHelper::EVENT_ENTITY_ID) {
                 handleEventMessage(copy);
             } else {
                 handleNormalMessage(send_strategy, copy, entity_id);

@@ -20,7 +20,6 @@ extern Coordinator gCoordinator;
 class Worker {
     zmq::context_t &context;
     zmq::socket_t worker;
-    std::unordered_set<std::string> clients;
     Timeline timeline;
     std::string id;
 
@@ -29,7 +28,7 @@ public:
                                                                        timeline(nullptr, 1000), id(std::move(id)) {
     }
 
-    void work(Send_Strategy *send_strategy) {
+    void work(Send_Strategy *send_strategy, std::unordered_set<std::string> &clients, std::shared_mutex &mutex) {
         worker.set(zmq::sockopt::routing_id, id);
         worker.connect("tcp://localhost:5571");
 
@@ -40,45 +39,36 @@ public:
                 zmq::message_t entity_data;
 
 
-                NetworkHelper::receiveMessageServer(worker, identity, entity_id, entity_data);
+                NetworkHelper::receiveMessageServer(worker, identity, entity_id, entity_data); {
+                    std::shared_lock<std::shared_mutex> read_lock(mutex);
+                    if (clients.find(identity.to_string()) == clients.end()) {
+                        read_lock.unlock();
 
 
-                if (clients.find(identity.to_string()) == clients.end()) {
-                    // send all entities to new client
-                    for (const auto &entity: gCoordinator.getEntityIds()) {
-                        if (!gCoordinator.hasComponent<Transform>(entity.second) || !gCoordinator.hasComponent<Color>(
-                                entity.second)) {
-                            continue;
-                        }
-                        auto &transform = gCoordinator.getComponent<Transform>(entity.second);
-                        auto &color = gCoordinator.getComponent<Color>(entity.second);
-                        RigidBody rigidBody{0};
-                        Collision collision{false, false};
-                        if(gCoordinator.hasComponent<RigidBody>(entity.second)) {
-                            rigidBody = gCoordinator.getComponent<RigidBody>(entity.second);
-                        }
-                        if(gCoordinator.hasComponent<Collision>(entity.second)) {
-                            collision = gCoordinator.getComponent<Collision>(entity.second);
-                        }
-                        auto message = send_strategy->get_message(entity.second, transform, color, Message::UPDATE,
-                                                                  rigidBody, collision);
+                        // send all entities to new client
+                        std::cout << gCoordinator.getEntityIds().size() << std::endl;
+                        for (const auto &entity: gCoordinator.getEntityIds()) {
+                                auto message = send_strategy->get_message(entity.second, Message::CREATE);
 
-                        NetworkHelper::sendMessageServer(worker, identity.to_string(), entity.first, message);
+                                NetworkHelper::sendMessageServer(worker, identity.to_string(), entity.first, message);
+                        }
                     }
+                } {
+                    std::unique_lock<std::shared_mutex> write_lock(mutex);
+                    clients.insert(identity.to_string());
+                    write_lock.unlock();
                 }
 
-                clients.insert(identity.to_string());
 
-                std::variant<std::vector<char>, std::vector<float> > received_msg = send_strategy->copy_message(
-                    entity_data);
+                std::string received_msg = send_strategy->copy_message(entity_data); {
+                    std::shared_lock<std::shared_mutex> read_lock(mutex);
+                    for (const auto &clientId: clients) {
+                        if (clientId == identity.to_string()) {
+                            continue;
+                        }
 
-
-                for (const auto &clientId: clients) {
-                    if (clientId == identity.to_string()) {
-                        continue;
+                        NetworkHelper::sendMessageServer(worker, clientId, entity_id.to_string(), received_msg);
                     }
-
-                    NetworkHelper::sendMessageServer(worker, clientId, entity_id.to_string(), received_msg);
                 }
 
 

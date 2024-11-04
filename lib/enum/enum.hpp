@@ -11,7 +11,7 @@ enum Message {
     DESTROY,
     SYNC,
     DELETE,
-    TEST
+    CREATE
 };
 
 enum MovementState {

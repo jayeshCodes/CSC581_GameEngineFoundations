@@ -8,6 +8,9 @@
 #include <zmq.hpp>
 #include <nlohmann/json.hpp>
 #include "../enum/enum.hpp"
+#include "../core/timeline.hpp"
+
+inline Timeline timeline;
 
 struct Transform {
     float x, y;
@@ -28,7 +31,18 @@ struct Color {
     SDL_Color color;
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Color, color.r, color.g, color.b, color.a)
+inline void to_json(nlohmann::json &j, const SDL_Color &c) {
+    j = nlohmann::json{{"r", c.r}, {"g", c.g}, {"b", c.b}, {"a", c.a}};
+}
+
+inline void from_json(const nlohmann::json &j, SDL_Color &c) {
+    j.at("r").get_to(c.r);
+    j.at("g").get_to(c.g);
+    j.at("b").get_to(c.b);
+    j.at("a").get_to(c.a);
+}
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Color, color)
 
 struct CKinematic {
     SDL_FPoint velocity;
@@ -37,8 +51,16 @@ struct CKinematic {
     float angular_acceleration;
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(CKinematic, velocity.x, velocity.y, rotation, acceleration.x, acceleration.y,
-                                   angular_acceleration)
+inline void to_json(nlohmann::json &j, const SDL_FPoint &p) {
+    j = nlohmann::json{{"x", p.x}, {"y", p.y}};
+}
+
+inline void from_json(const nlohmann::json &j, SDL_FPoint &p) {
+    j.at("x").get_to(p.x);
+    j.at("y").get_to(p.y);
+}
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(CKinematic, velocity, rotation, acceleration, angular_acceleration)
 
 struct Camera {
     float x;
@@ -62,6 +84,17 @@ struct KeyboardMovement {
     float speed;
     bool movingLeft = false;
     bool movingRight = false;
+    bool movingUp = false;
+    bool movingDown = false;
+
+    // Double tap detection
+    int64_t lastLeftTapTime = timeline.getElapsedTime();
+    int64_t lastRightTapTime = timeline.getElapsedTime();
+    int64_t lastSpaceTapTime = timeline.getElapsedTime();
+    bool wasLeftReleased = true;
+    bool wasRightReleased = true;
+    bool wasSpaceReleased = true;
+    static constexpr float doubleTapThreshold = 0.3f; // seconds
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(KeyboardMovement, speed)
@@ -74,8 +107,8 @@ struct Server {
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Server, listen_port, publish_port)
 
 
-struct Receiver {};
-
+struct Receiver {
+};
 
 
 struct MovingPlatform {
@@ -94,6 +127,7 @@ struct ServerEntity {
 
 struct ClientEntity {
     int noOfTimes = 0;
+    bool synced = false;
 };
 
 struct Destroy {
@@ -101,6 +135,8 @@ struct Destroy {
     bool destroy = false;
     bool isSent = false;
 };
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Destroy, slot, destroy, isSent)
 
 /**
  * The CollisionShape is an enumeration that defines the shape of the collision boundary for an entity.
@@ -123,6 +159,8 @@ struct Collision {
     CollisionLayer layer;
 };
 
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Collision, isCollider, isTrigger, layer)
+
 // Jump
 struct Jump {
     float maxJumpHeight;
@@ -133,17 +171,14 @@ struct Jump {
     float initialJumpVelocity;
 };
 
-struct Platform {
-    float minX;
-    float maxX;
-    float minY;
-    float maxY;
-};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Jump, maxJumpHeight, jumpDuration, isJumping, jumpTime, canJump, initialJumpVelocity)
 
 struct Respawnable {
     Transform lastSafePosition;
     bool isRespawn = false;
 };
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Respawnable, lastSafePosition, isRespawn)
 
 /**
  * If mass is -1 then the object is considered to be static
@@ -155,17 +190,24 @@ struct RigidBody {
     float gravity_scale;
 };
 
-struct TestServer {
-    bool start = false;
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RigidBody, mass, drag, angular_drag, gravity_scale)
+
+struct Dash {
+    float dashSpeed = 500.0f;
+    float dashDuration = 0.2f;
+    float dashCooldown = 0.5f;
+    bool isDashing = false;
+    float dashTimeRemaining = 0.0f;
+    float cooldownTimeRemaining = 0.0f;
 };
 
-struct TestClient {
-    int entities = 1000;
-    bool testStarted = false;
-    bool testCompleted = false;
-    int iterations = 0;
-    int64_t startTime = 0;
-    int64_t endTime = 0;
+struct Stomp {
+    bool isStomping = false;
+    float stompSpeed = 500.0f;
+    float stompDuration = 0.2f;
+    float stompCooldown = 0.5f;
+    float stompTimeRemaining = 0.0f;
+    float cooldownTimeRemaining = 0.0f;
 };
 
 #endif //TRANSFORM_HPP

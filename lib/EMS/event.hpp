@@ -15,7 +15,8 @@ enum EventType {
     EntityDeath,
     EntityCollided,
     EntityInput,
-    EntityTriggered
+    EntityTriggered,
+    EntityCreated
 };
 
 struct EntityRespawnData {
@@ -50,11 +51,18 @@ struct EntityInputData {
     SDL_Keycode key;
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(EntityInputData, entity, key);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(EntityInputData, entity, key)
+
+struct EntityCreatedData {
+    Entity entity;
+    std::string message;
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(EntityCreatedData, entity, message)
 
 struct Event {
     EventType type;
-    std::variant<EntityRespawnData, EntityDeathData, EntityCollidedData, EntityInputData, EntityTriggeredData> data;
+    std::variant<EntityRespawnData, EntityDeathData, EntityCollidedData, EntityInputData, EntityTriggeredData, EntityCreatedData> data;
 };
 
 inline std::string eventTypeToString(const EventType type) {
@@ -64,6 +72,7 @@ inline std::string eventTypeToString(const EventType type) {
         case EntityCollided: return "EntityCollided";
         case EntityInput: return "EntityInput";
         case EntityTriggered: return "EntityTriggered";
+        case EntityCreated: return "EntityCreated";
         default: return "Unknown";
     }
 }
@@ -74,6 +83,7 @@ inline EventType stringToEventType(const std::string &str) {
     if (str == "EntityCollided") return EntityCollided;
     if (str == "EntityInput") return EntityInput;
     if (str == "EntityTriggered") return EntityTriggered;
+    if (str == "EntityCreated") return EntityCreated;
     throw std::invalid_argument("Unknown EventType string");
 }
 
@@ -98,6 +108,9 @@ inline void to_json(nlohmann::json &j, const Event &event) {
         } else if constexpr (std::is_same_v<T, EntityTriggeredData>) {
             j["data"] = arg;
             j["data_type"] = "EntityTriggeredData";
+        } else if constexpr (std::is_same_v<T, EntityCreatedData>) {
+            j["data"] = arg;
+            j["data_type"] = "EntityCreatedData";
         }
     }, event.data);
 }
@@ -115,6 +128,8 @@ inline void from_json(const nlohmann::json &j, Event &event) {
         event.data = j.at("data").get<EntityInputData>();
     } else if (dataType == "EntityTriggeredData") {
         event.data = j.at("data").get<EntityTriggeredData>();
+    } else if (dataType == "EntityCreatedData") {
+        event.data = j.at("data").get<EntityCreatedData>();
     }
 }
 
