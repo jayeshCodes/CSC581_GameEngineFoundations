@@ -9,6 +9,7 @@
 #include "../ECS/system.hpp"
 #include "../EMS/event_coordinator.hpp"
 #include "../model/components.hpp"
+#include <chrono> // for the dash functionality - can replace with a timeline based system in the future
 
 extern Coordinator gCoordinator;
 extern EventCoordinator eventCoordinator;
@@ -22,18 +23,60 @@ private:
             auto &kinematic = gCoordinator.getComponent<CKinematic>(entity);
             auto &keyboard = gCoordinator.getComponent<KeyboardMovement>(entity);
             auto &jump = gCoordinator.getComponent<Jump>(entity);
+            auto &dash = gCoordinator.getComponent<Dash>(entity);
+            auto &stomp = gCoordinator.getComponent<Stomp>(entity);
+
+            // Get current time for double-tap detection
+            auto currentTime = std::chrono::steady_clock::now();
 
             switch (data.key) {
                 // handle keypress events
                 case SDLK_LEFT: // Affordance for left arrow key
-                case SDLK_a:
+                case SDLK_a: {
                     kinematic.velocity.x = -keyboard.speed;
                     keyboard.movingLeft = true;
+
+                    // Double-tap detection for left dash
+                    if (keyboard.wasLeftReleased) {
+                        auto timeSinceLastTap = std::chrono::duration_cast<std::chrono::duration<float> >(
+                            currentTime - keyboard.lastLeftTapTime
+                        ).count();
+
+
+                        if (timeSinceLastTap <= keyboard.doubleTapThreshold &&
+                            !dash.isDashing && dash.cooldownTimeRemaining <= 0) {
+                            // Trigger dash
+                            dash.isDashing = true;
+                            dash.dashTimeRemaining = dash.dashDuration;
+                            kinematic.velocity.x = -dash.dashSpeed;
+                        }
+                        keyboard.lastLeftTapTime = currentTime;
+                        keyboard.wasLeftReleased = false;
+                    }
                     break;
+                }
                 case SDLK_RIGHT: // Affordance for right arrow key
-                case SDLK_d:
+                case SDLK_d: {
                     kinematic.velocity.x = keyboard.speed;
                     keyboard.movingRight = true;
+
+                    // Double-tap detection for right dash
+                    if (keyboard.wasRightReleased) {
+                        auto timeSinceLastTap = std::chrono::duration_cast<std::chrono::duration<float> >(
+                            currentTime - keyboard.lastRightTapTime
+                        ).count();
+
+
+                        if (timeSinceLastTap <= keyboard.doubleTapThreshold &&
+                            !dash.isDashing && dash.cooldownTimeRemaining <= 0) {
+                            // Trigger dash
+                            dash.isDashing = true;
+                            dash.dashTimeRemaining = dash.dashDuration;
+                            kinematic.velocity.x = dash.dashSpeed;
+                        }
+                        keyboard.lastRightTapTime = currentTime;
+                        keyboard.wasRightReleased = false;
+                    }
                     break;
                 case SDLK_SPACE:
                     if (jump.canJump && !jump.isJumping) {
@@ -43,21 +86,26 @@ private:
                         jump.jumpTime = 0.f;
                     }
                     break;
-
+                }
                 // handle key release events
                 case SDLK_LEFT | 0x8000: // Affordance for left arrow key
                 case SDLK_a | 0x8000:
                     keyboard.movingLeft = false;
-                    if (!keyboard.movingRight) {
+                    keyboard.wasLeftReleased = true;
+                    if (!keyboard.movingRight && !dash.isDashing) {
                         kinematic.velocity.x = 0;
                     }
                     break;
                 case SDLK_RIGHT | 0x8000: // Affordance for right arrow key
                 case SDLK_d | 0x8000:
                     keyboard.movingRight = false;
-                    if (!keyboard.movingLeft) {
+                    keyboard.wasRightReleased = true;
+                    if (!keyboard.movingLeft && !dash.isDashing) {
                         kinematic.velocity.x = 0;
                     }
+                    break;
+                case SDLK_SPACE | 0x8000:
+                    keyboard.wasSpaceReleased = true;
                     break;
             }
         }

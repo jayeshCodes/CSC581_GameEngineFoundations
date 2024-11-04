@@ -141,6 +141,8 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Platform>();
     gCoordinator.registerComponent<Respawnable>();
     gCoordinator.registerComponent<RigidBody>();
+    gCoordinator.registerComponent<Dash>();
+    gCoordinator.registerComponent<Stomp>();
 
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
@@ -243,6 +245,8 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(mainChar, Respawnable{.lastSafePosition={.x=0, SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false});
     gCoordinator.addComponent(mainChar, RigidBody{.mass=1.f});
     gCoordinator.addComponent(mainChar, Collision{.isCollider=true, false, CollisionLayer::PLAYER});
+    gCoordinator.addComponent(mainChar, Dash{});
+    gCoordinator.addComponent(mainChar, Stomp{});
 
     auto trigger = gCoordinator.createEntity();
     gCoordinator.addComponent(trigger, Transform{.x=100.f, SCREEN_HEIGHT - 150.f, 32, 32, 0});

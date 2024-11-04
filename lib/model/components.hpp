@@ -8,6 +8,7 @@
 #include <zmq.hpp>
 #include <nlohmann/json.hpp>
 #include "../enum/enum.hpp"
+#include <chrono>
 
 struct Transform {
     float x, y;
@@ -62,6 +63,17 @@ struct KeyboardMovement {
     float speed;
     bool movingLeft = false;
     bool movingRight = false;
+    bool movingUp = false;
+    bool movingDown = false;
+
+    // Double tap detection
+    std::chrono::steady_clock::time_point lastLeftTapTime = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point lastRightTapTime = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point lastSpaceTapTime = std::chrono::steady_clock::now();
+    bool wasLeftReleased = true;
+    bool wasRightReleased = true;
+    bool wasSpaceReleased = true;
+    static constexpr float doubleTapThreshold = 0.3f; // seconds
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(KeyboardMovement, speed)
@@ -166,6 +178,24 @@ struct TestClient {
     int iterations = 0;
     int64_t startTime = 0;
     int64_t endTime = 0;
+};
+
+struct Dash {
+    float dashSpeed = 500.0f;
+    float dashDuration = 0.2f;
+    float dashCooldown = 0.5f;
+    bool isDashing = false;
+    float dashTimeRemaining = 0.0f;
+    float cooldownTimeRemaining = 0.0f;
+};
+
+struct Stomp {
+    bool isStomping = false;
+    float stompSpeed = 500.0f;
+    float stompDuration = 0.2f;
+    float stompCooldown = 0.5f;
+    float stompTimeRemaining = 0.0f;
+    float cooldownTimeRemaining = 0.0f;
 };
 
 #endif //TRANSFORM_HPP
