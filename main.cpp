@@ -128,6 +128,8 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Jump>();
     gCoordinator.registerComponent<Respawnable>();
     gCoordinator.registerComponent<RigidBody>();
+    gCoordinator.registerComponent<Dash>();
+    gCoordinator.registerComponent<Stomp>();
 
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
@@ -173,6 +175,7 @@ int main(int argc, char *argv[]) {
     keyboardMovementSignature.set(gCoordinator.getComponentType<CKinematic>());
     keyboardMovementSignature.set(gCoordinator.getComponentType<KeyboardMovement>());
     keyboardMovementSignature.set(gCoordinator.getComponentType<Jump>());
+    keyboardMovementSignature.set(gCoordinator.getComponentType<Dash>());
     gCoordinator.setSystemSignature<KeyboardMovementSystem>(keyboardMovementSignature);
 
     Signature clientSignature;
@@ -245,8 +248,8 @@ int main(int argc, char *argv[]) {
                               });
     gCoordinator.addComponent(mainChar, RigidBody{.mass = 1.f});
     gCoordinator.addComponent(mainChar, Collision{.isCollider = true, false, CollisionLayer::PLAYER});
-
-    std::cout << "MainChar: " << gCoordinator.getEntityKey(mainChar) << std::endl;
+	gCoordinator.addComponent(mainChar, Dash{});
+    gCoordinator.addComponent(mainChar, Stomp{});    std::cout << "MainChar: " << gCoordinator.getEntityKey(mainChar) << std::endl;
 
     Event entityCreatedEvent{EntityCreated, {}};
     entityCreatedEvent.data = EntityCreatedData{mainChar, strategy->get_message(mainChar, Message::CREATE)};

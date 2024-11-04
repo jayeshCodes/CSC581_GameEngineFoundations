@@ -8,6 +8,9 @@
 #include <zmq.hpp>
 #include <nlohmann/json.hpp>
 #include "../enum/enum.hpp"
+#include "../core/timeline.hpp"
+
+inline Timeline timeline;
 
 struct Transform {
     float x, y;
@@ -81,6 +84,17 @@ struct KeyboardMovement {
     float speed;
     bool movingLeft = false;
     bool movingRight = false;
+    bool movingUp = false;
+    bool movingDown = false;
+
+    // Double tap detection
+    int64_t lastLeftTapTime = timeline.getElapsedTime();
+    int64_t lastRightTapTime = timeline.getElapsedTime();
+    int64_t lastSpaceTapTime = timeline.getElapsedTime();
+    bool wasLeftReleased = true;
+    bool wasRightReleased = true;
+    bool wasSpaceReleased = true;
+    static constexpr float doubleTapThreshold = 0.3f; // seconds
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(KeyboardMovement, speed)
@@ -177,5 +191,23 @@ struct RigidBody {
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RigidBody, mass, drag, angular_drag, gravity_scale)
+
+struct Dash {
+    float dashSpeed = 500.0f;
+    float dashDuration = 0.2f;
+    float dashCooldown = 0.5f;
+    bool isDashing = false;
+    float dashTimeRemaining = 0.0f;
+    float cooldownTimeRemaining = 0.0f;
+};
+
+struct Stomp {
+    bool isStomping = false;
+    float stompSpeed = 500.0f;
+    float stompDuration = 0.2f;
+    float stompCooldown = 0.5f;
+    float stompTimeRemaining = 0.0f;
+    float cooldownTimeRemaining = 0.0f;
+};
 
 #endif //TRANSFORM_HPP
