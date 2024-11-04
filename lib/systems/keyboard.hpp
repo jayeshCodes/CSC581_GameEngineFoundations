@@ -10,7 +10,7 @@
 #include "../EMS/event_coordinator.hpp"
 #include "../model/components.hpp"
 
-extern Timeline anchorTimeline;
+extern Timeline gameTimeline;
 extern Coordinator gCoordinator;
 extern EventCoordinator eventCoordinator;
 
@@ -27,7 +27,7 @@ private:
             auto &stomp = gCoordinator.getComponent<Stomp>(entity);
 
             // Get current time for double-tap detection
-            auto currentTime = anchorTimeline.getElapsedTime();
+            auto currentTime = gameTimeline.getElapsedTime();
 
             switch (data.key) {
                 // handle keypress events
@@ -41,7 +41,7 @@ private:
                         auto timeSinceLastTap = (currentTime - keyboard.lastLeftTapTime) / 1000.f;
 
 
-                        if (timeSinceLastTap <= keyboard.doubleTapThreshold &&
+                        if (timeSinceLastTap <= KeyboardMovement::doubleTapThreshold &&
                             !dash.isDashing && dash.cooldownTimeRemaining <= 0) {
                             // Trigger dash
                             dash.isDashing = true;
@@ -63,7 +63,7 @@ private:
                         auto timeSinceLastTap = (currentTime - keyboard.lastRightTapTime) / 1000.f;
 
 
-                        if (timeSinceLastTap <= keyboard.doubleTapThreshold &&
+                        if (timeSinceLastTap <= KeyboardMovement::doubleTapThreshold &&
                             !dash.isDashing && dash.cooldownTimeRemaining <= 0) {
                             // Trigger dash
                             dash.isDashing = true;
