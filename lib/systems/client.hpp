@@ -10,7 +10,6 @@
 
 #include "../ECS/coordinator.hpp"
 #include "../ECS/system.hpp"
-#include "../enum/enum.hpp"
 #include "../helpers/network_helper.hpp"
 #include "../model/components.hpp"
 #include "../strategy/send_strategy.hpp"
@@ -19,26 +18,15 @@ extern Coordinator gCoordinator;
 
 class ClientSystem : public System {
     std::map<Entity, Transform> previous;
-    bool connected = false;
 
-    void sync(zmq::socket_t &client_socket, Send_Strategy *send_strategy) {
-        auto message = send_strategy->get_message(INVALID_ENTITY, Message::SYNC);
-
-        //This entity id doesnt matter
-        std::string entity_id = client_socket.get(zmq::sockopt::routing_id) + std::to_string(-123);
-        NetworkHelper::sendMessageClient(client_socket, entity_id, message);
-        std::cout << "Sending SYNC" << std::endl;
-        connected = true;
-    }
-
-    void send_position_update(zmq::socket_t &client_socket, Send_Strategy *send_strategy) {
+public:
+    void update(zmq::socket_t &client_socket, Send_Strategy *send_strategy) {
         for (auto entity: entities) {
             auto &client_entity = gCoordinator.getComponent<ClientEntity>(entity);
-            if(!client_entity.synced) {
+            if (!client_entity.synced) {
                 return;
             }
             auto &transform = gCoordinator.getComponent<Transform>(entity);
-            auto &color = gCoordinator.getComponent<Color>(entity);
             auto &clientEntity = gCoordinator.getComponent<ClientEntity>(entity);
             if (previous[entity].equal(transform) && clientEntity.noOfTimes == 0) {
                 continue;
@@ -48,16 +36,11 @@ class ClientSystem : public System {
             auto message = send_strategy->get_message(entity, Message::UPDATE);
             previous[entity] = transform;
 
-            std::string entity_id = gCoordinator.getEntityKey(entity);
-            NetworkHelper::sendMessageClient(client_socket, entity_id, message);
+            Event positionChangedEvent{
+                EventType::PositionChanged,
+                PositionChangedData{entity, send_strategy->get_message(entity, Message::UPDATE)}
+            };
+            eventCoordinator.emitServer(client_socket, std::make_shared<Event>(positionChangedEvent));
         }
-    }
-
-public:
-    void update(zmq::socket_t &client_socket, Send_Strategy *send_strategy) {
-        // if (!connected) {
-        //     sync(client_socket, send_strategy);
-        // }
-        send_position_update(client_socket, send_strategy);
     }
 };

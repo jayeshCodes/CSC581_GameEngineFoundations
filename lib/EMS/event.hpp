@@ -16,7 +16,8 @@ enum EventType {
     EntityCollided,
     EntityInput,
     EntityTriggered,
-    EntityCreated
+    MainCharCreated,
+    PositionChanged
 };
 
 struct EntityRespawnData {
@@ -53,16 +54,25 @@ struct EntityInputData {
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(EntityInputData, entity, key)
 
-struct EntityCreatedData {
+struct MainCharCreatedData {
     Entity entity;
     std::string message;
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(EntityCreatedData, entity, message)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(MainCharCreatedData, entity, message)
+
+struct PositionChangedData {
+    Entity entity;
+    std::string message;
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(PositionChangedData, entity, message)
+
+using EventDataTypes = std::variant<EntityRespawnData, EntityDeathData, EntityCollidedData, EntityInputData, EntityTriggeredData, MainCharCreatedData, PositionChangedData>;
 
 struct Event {
     EventType type;
-    std::variant<EntityRespawnData, EntityDeathData, EntityCollidedData, EntityInputData, EntityTriggeredData, EntityCreatedData> data;
+    EventDataTypes data;
 };
 
 inline std::string eventTypeToString(const EventType type) {
@@ -72,7 +82,8 @@ inline std::string eventTypeToString(const EventType type) {
         case EntityCollided: return "EntityCollided";
         case EntityInput: return "EntityInput";
         case EntityTriggered: return "EntityTriggered";
-        case EntityCreated: return "EntityCreated";
+        case MainCharCreated: return "EntityCreated";
+        case PositionChanged: return "PositionChanged";
         default: return "Unknown";
     }
 }
@@ -83,7 +94,8 @@ inline EventType stringToEventType(const std::string &str) {
     if (str == "EntityCollided") return EntityCollided;
     if (str == "EntityInput") return EntityInput;
     if (str == "EntityTriggered") return EntityTriggered;
-    if (str == "EntityCreated") return EntityCreated;
+    if (str == "EntityCreated") return MainCharCreated;
+    if (str == "PositionChanged") return PositionChanged;
     throw std::invalid_argument("Unknown EventType string");
 }
 
@@ -108,9 +120,12 @@ inline void to_json(nlohmann::json &j, const Event &event) {
         } else if constexpr (std::is_same_v<T, EntityTriggeredData>) {
             j["data"] = arg;
             j["data_type"] = "EntityTriggeredData";
-        } else if constexpr (std::is_same_v<T, EntityCreatedData>) {
+        } else if constexpr (std::is_same_v<T, MainCharCreatedData>) {
             j["data"] = arg;
             j["data_type"] = "EntityCreatedData";
+        } else if constexpr (std::is_same_v<T, PositionChangedData>) {
+            j["data"] = arg;
+            j["data_type"] = "PositionChangedData";
         }
     }, event.data);
 }
@@ -129,7 +144,9 @@ inline void from_json(const nlohmann::json &j, Event &event) {
     } else if (dataType == "EntityTriggeredData") {
         event.data = j.at("data").get<EntityTriggeredData>();
     } else if (dataType == "EntityCreatedData") {
-        event.data = j.at("data").get<EntityCreatedData>();
+        event.data = j.at("data").get<MainCharCreatedData>();
+    } else if (dataType == "PositionChangedData") {
+        event.data = j.at("data").get<PositionChangedData>();
     }
 }
 

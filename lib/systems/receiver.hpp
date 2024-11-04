@@ -27,17 +27,6 @@ private:
                     }
                 }
             }
-            if (receivedMessage.type == Message::UPDATE) {
-                auto generatedId = gCoordinator.createEntity(receivedMessage.entity_key);
-
-                auto received_transform = std::get<Transform>(receivedMessage.components[0]);
-
-                if (!gCoordinator.hasComponent<Transform>(generatedId)) { return; }
-
-                auto &transform = gCoordinator.getComponent<Transform>(generatedId);
-
-                transform = received_transform;
-            }
             if (receivedMessage.type == Message::DELETE) {
                 auto entities = gCoordinator.getEntitiesStartsWith(receivedMessage.entity_key);
                 for (auto entity: entities) {

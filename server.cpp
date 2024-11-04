@@ -30,6 +30,7 @@
 #include "lib/systems/keyboard_movement.cpp"
 
 #include "lib/systems/move_between_2_point_system.hpp"
+#include "lib/systems/position_update_handler.hpp"
 #include "lib/systems/receiver.hpp"
 
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
@@ -143,6 +144,7 @@ int main(int argc, char *argv[]) {
     auto receiverSystem = gCoordinator.registerSystem<ReceiverSystem>();
     auto eventSystem = gCoordinator.registerSystem<EventSystem>();
     auto entityCreatedSystem = gCoordinator.registerSystem<EntityCreatedHandler>();
+    auto positionUpdateHandler = gCoordinator.registerSystem<PositionUpdateHandler>();
 
     Signature clientEntitySignature;
     clientEntitySignature.set(gCoordinator.getComponentType<ClientEntity>());
@@ -245,23 +247,6 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(platform2, Collision{true, false, CollisionLayer::MOVING_PLATFORM});
 
     std::cout << "Platform2: " << gCoordinator.getEntityKey(platform2) << std::endl;
-
-    // Entity platform2 = gCoordinator.createEntity();
-    // gCoordinator.addComponent(platform2, Transform{300, 500, 100, 400});
-    // gCoordinator.addComponent(platform2, Color{shade_color::Brown});
-    // gCoordinator.addComponent(platform2, CKinematic{0, 0, 0, 0});
-    // gCoordinator.addComponent(platform2, Destroy{});
-    // gCoordinator.addComponent(platform2, ClientEntity{true});
-    // gCoordinator.addComponent(platform2, Collision{true, false, CollisionLayer::OTHER});
-    // gCoordinator.addComponent(platform2, RigidBody{-1});
-
-    // Entity platform2 = gCoordinator.createEntity();
-    // gCoordinator.addComponent(platform2, Transform{300, 300, 100, 100});
-    // gCoordinator.addComponent(platform2, Color{255, 255, 0, 255});
-    // gCoordinator.addComponent(platform2, CKinematic{0, 0, 0, 0});
-    // gCoordinator.addComponent(platform2, MovingPlatform{200, 800, RIGHT, 2});
-    // gCoordinator.addComponent(platform2, ClientEntity{true});
-    // gCoordinator.addComponent(platform2, Destroy{});
 
     zmq::context_t context(1);
     zmq::socket_t frontend(context, ZMQ_ROUTER);

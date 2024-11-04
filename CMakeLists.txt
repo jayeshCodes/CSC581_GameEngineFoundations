@@ -60,7 +60,8 @@ set(SOURCES
 
 add_executable(shade_engine ${SOURCES} main.cpp
         lib/model/data_model.hpp
-        lib/systems/entity_created_handler.hpp)
+        lib/systems/entity_created_handler.hpp
+        lib/systems/position_update_handler.hpp)
 add_executable(shade_engine_server ${SOURCES} server.cpp)
 
 find_package(SDL2 REQUIRED)

@@ -31,6 +31,7 @@
 #include "lib/systems/respawn.hpp"
 #include "lib/systems/collision_handler.hpp"
 #include "lib/systems/entity_created_handler.hpp"
+#include "lib/systems/position_update_handler.hpp"
 #include "lib/systems/trigger_handler.hpp"
 
 class ReceiverSystem;
@@ -150,6 +151,7 @@ int main(int argc, char *argv[]) {
     auto triggerHandlerSystem = gCoordinator.registerSystem<TriggerHandlerSystem>();
     auto eventSystem = gCoordinator.registerSystem<EventSystem>();
     auto entityCreatedSystem = gCoordinator.registerSystem<EntityCreatedHandler>();
+    auto positionUpdateHandler = gCoordinator.registerSystem<PositionUpdateHandler>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
@@ -249,10 +251,11 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(mainChar, RigidBody{.mass = 1.f});
     gCoordinator.addComponent(mainChar, Collision{.isCollider = true, false, CollisionLayer::PLAYER});
 	gCoordinator.addComponent(mainChar, Dash{});
-    gCoordinator.addComponent(mainChar, Stomp{});    std::cout << "MainChar: " << gCoordinator.getEntityKey(mainChar) << std::endl;
+    gCoordinator.addComponent(mainChar, Stomp{});
+    std::cout << "MainChar: " << gCoordinator.getEntityKey(mainChar) << std::endl;
 
-    Event entityCreatedEvent{EntityCreated, {}};
-    entityCreatedEvent.data = EntityCreatedData{mainChar, strategy->get_message(mainChar, Message::CREATE)};
+    Event entityCreatedEvent{MainCharCreated, {}};
+    entityCreatedEvent.data = MainCharCreatedData{mainChar, strategy->get_message(mainChar, Message::CREATE)};
     eventCoordinator.emitServer(client_socket, std::make_shared<Event>(entityCreatedEvent));
     gCoordinator.getComponent<ClientEntity>(mainChar).synced = true;
 

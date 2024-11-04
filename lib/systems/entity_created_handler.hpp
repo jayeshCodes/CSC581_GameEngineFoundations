@@ -15,8 +15,8 @@ extern EventCoordinator event_coordinator;
 
 class EntityCreatedHandler : public System {
     EventHandler collisionHandler = [this](const std::shared_ptr<Event> &event) {
-        if (event->type == EventType::EntityCreated) {
-            const auto &data = std::get<EntityCreatedData>(event->data);
+        if (event->type == EventType::MainCharCreated) {
+            const auto &data = std::get<MainCharCreatedData>(event->data);
             const nlohmann::json received_msg = nlohmann::json::parse(data.message);
             SimpleMessage msg = received_msg;
             auto generatedId = gCoordinator.createEntity(msg.entity_key);
@@ -52,10 +52,10 @@ class EntityCreatedHandler : public System {
 
 public:
     EntityCreatedHandler() {
-        eventCoordinator.subscribe(collisionHandler, EventType::EntityCreated);
+        eventCoordinator.subscribe(collisionHandler, EventType::MainCharCreated);
     }
 
     ~EntityCreatedHandler() {
-        eventCoordinator.unsubscribe(collisionHandler, EventType::EntityCreated);
+        eventCoordinator.unsubscribe(collisionHandler, EventType::MainCharCreated);
     }
 };

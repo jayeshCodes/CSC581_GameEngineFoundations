@@ -21,7 +21,7 @@ class TriggerHandlerSystem : public System {
           auto& otherEntity = data.otherEntity;
 
           auto &kinematic = gCoordinator.getComponent<CKinematic>(otherEntity);
-          kinematic.velocity.y = -500.f;
+          kinematic.velocity.y = -100.f;
       }
     };
 
