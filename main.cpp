@@ -216,6 +216,17 @@ int main(int argc, char *argv[]) {
     respawnSignature.set(gCoordinator.getComponentType<Collision>());
     gCoordinator.setSystemSignature<DeathSystem>(respawnSignature);
 
+    zmq::socket_t reply_socket(context, ZMQ_DEALER);
+    std::string id = identity + "R";
+    reply_socket.set(zmq::sockopt::routing_id, id);
+    reply_socket.connect("tcp://localhost:5570");
+
+    std::thread t1([receiverSystem, &reply_socket, &strategy]() {
+        while (GameManager::getInstance()->gameRunning) {
+            receiverSystem->update(reply_socket, strategy.get());
+        }
+    });
+
 
     Entity mainCamera = gCoordinator.createEntity();
     gCoordinator.addComponent(mainCamera, Camera{.x = 0, 0, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT});
@@ -256,16 +267,6 @@ int main(int argc, char *argv[]) {
 
     auto last_time = gameTimeline.getElapsedTime();
 
-    // Start the message receiver thread
-    std::thread t1([receiverSystem, &context, &identity, &strategy]() {
-        zmq::socket_t socket(context, ZMQ_DEALER);
-        std::string id = identity + "R";
-        socket.set(zmq::sockopt::routing_id, id);
-        socket.connect("tcp://localhost:5570");
-        while (GameManager::getInstance()->gameRunning) {
-            receiverSystem->update(socket, strategy.get());
-        }
-    });
 
     // Start the message sending thread
     std::thread t2([&client_socket, &clientSystem, &strategy] {

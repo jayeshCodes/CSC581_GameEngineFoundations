@@ -46,12 +46,11 @@ public:
 
 
                         // send all entities to new client
+                        std::cout << gCoordinator.getEntityIds().size() << std::endl;
                         for (const auto &entity: gCoordinator.getEntityIds()) {
-                            for (int i = 0; i < 5; i++) {
                                 auto message = send_strategy->get_message(entity.second, Message::CREATE);
 
                                 NetworkHelper::sendMessageServer(worker, identity.to_string(), entity.first, message);
-                            }
                         }
                     }
                 } {

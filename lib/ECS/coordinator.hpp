@@ -51,7 +51,7 @@ public:
         component_manager->entityDestroyed(entity);
         system_manager->entityDestroyed(entity);
 
-        entities.erase(createKey(entity));
+        entities.erase(getEntityKey(entity));
     }
 
     template<typename T>
@@ -150,7 +150,6 @@ public:
     }
 
     std::string getEntityKey(const Entity id) {
-        std::shared_lock lock(mutex);
         for(auto &[key, value]: entities) {
             if(value == id) {
                 return key;

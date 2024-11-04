@@ -55,26 +55,8 @@ public:
             if (gCoordinator.hasComponent<CKinematic>(entity)) {
                 json_message.components.emplace_back(gCoordinator.getComponent<CKinematic>(entity));
             }
-            if (gCoordinator.hasComponent<MovingPlatform>(entity)) {
-                json_message.components.emplace_back(gCoordinator.getComponent<MovingPlatform>(entity));
-            }
             if (gCoordinator.hasComponent<Destroy>(entity)) {
                 json_message.components.emplace_back(gCoordinator.getComponent<Destroy>(entity));
-            }
-            if (gCoordinator.hasComponent<Jump>(entity)) {
-                json_message.components.emplace_back(gCoordinator.getComponent<Jump>(entity));
-            }
-            if (gCoordinator.hasComponent<Respawnable>(entity)) {
-                json_message.components.emplace_back(gCoordinator.getComponent<Respawnable>(entity));
-            }
-            if (gCoordinator.hasComponent<Camera>(entity)) {
-                json_message.components.emplace_back(gCoordinator.getComponent<Camera>(entity));
-            }
-            if (gCoordinator.hasComponent<KeyboardMovement>(entity)) {
-                json_message.components.emplace_back(gCoordinator.getComponent<KeyboardMovement>(entity));
-            }
-            if (gCoordinator.hasComponent<Gravity>(entity)) {
-                json_message.components.emplace_back(gCoordinator.getComponent<Gravity>(entity));
             }
             json = json_message;
         }

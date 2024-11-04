@@ -67,7 +67,7 @@ private:
                     }
                     if (std::holds_alternative<CKinematic>(component)) {
                         auto received_kinematic = std::get<CKinematic>(component);
-                        gCoordinator.addComponent<CKinematic>(generatedId, received_kinematic);
+                        gCoordinator.addComponent<CKinematic>(generatedId, CKinematic{});
                     }
                     if (std::holds_alternative<Destroy>(component)) {
                         auto received_destroy = std::get<Destroy>(component);
