@@ -201,6 +201,8 @@ struct Dash {
     float cooldownTimeRemaining = 0.0f;
 };
 
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Dash, dashSpeed, dashDuration, dashCooldown, isDashing, dashTimeRemaining, cooldownTimeRemaining)
+
 struct Stomp {
     bool isStomping = false;
     float stompSpeed = 500.0f;
@@ -209,5 +211,13 @@ struct Stomp {
     float stompTimeRemaining = 0.0f;
     float cooldownTimeRemaining = 0.0f;
 };
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Stomp, isStomping, stompSpeed, stompDuration, stompCooldown, stompTimeRemaining, cooldownTimeRemaining)
+
+struct VerticalBoost {
+    float velocity = -100.f;
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(VerticalBoost, velocity)
 
 #endif //TRANSFORM_HPP

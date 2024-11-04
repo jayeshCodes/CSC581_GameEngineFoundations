@@ -52,7 +52,7 @@ set(SOURCES
         lib/data_structures/ThreadSafePriorityQueue.hpp
         lib/systems/keyboard.hpp
         lib/systems/collision_handler.hpp
-        lib/systems/trigger_handler.hpp
+        lib/systems/vertical_boost_handler.hpp
         lib/systems/event_system.hpp
         lib/systems/respawn.hpp
         lib/helpers/network_helper.hpp

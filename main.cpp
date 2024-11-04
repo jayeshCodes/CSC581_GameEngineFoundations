@@ -32,7 +32,7 @@
 #include "lib/systems/collision_handler.hpp"
 #include "lib/systems/entity_created_handler.hpp"
 #include "lib/systems/position_update_handler.hpp"
-#include "lib/systems/trigger_handler.hpp"
+#include "lib/systems/vertical_boost_handler.hpp"
 
 class ReceiverSystem;
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
@@ -131,6 +131,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<RigidBody>();
     gCoordinator.registerComponent<Dash>();
     gCoordinator.registerComponent<Stomp>();
+    gCoordinator.registerComponent<VerticalBoost>();
 
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
@@ -148,7 +149,7 @@ int main(int argc, char *argv[]) {
     auto respawnSystem = gCoordinator.registerSystem<RespawnSystem>();
     auto keyboardSystem = gCoordinator.registerSystem<KeyboardSystem>();
     auto collisonHandlerSystem = gCoordinator.registerSystem<CollisionHandlerSystem>();
-    auto triggerHandlerSystem = gCoordinator.registerSystem<TriggerHandlerSystem>();
+    auto triggerHandlerSystem = gCoordinator.registerSystem<VerticalBoostHandler>();
     auto eventSystem = gCoordinator.registerSystem<EventSystem>();
     auto entityCreatedSystem = gCoordinator.registerSystem<EntityCreatedHandler>();
     auto positionUpdateHandler = gCoordinator.registerSystem<PositionUpdateHandler>();
@@ -266,6 +267,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(trigger, Destroy{});
     gCoordinator.addComponent(trigger, RigidBody{.mass = -1.f});
     gCoordinator.addComponent(trigger, Collision{false, true, CollisionLayer::OTHER});
+    gCoordinator.addComponent(trigger, VerticalBoost{.velocity = -200.f});
 
 
     auto clientEntity = gCoordinator.createEntity();
