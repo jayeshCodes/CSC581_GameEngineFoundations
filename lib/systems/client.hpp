@@ -35,7 +35,6 @@ class ClientSystem : public System {
         for (auto entity: entities) {
             auto &client_entity = gCoordinator.getComponent<ClientEntity>(entity);
             if(!client_entity.synced) {
-                std::cout << "here?" << std::endl;
                 return;
             }
             auto &transform = gCoordinator.getComponent<Transform>(entity);

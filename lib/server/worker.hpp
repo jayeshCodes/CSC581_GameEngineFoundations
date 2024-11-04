@@ -46,7 +46,6 @@ public:
 
 
                         // send all entities to new client
-                        std::cout << gCoordinator.getEntityIds().size() << std::endl;
                         for (const auto &entity: gCoordinator.getEntityIds()) {
                                 auto message = send_strategy->get_message(entity.second, Message::CREATE);
 
