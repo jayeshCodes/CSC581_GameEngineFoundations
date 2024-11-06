@@ -91,9 +91,9 @@ struct KeyboardMovement {
     int64_t lastLeftTapTime = timeline.getElapsedTime();
     int64_t lastRightTapTime = timeline.getElapsedTime();
     int64_t lastSpaceTapTime = timeline.getElapsedTime();
-    bool wasLeftReleased = true;
-    bool wasRightReleased = true;
-    bool wasSpaceReleased = true;
+    bool wasLeftReleased = false;
+    bool wasRightReleased = false;
+    bool wasSpaceReleased = false;
     static constexpr float doubleTapThreshold = 0.3f; // seconds
 };
 

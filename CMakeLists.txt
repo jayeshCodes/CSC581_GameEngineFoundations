@@ -56,12 +56,14 @@ set(SOURCES
         lib/systems/event_system.hpp
         lib/systems/respawn.hpp
         lib/helpers/network_helper.hpp
-)
-
-add_executable(shade_engine ${SOURCES} main.cpp
         lib/model/data_model.hpp
         lib/systems/entity_created_handler.hpp
-        lib/systems/position_update_handler.hpp)
+        lib/systems/position_update_handler.hpp
+        lib/systems/dash.hpp
+        lib/systems/combo_event_handler.hpp)
+
+
+add_executable(shade_engine ${SOURCES} main.cpp)
 add_executable(shade_engine_server ${SOURCES} server.cpp)
 
 find_package(SDL2 REQUIRED)

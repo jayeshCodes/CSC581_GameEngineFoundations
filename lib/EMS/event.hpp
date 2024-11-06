@@ -17,7 +17,9 @@ enum EventType {
     EntityInput,
     EntityTriggered,
     MainCharCreated,
-    PositionChanged
+    PositionChanged,
+    DashRight,
+    DashLeft,
 };
 
 struct EntityRespawnData {
@@ -68,7 +70,12 @@ struct PositionChangedData {
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(PositionChangedData, entity, message)
 
-using EventDataTypes = std::variant<EntityRespawnData, EntityDeathData, EntityCollidedData, EntityInputData, EntityTriggeredData, MainCharCreatedData, PositionChangedData>;
+struct DashData {
+    Entity entity;
+};
+
+using EventDataTypes = std::variant<EntityRespawnData, EntityDeathData, EntityCollidedData, EntityInputData,
+    EntityTriggeredData, MainCharCreatedData, PositionChangedData, DashData>;
 
 struct Event {
     EventType type;

@@ -30,6 +30,8 @@
 #include "lib/systems/keyboard.hpp"
 #include "lib/systems/respawn.hpp"
 #include "lib/systems/collision_handler.hpp"
+#include "lib/systems/combo_event_handler.hpp"
+#include "lib/systems/dash.hpp"
 #include "lib/systems/entity_created_handler.hpp"
 #include "lib/systems/position_update_handler.hpp"
 #include "lib/systems/vertical_boost_handler.hpp"
@@ -153,6 +155,8 @@ int main(int argc, char *argv[]) {
     auto eventSystem = gCoordinator.registerSystem<EventSystem>();
     auto entityCreatedSystem = gCoordinator.registerSystem<EntityCreatedHandler>();
     auto positionUpdateHandler = gCoordinator.registerSystem<PositionUpdateHandler>();
+    auto dashSystem = gCoordinator.registerSystem<DashSystem>();
+    auto comboEventHandler = gCoordinator.registerSystem<ComboEventHandler>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
@@ -221,6 +225,11 @@ int main(int argc, char *argv[]) {
     respawnSignature.set(gCoordinator.getComponentType<Transform>());
     respawnSignature.set(gCoordinator.getComponentType<Collision>());
     gCoordinator.setSystemSignature<DeathSystem>(respawnSignature);
+
+    Signature dashSignature;
+    dashSignature.set(gCoordinator.getComponentType<Dash>());
+    dashSignature.set(gCoordinator.getComponentType<CKinematic>());
+    gCoordinator.setSystemSignature<DashSystem>(dashSignature);
 
     zmq::socket_t reply_socket(context, ZMQ_DEALER);
     std::string id = identity + "R";
@@ -304,6 +313,7 @@ int main(int argc, char *argv[]) {
         cameraSystem->update(mainChar);
         renderSystem->update(mainCamera);
         eventSystem->update();
+        dashSystem->update(dt);
 
         auto elapsed_time = gameTimeline.getElapsedTime();
         auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - current_time); // Ensure float division

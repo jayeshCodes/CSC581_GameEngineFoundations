@@ -7,83 +7,94 @@
 #include "../model/components.hpp"
 #include "../EMS/event_coordinator.hpp"
 #include <thread>
+#include <unordered_set>
 
 extern Coordinator gCoordinator;
 extern EventCoordinator eventCoordinator;
 
+struct KeyCombo {
+    std::vector<SDL_Scancode> keys;
+    int64_t comboWindow;
+    EventType eventType;
+};
+
+extern Timeline gameTimeline;
+
 class KeyboardMovementSystem : public System {
-private:
-    // Track previous key states to detect releases
-    bool prevAState = false;
-    bool prevDState = false;
-    bool prevSpaceState = false;
+    std::vector<KeyCombo> keyCombos = {
+        {{SDL_SCANCODE_LSHIFT, SDL_SCANCODE_D}, 1000, EventType::DashRight},
+        {{SDL_SCANCODE_LSHIFT, SDL_SCANCODE_A}, 1000, EventType::DashLeft},
+    };
+
+    std::unordered_map<SDL_Scancode, bool> prevKeyState;
+    std::unordered_map<SDL_Scancode, int64_t> keyPressTime;
+
+    const Uint8 *keyboardState = nullptr;
 
 public:
+    KeyboardMovementSystem() {
+        prevKeyState[SDL_SCANCODE_D] = false;
+        prevKeyState[SDL_SCANCODE_A] = false;
+        prevKeyState[SDL_SCANCODE_LSHIFT] = false;
+        prevKeyState[SDL_SCANCODE_SPACE] = false;
+    }
+
     void update() {
-        for (const auto entity: entities) {
-            auto &transform = gCoordinator.getComponent<Transform>(entity);
-            auto &kinematic = gCoordinator.getComponent<CKinematic>(entity);
-            auto &keyboard = gCoordinator.getComponent<KeyboardMovement>(entity);
-            auto &jump = gCoordinator.getComponent<Jump>(entity);
-            auto &dash = gCoordinator.getComponent<Dash>(entity);
-            auto &stomp = gCoordinator.getComponent<Stomp>(entity);
+        for (auto &entity: entities) {
+            keyboardState = SDL_GetKeyboardState(nullptr);
+            int64_t now = gameTimeline.getElapsedTime();
+            bool comboEventTriggered = false;
 
-            const Uint8 *state = SDL_GetKeyboardState(nullptr);
-
-            // Handle key presses
-            if (state[SDL_SCANCODE_A]) {
-                if (!prevAState) {
-                    // Only emit when key is first pressed
-                    Event event{EventType::EntityInput, EntityInputData{entity, SDLK_a}};
-                    eventCoordinator.emit(std::make_shared<Event>(event));
+            for (const auto &combo: keyCombos) {
+                bool comboTriggered = true; // Reset for each combo
+                for (auto key: combo.keys) {
+                    if (!keyboardState[key] || !keyPressTime.contains(key)) {
+                        comboTriggered = false;
+                        break;
+                    }
                 }
-                prevAState = true;
-            } else if (prevAState) {
-                // Key was released
-                Event event{EventType::EntityInput, EntityInputData{entity, SDLK_a | 0x8000}};
-                eventCoordinator.emit(std::make_shared<Event>(event));
-                prevAState = false;
-            }
 
-            if (state[SDL_SCANCODE_D]) {
-                if (!prevDState) {
-                    // Only emit when key is first pressed
-                    Event event{EventType::EntityInput, EntityInputData{entity, SDLK_d}};
-                    eventCoordinator.emit(std::make_shared<Event>(event));
-                }
-                prevDState = true;
-            } else if (prevDState) {
-                // Key was released
-                Event event{EventType::EntityInput, EntityInputData{entity, SDLK_d | 0x8000}};
-                eventCoordinator.emit(std::make_shared<Event>(event));
-                prevDState = false;
-            }
+                if (comboTriggered) {
+                    // Find the oldest press time in this combo
+                    auto oldestPressTime = now;
+                    for (auto key: combo.keys) {
+                        if (const auto pressTime = keyPressTime[key]; pressTime < oldestPressTime) {
+                            oldestPressTime = pressTime;
+                        }
+                    }
 
-            if (state[SDL_SCANCODE_SPACE] && !jump.isJumping && jump.canJump) {
-                Event event{EventType::EntityInput, EntityInputData{entity, SDLK_SPACE}};
-                eventCoordinator.emit(std::make_shared<Event>(event));
-            }
+                    if (now - oldestPressTime < combo.comboWindow) {
+                        Event comboEvent{combo.eventType, DashData{entity}};
+                        eventCoordinator.emit(std::make_shared<Event>(comboEvent));
 
-            // Update dash timing
-            if (dash.isDashing) {
-                dash.dashTimeRemaining -= 1.0f / 60.0f; // Assuming 60 FPS, adjust as needed
-                if (dash.dashTimeRemaining <= 0) {
-                    dash.isDashing = false;
-                    dash.cooldownTimeRemaining = dash.dashCooldown;
-                    // Reset velocity to normal movement speed if still moving
-                    if (keyboard.movingLeft) {
-                        kinematic.velocity.x = -keyboard.speed;
-                    } else if (keyboard.movingRight) {
-                        kinematic.velocity.x = keyboard.speed;
-                    } else {
-                        kinematic.velocity.x = 0;
+                        for (auto key: combo.keys) {
+                            keyPressTime.erase(key);
+                        }
+
+                        comboEventTriggered = true;
+                        break; // Stop checking further combos but continue with individual key checks
                     }
                 }
             }
 
-            // Update cooldown
-            if (dash.cooldownTimeRemaining > 0) {
-                dash.cooldownTimeRemaining -= 1.0f / 60.0f; // Assuming 60 FPS, adjust as needed
+            // Process individual key events even if a combo was triggered
+            for (auto &keyState: prevKeyState) {
+                auto key = keyState.first;
+                bool wasPressed = keyState.second;
+                bool isPressed = keyboardState[key];
+
+                if (isPressed && !wasPressed) {
+                    // Key just pressed
+                    keyPressTime[key] = now;
+                    Event individualEvent{EventType::EntityInput, EntityInputData{entity, key}};
+                    eventCoordinator.emit(std::make_shared<Event>(individualEvent));
+                } else if (!isPressed && wasPressed) {
+                    // Key just released
+                    Event releaseEvent{EventType::EntityInput, EntityInputData{entity, key | 0x8000}};
+                    eventCoordinator.emit(std::make_shared<Event>(releaseEvent));
+                }
+
+                prevKeyState[key] = isPressed; // Update previous state
             }
         }
     }
