@@ -10,6 +10,7 @@
 
 extern Coordinator gCoordinator;
 extern EventCoordinator eventCoordinator;
+extern std::string mainCharID;
 
 class VerticalBoostHandler : public System {
     EventHandler triggerHandler = [this](const std::shared_ptr<Event> &event) {
@@ -17,6 +18,8 @@ class VerticalBoostHandler : public System {
             const auto &data = std::get<EntityTriggeredData>(event->data);
             auto &triggerEntity = data.triggerEntity;
             auto &otherEntity = data.otherEntity;
+
+            if (gCoordinator.getEntityKey(otherEntity) != mainCharID) return;
 
             if (gCoordinator.hasComponent<CKinematic>(otherEntity) && gCoordinator.hasComponent<VerticalBoost>(
                     triggerEntity)) {

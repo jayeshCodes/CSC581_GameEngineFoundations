@@ -130,6 +130,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Receiver>();
     gCoordinator.registerComponent<RigidBody>();
     gCoordinator.registerComponent<Respawnable>();
+    gCoordinator.registerComponent<VerticalBoost>();
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
     auto kinematicSystem = gCoordinator.registerSystem<KinematicSystem>();
@@ -145,6 +146,7 @@ int main(int argc, char *argv[]) {
     auto eventSystem = gCoordinator.registerSystem<EventSystem>();
     auto entityCreatedSystem = gCoordinator.registerSystem<EntityCreatedHandler>();
     auto positionUpdateHandler = gCoordinator.registerSystem<PositionUpdateHandler>();
+
 
     Signature clientEntitySignature;
     clientEntitySignature.set(gCoordinator.getComponentType<ClientEntity>());
@@ -245,6 +247,16 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(platform2, ClientEntity{.synced = true});
     gCoordinator.addComponent(platform2, RigidBody{-1.f});
     gCoordinator.addComponent(platform2, Collision{true, false, CollisionLayer::MOVING_PLATFORM});
+
+    auto trigger = gCoordinator.createEntity();
+    gCoordinator.addComponent(trigger, Transform{.x = 100.f, SCREEN_HEIGHT - 150.f, 32, 32, 0});
+    gCoordinator.addComponent(trigger, Color{.color = shade_color::Black});
+    gCoordinator.addComponent(trigger, CKinematic{});
+    gCoordinator.addComponent(trigger, Destroy{});
+    gCoordinator.addComponent(trigger, RigidBody{.mass = 0.f});
+    gCoordinator.addComponent(trigger, ClientEntity{.synced = true});
+    gCoordinator.addComponent(trigger, Collision{false, true, CollisionLayer::OTHER});
+    gCoordinator.addComponent(trigger, VerticalBoost{.velocity = -200.f});
 
     std::cout << "Platform2: " << gCoordinator.getEntityKey(platform2) << std::endl;
 

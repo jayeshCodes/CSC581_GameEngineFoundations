@@ -263,20 +263,12 @@ int main(int argc, char *argv[]) {
 	gCoordinator.addComponent(mainChar, Dash{});
     gCoordinator.addComponent(mainChar, Stomp{});
     std::cout << "MainChar: " << gCoordinator.getEntityKey(mainChar) << std::endl;
+    mainCharID = gCoordinator.getEntityKey(mainChar);
 
     Event entityCreatedEvent{MainCharCreated, {}};
     entityCreatedEvent.data = MainCharCreatedData{mainChar, strategy->get_message(mainChar, Message::CREATE)};
     eventCoordinator.emitServer(client_socket, std::make_shared<Event>(entityCreatedEvent));
     gCoordinator.getComponent<ClientEntity>(mainChar).synced = true;
-
-    auto trigger = gCoordinator.createEntity();
-    gCoordinator.addComponent(trigger, Transform{.x = 100.f, SCREEN_HEIGHT - 150.f, 32, 32, 0});
-    gCoordinator.addComponent(trigger, Color{.color = shade_color::Black});
-    gCoordinator.addComponent(trigger, CKinematic{});
-    gCoordinator.addComponent(trigger, Destroy{});
-    gCoordinator.addComponent(trigger, RigidBody{.mass = -1.f});
-    gCoordinator.addComponent(trigger, Collision{false, true, CollisionLayer::OTHER});
-    gCoordinator.addComponent(trigger, VerticalBoost{.velocity = -200.f});
 
 
     auto clientEntity = gCoordinator.createEntity();

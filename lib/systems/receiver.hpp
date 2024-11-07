@@ -62,6 +62,10 @@ private:
                         auto received_destroy = std::get<Destroy>(component);
                         gCoordinator.addComponent<Destroy>(generatedId, received_destroy);
                     }
+                    if (std::holds_alternative<VerticalBoost>(component)) {
+                        auto received_vertical_boost = std::get<VerticalBoost>(component);
+                        gCoordinator.addComponent<VerticalBoost>(generatedId, received_vertical_boost);
+                    }
                 }
             }
         } catch (std::exception &e) {
