@@ -249,7 +249,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(platform2, Collision{true, false, CollisionLayer::MOVING_PLATFORM});
 
     auto trigger = gCoordinator.createEntity();
-    gCoordinator.addComponent(trigger, Transform{.x = 100.f, SCREEN_HEIGHT - 150.f, 32, 32, 0});
+    gCoordinator.addComponent(trigger, Transform{.x = 150.f, SCREEN_HEIGHT - 110.f, 32, 32, 0});
     gCoordinator.addComponent(trigger, Color{.color = shade_color::Black});
     gCoordinator.addComponent(trigger, CKinematic{});
     gCoordinator.addComponent(trigger, Destroy{});

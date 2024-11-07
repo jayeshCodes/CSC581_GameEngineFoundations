@@ -18,6 +18,8 @@ private:
             auto entity = data.entity;
             auto &transform = gCoordinator.getComponent<Transform>(entity);
             auto &kinematic = gCoordinator.getComponent<CKinematic>(entity);
+            auto &respawnable = gCoordinator.getComponent<Respawnable>(entity);
+            respawnable.isDead = false;
             auto respawnTransform = data.respawnPosition;
             transform = respawnTransform;
             kinematic.velocity = {0, 0}; // Reset velocity on respawn

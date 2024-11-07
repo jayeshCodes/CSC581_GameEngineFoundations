@@ -21,7 +21,7 @@ public:
             auto &transform = gCoordinator.getComponent<Transform>(entity);
             auto &respawnable = gCoordinator.getComponent<Respawnable>(entity);
 
-            if (transform.y > DEATH_Y || respawnable.isRespawn) {
+            if ((transform.y > DEATH_Y || respawnable.isRespawn) && !respawnable.isDead) {
                 Event event{
                     EntityDeath,
                     EntityDeathData{
@@ -32,7 +32,10 @@ public:
                         }
                     }
                 };
-                eventCoordinator.emit(std::make_shared<Event>(event));
+                auto time = eventTimeline.getElapsedTime() + 5000;
+                eventCoordinator.queueEvent(std::make_shared<Event>(event), time,
+                                            Priority::HIGH);
+                respawnable.isDead = true;
             }
         }
     }

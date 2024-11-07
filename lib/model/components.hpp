@@ -176,6 +176,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Jump, maxJumpHeight, jumpDuration, isJumping,
 struct Respawnable {
     Transform lastSafePosition;
     bool isRespawn = false;
+    bool isDead = false;
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Respawnable, lastSafePosition, isRespawn)
