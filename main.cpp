@@ -244,23 +244,23 @@ int main(int argc, char *argv[]) {
 
 
     Entity mainCamera = gCoordinator.createEntity();
-    gCoordinator.addComponent(mainCamera, Camera{.x = 0, 0, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT});
+    gCoordinator.addComponent(mainCamera, Camera{0, 0, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT});
 
     auto mainChar = gCoordinator.createEntity();
-    gCoordinator.addComponent(mainChar, Transform{.x = 0.f, SCREEN_HEIGHT - 200.f, 32, 32, 0});
-    gCoordinator.addComponent(mainChar, Color{.color = shade_color::generateRandomSolidColor()});
+    gCoordinator.addComponent(mainChar, Transform{0.f, SCREEN_HEIGHT - 200.f, 32, 32, 0});
+    gCoordinator.addComponent(mainChar, Color{shade_color::generateRandomSolidColor()});
     gCoordinator.addComponent(mainChar, CKinematic{});
-    gCoordinator.addComponent(mainChar, KeyboardMovement{.speed = 150.f});
-    gCoordinator.addComponent(mainChar, ClientEntity{.synced = false});
+    gCoordinator.addComponent(mainChar, KeyboardMovement{150.f});
+    gCoordinator.addComponent(mainChar, ClientEntity{0, false});
     gCoordinator.addComponent(mainChar, Destroy{});
-    gCoordinator.addComponent(mainChar, Jump{.maxJumpHeight = 50.f, 1.f, false, 0.0f, true, 120.f});
-    gCoordinator.addComponent(mainChar, Gravity{.gravX = 0, 100});
+    gCoordinator.addComponent(mainChar, Jump{50.f, 1.f, false, 0.0f, true, 120.f});
+    gCoordinator.addComponent(mainChar, Gravity{0, 100});
     gCoordinator.addComponent(mainChar, Respawnable{
-                                  .lastSafePosition = {.x = 0, SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false
+                                  {SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false
                               });
-    gCoordinator.addComponent(mainChar, RigidBody{.mass = 1.f});
-    gCoordinator.addComponent(mainChar, Collision{.isCollider = true, false, CollisionLayer::PLAYER});
-	gCoordinator.addComponent(mainChar, Dash{});
+    gCoordinator.addComponent(mainChar, RigidBody{1.f});
+    gCoordinator.addComponent(mainChar, Collision{true, false, CollisionLayer::PLAYER});
+    gCoordinator.addComponent(mainChar, Dash{});
     gCoordinator.addComponent(mainChar, Stomp{});
     std::cout << "MainChar: " << gCoordinator.getEntityKey(mainChar) << std::endl;
     mainCharID = gCoordinator.getEntityKey(mainChar);
