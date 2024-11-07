@@ -256,7 +256,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(mainChar, Jump{50.f, 1.f, false, 0.0f, true, 120.f});
     gCoordinator.addComponent(mainChar, Gravity{0, 100});
     gCoordinator.addComponent(mainChar, Respawnable{
-                                  {SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false
+                                  {0, SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false
                               });
     gCoordinator.addComponent(mainChar, RigidBody{1.f});
     gCoordinator.addComponent(mainChar, Collision{true, false, CollisionLayer::PLAYER});
