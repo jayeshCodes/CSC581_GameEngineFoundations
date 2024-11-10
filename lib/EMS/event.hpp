@@ -20,6 +20,11 @@ enum EventType {
     PositionChanged,
     DashRight,
     DashLeft,
+    ReplayTransformChanged,
+    StartRecording,
+    StopRecording,
+    StartReplaying,
+    StopReplaying,
 };
 
 struct EntityRespawnData {
@@ -74,8 +79,17 @@ struct DashData {
     Entity entity;
 };
 
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(DashData, entity)
+
+struct ReplayTransformData {
+    Entity entity;
+    Transform transform;
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ReplayTransformData, entity, transform)
+
 using EventDataTypes = std::variant<EntityRespawnData, EntityDeathData, EntityCollidedData, EntityInputData,
-    EntityTriggeredData, MainCharCreatedData, PositionChangedData, DashData>;
+    EntityTriggeredData, MainCharCreatedData, PositionChangedData, DashData, ReplayTransformData>;
 
 struct Event {
     EventType type;
@@ -91,6 +105,9 @@ inline std::string eventTypeToString(const EventType type) {
         case EntityTriggered: return "EntityTriggered";
         case MainCharCreated: return "EntityCreated";
         case PositionChanged: return "PositionChanged";
+        case DashRight: return "DashRight";
+        case DashLeft: return "DashLeft";
+        case ReplayTransformChanged: return "TransformChanged";
         default: return "Unknown";
     }
 }
@@ -103,6 +120,9 @@ inline EventType stringToEventType(const std::string &str) {
     if (str == "EntityTriggered") return EntityTriggered;
     if (str == "EntityCreated") return MainCharCreated;
     if (str == "PositionChanged") return PositionChanged;
+    if (str == "DashRight") return DashRight;
+    if (str == "DashLeft") return DashLeft;
+    if (str == "TransformChanged") return ReplayTransformChanged;
     throw std::invalid_argument("Unknown EventType string");
 }
 
@@ -133,6 +153,12 @@ inline void to_json(nlohmann::json &j, const Event &event) {
         } else if constexpr (std::is_same_v<T, PositionChangedData>) {
             j["data"] = arg;
             j["data_type"] = "PositionChangedData";
+        } else if constexpr (std::is_same_v<T, DashData>) {
+            j["data"] = arg;
+            j["data_type"] = "DashData";
+        } else if constexpr (std::is_same_v<T, ReplayTransformData>) {
+            j["data"] = arg;
+            j["data_type"] = "TransformData";
         }
     }, event.data);
 }
@@ -154,6 +180,10 @@ inline void from_json(const nlohmann::json &j, Event &event) {
         event.data = j.at("data").get<MainCharCreatedData>();
     } else if (dataType == "PositionChangedData") {
         event.data = j.at("data").get<PositionChangedData>();
+    } else if (dataType == "DashData") {
+        event.data = j.at("data").get<DashData>();
+    } else if (dataType == "TransformData") {
+        event.data = j.at("data").get<ReplayTransformData>();
     }
 }
 

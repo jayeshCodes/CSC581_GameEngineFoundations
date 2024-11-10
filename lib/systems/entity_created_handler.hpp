@@ -10,7 +10,7 @@
 #include "../strategy/send_strategy.hpp"
 
 extern Coordinator gCoordinator;
-extern EventCoordinator event_coordinator;
+extern EventCoordinator eventCoordinator;
 
 
 class EntityCreatedHandler : public System {

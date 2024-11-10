@@ -2,8 +2,7 @@
 // Created by Utsav Lal on 10/2/24.
 //
 
-#ifndef TRANSFORM_HPP
-#define TRANSFORM_HPP
+#pragma once
 #include <SDL.h>
 #include <zmq.hpp>
 #include <nlohmann/json.hpp>
@@ -220,5 +219,3 @@ struct VerticalBoost {
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(VerticalBoost, velocity)
-
-#endif //TRANSFORM_HPP
