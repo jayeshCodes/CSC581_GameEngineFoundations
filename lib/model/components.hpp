@@ -201,7 +201,8 @@ struct Dash {
     float cooldownTimeRemaining = 0.0f;
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Dash, dashSpeed, dashDuration, dashCooldown, isDashing, dashTimeRemaining, cooldownTimeRemaining)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Dash, dashSpeed, dashDuration, dashCooldown, isDashing, dashTimeRemaining,
+                                   cooldownTimeRemaining)
 
 struct Stomp {
     bool isStomping = false;
@@ -212,10 +213,15 @@ struct Stomp {
     float cooldownTimeRemaining = 0.0f;
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Stomp, isStomping, stompSpeed, stompDuration, stompCooldown, stompTimeRemaining, cooldownTimeRemaining)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Stomp, isStomping, stompSpeed, stompDuration, stompCooldown, stompTimeRemaining,
+                                   cooldownTimeRemaining)
 
 struct VerticalBoost {
     float velocity = -100.f;
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(VerticalBoost, velocity)
+
+using ALL_COMPONENTS = std::variant<Transform, Color, CKinematic, Camera, Gravity, KeyboardMovement, Server, Receiver,
+    MovingPlatform, ServerEntity, ClientEntity, Destroy, Collision, Jump, Respawnable, RigidBody, Dash, Stomp,
+    VerticalBoost>;

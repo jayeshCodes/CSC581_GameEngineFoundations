@@ -9,6 +9,8 @@
 #include <bitset>
 #include <cstdint>
 
+#include "../model/components.hpp"
+
 // Giving an alias to the data type and defining the maximum number of entities
 using Entity = std::uint32_t;
 constexpr Entity MAX_ENTITIES = 5000;
@@ -23,6 +25,14 @@ constexpr ComponentType MAX_COMPONENTS = 32;
 using Signature = std::bitset<MAX_COMPONENTS>;
 
 constexpr Entity EntityNotCreated = -1;
+
+struct EntitySnapshot {
+    Entity entity;
+    std::string id;
+    std::vector<ALL_COMPONENTS> components;
+};
+
+using Snapshot = std::vector<EntitySnapshot>;
 
 
 #endif //TYPES_HPP

@@ -13,7 +13,6 @@ extern EventCoordinator eventCoordinator;
 
 class ReplayHandler : public System {
     const int maxReplaySize = 60 * 30; // 30 seconds of replay assuming 60FPS
-    std::unordered_map<Entity, Transform> initialTransforms;
     std::unordered_map<Entity, std::queue<Transform> > replayTransforms;
     bool recording = false;
     bool replaying = false;
@@ -21,14 +20,8 @@ class ReplayHandler : public System {
     EventHandler startReplayHandler = [this](const std::shared_ptr<Event> &event) {
         if (event->type == EventType::StartRecording) {
             std::cout << "Recording started" << std::endl;
-            initialTransforms.clear();
             replayTransforms.clear();
-            for (auto &[id, entity]: gCoordinator.getEntityIds()) {
-                if (gCoordinator.hasComponent<Transform>(entity)) {
-                    const auto &transform = gCoordinator.getComponent<Transform>(entity);
-                    initialTransforms[entity] = transform;
-                }
-            }
+            gCoordinator.backup();
             recording = true;
         }
     };
@@ -43,12 +36,7 @@ class ReplayHandler : public System {
     EventHandler replayHandler = [this](const std::shared_ptr<Event> &event) {
         if (event->type == EventType::StartReplaying) {
             std::cout << "Starting Replay" << std::endl;
-            for (auto &[id, entity]: gCoordinator.getEntityIds()) {
-                if (gCoordinator.hasComponent<Transform>(entity)) {
-                    auto &transform = gCoordinator.getComponent<Transform>(entity);
-                    transform = initialTransforms[entity];
-                }
-            }
+            gCoordinator.restore();
             replaying = true;
         }
     };
