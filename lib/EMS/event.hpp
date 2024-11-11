@@ -25,6 +25,8 @@ enum EventType {
     StopRecording,
     StartReplaying,
     StopReplaying,
+    EntityCreated,
+    EntityDestroyed
 };
 
 struct EntityRespawnData {
@@ -88,8 +90,23 @@ struct ReplayTransformData {
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ReplayTransformData, entity, transform)
 
+struct EntityCreatedData {
+    Entity entity;
+    std::string id;
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(EntityCreatedData, entity, id)
+
+struct EntityDestroyedData {
+    Entity entity;
+    std::string id;
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(EntityDestroyedData, entity, id)
+
 using EventDataTypes = std::variant<EntityRespawnData, EntityDeathData, EntityCollidedData, EntityInputData,
-    EntityTriggeredData, MainCharCreatedData, PositionChangedData, DashData, ReplayTransformData>;
+    EntityTriggeredData, MainCharCreatedData, PositionChangedData, DashData, ReplayTransformData, EntityCreatedData,
+    EntityDestroyedData>;
 
 struct Event {
     EventType type;
