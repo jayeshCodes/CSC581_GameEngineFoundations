@@ -267,7 +267,7 @@ int main(int argc, char *argv[]) {
     std::cout << "MainChar: " << gCoordinator.getEntityKey(mainChar) << std::endl;
     mainCharID = gCoordinator.getEntityKey(mainChar);
 
-    Event entityCreatedEvent{MainCharCreated, {}};
+    Event entityCreatedEvent{eventTypeToString(MainCharCreated), {}};
     entityCreatedEvent.data = MainCharCreatedData{mainChar, strategy->get_message(mainChar, Message::CREATE)};
     eventCoordinator.emitServer(client_socket, std::make_shared<Event>(entityCreatedEvent));
     gCoordinator.getComponent<ClientEntity>(mainChar).synced = true;

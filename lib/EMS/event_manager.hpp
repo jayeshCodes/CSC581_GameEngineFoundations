@@ -12,7 +12,7 @@
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
-#include "event.hpp"
+#include "types.hpp"
 
 #include "../core/timeline.hpp"
 #include "../data_structures/ThreadSafePriorityQueue.hpp"
@@ -45,18 +45,18 @@ struct CompareQueuedEvent {
 
 class EventManager {
 private:
-    std::unordered_map<EventType, std::vector<EventHandler> > handlers;
+    std::unordered_map<std::string, std::vector<EventHandler> > handlers;
     ThreadSafePriorityQueue<QueuedEvent, CompareQueuedEvent> eventQueue;
     std::mutex queueMutex;
     std::mutex handlersMutex;
 
 public:
-    void subscribe(const EventHandler &handler, EventType eventType) {
+    void subscribe(const EventHandler &handler, const std::string &eventType) {
         std::lock_guard lock(handlersMutex);
         handlers[eventType].push_back(handler);
     }
 
-    void unsubscribe(const EventHandler handler, EventType eventType) {
+    void unsubscribe(const EventHandler handler, const std::string &eventType) {
         std::lock_guard lock(handlersMutex);
         if (!handlers.contains(eventType)) {
             std::cerr << "Error: Invalid eventType" << std::endl;

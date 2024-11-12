@@ -81,7 +81,7 @@ private:
     }
 
     static void handleTrigger(Entity triggerEntity, Entity otherEntity) {
-        Event event{EventType::EntityTriggered, EntityTriggeredData{triggerEntity, otherEntity}};
+        Event event{eventTypeToString(EventType::EntityTriggered), EntityTriggeredData{triggerEntity, otherEntity}};
         eventCoordinator.emit(std::make_shared<Event>(event));
     }
 
@@ -96,7 +96,7 @@ private:
                         << std::endl;
             return;
         }
-        Event event{EventType::EntityCollided, EntityCollidedData{entityA, entityB}};
+        Event event{eventTypeToString(EventType::EntityCollided), EntityCollidedData{entityA, entityB}};
         eventCoordinator.emit(std::make_shared<Event>(event));
     }
 

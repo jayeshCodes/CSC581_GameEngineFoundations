@@ -15,13 +15,13 @@ class ReceiverSystem : public System {
     bool isReplaying = false;
 
     EventHandler startReplayHandler = [this](const std::shared_ptr<Event> &event) {
-        if (event->type == EventType::StartReplaying) {
+        if (event->type == eventTypeToString(EventType::StartReplaying)) {
             isReplaying = true;
         }
     };
 
     EventHandler stopReplayHandler = [this](const std::shared_ptr<Event> &event) {
-        if (event->type == EventType::StopReplaying) {
+        if (event->type == eventTypeToString(EventType::StopReplaying)) {
             isReplaying = false;
         }
     };
@@ -95,13 +95,13 @@ private:
 
 public:
     ReceiverSystem() {
-        eventCoordinator.subscribe(startReplayHandler, EventType::StartReplaying);
-        eventCoordinator.subscribe(stopReplayHandler, EventType::StopReplaying);
+        eventCoordinator.subscribe(startReplayHandler, eventTypeToString(EventType::StartReplaying));
+        eventCoordinator.subscribe(stopReplayHandler, eventTypeToString(EventType::StopReplaying));
     }
 
     ~ReceiverSystem() {
-        eventCoordinator.unsubscribe(startReplayHandler, EventType::StartReplaying);
-        eventCoordinator.unsubscribe(stopReplayHandler, EventType::StopReplaying);
+        eventCoordinator.unsubscribe(startReplayHandler, eventTypeToString(EventType::StartReplaying));
+        eventCoordinator.unsubscribe(stopReplayHandler, eventTypeToString(EventType::StopReplaying));
     }
 
     void update(zmq::socket_t &socket, Send_Strategy *send_strategy) {
