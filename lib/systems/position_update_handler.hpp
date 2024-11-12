@@ -13,10 +13,9 @@ extern EventCoordinator eventCoordinator;
 extern Coordinator gCoordinator;
 
 class PositionUpdateHandler : public System {
-
     EventHandler positionUpdateHandler = [this](const std::shared_ptr<Event> &event) {
-        if (event->type == EventType::PositionChanged) {
-            const auto &data = std::get<PositionChangedData>(event->data);
+        if (event->type == eventTypeToString(EventType::PositionChanged)) {
+            const PositionChangedData &data = event->data;
             const nlohmann::json received_msg = nlohmann::json::parse(data.message);
             const SimpleMessage receivedMessage = received_msg;
             const auto id = gCoordinator.createEntity(receivedMessage.entity_key);
@@ -32,10 +31,10 @@ class PositionUpdateHandler : public System {
 
 public:
     PositionUpdateHandler() {
-        eventCoordinator.subscribe(positionUpdateHandler, EventType::PositionChanged);
+        eventCoordinator.subscribe(positionUpdateHandler, eventTypeToString(EventType::PositionChanged));
     }
 
     ~PositionUpdateHandler() {
-        eventCoordinator.unsubscribe(positionUpdateHandler, EventType::PositionChanged);
+        eventCoordinator.unsubscribe(positionUpdateHandler, eventTypeToString(EventType::PositionChanged));
     }
 };

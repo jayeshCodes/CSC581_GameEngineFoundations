@@ -5,6 +5,7 @@
 #include "../ECS/coordinator.hpp"
 #include "../ECS/system.hpp"
 #include "../model/components.hpp"
+#include "../model/event.hpp"
 #include "../EMS/event_coordinator.hpp"
 #include <thread>
 #include <unordered_set>
@@ -67,7 +68,7 @@ public:
                     }
 
                     if (now - oldestPressTime < combo.comboWindow) {
-                        Event comboEvent{combo.eventType, DashData{entity}};
+                        Event comboEvent{eventTypeToString(combo.eventType), DashData{entity}};
                         eventCoordinator.emit(std::make_shared<Event>(comboEvent));
 
                         for (auto key: combo.keys) {
@@ -89,11 +90,13 @@ public:
                 if (isPressed && !wasPressed) {
                     // Key just pressed
                     keyPressTime[key] = now;
-                    Event individualEvent{EventType::EntityInput, EntityInputData{entity, key}};
+                    Event individualEvent{eventTypeToString(EventType::EntityInput), EntityInputData{entity, key}};
                     eventCoordinator.emit(std::make_shared<Event>(individualEvent));
                 } else if (!isPressed && wasPressed) {
                     // Key just released
-                    Event releaseEvent{EventType::EntityInput, EntityInputData{entity, key | 0x8000}};
+                    Event releaseEvent{
+                        eventTypeToString(EventType::EntityInput), EntityInputData{entity, key | 0x8000}
+                    };
                     eventCoordinator.emit(std::make_shared<Event>(releaseEvent));
                 }
 

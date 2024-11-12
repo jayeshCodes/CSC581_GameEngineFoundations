@@ -46,7 +46,6 @@ set(SOURCES
         lib/systems/receiver.hpp
         lib/strategy/send_strategy.hpp
         lib/strategy/strategy_selector.hpp
-        lib/EMS/event.hpp
         lib/EMS/event_manager.hpp
         lib/EMS/event_coordinator.hpp
         lib/data_structures/ThreadSafePriorityQueue.hpp

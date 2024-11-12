@@ -16,8 +16,8 @@ extern EventCoordinator eventCoordinator;
 class CollisionHandlerSystem : public System {
 private:
     EventHandler collisionHandler = [this](const std::shared_ptr<Event> &event) {
-        if (event->type == EventType::EntityCollided) {
-            const auto &data = std::get<EntityCollidedData>(event->data);
+        if (event->type == eventTypeToString(EventType::EntityCollided)) {
+            EntityCollidedData data = event->data;
             auto &entityA = data.entityA;
             auto &entityB = data.entityB;
 
@@ -181,11 +181,11 @@ private:
 
 public:
     CollisionHandlerSystem() {
-        eventCoordinator.subscribe(collisionHandler, EventType::EntityCollided);
+        eventCoordinator.subscribe(collisionHandler, eventTypeToString(EventType::EntityCollided));
     }
 
     ~CollisionHandlerSystem() {
-        eventCoordinator.unsubscribe(collisionHandler, EventType::EntityCollided);
+        eventCoordinator.unsubscribe(collisionHandler, eventTypeToString(EventType::EntityCollided));
     }
 };
 

@@ -6,7 +6,6 @@
 #include "../ECS/system.hpp"
 #include "../model/components.hpp"
 #include "../ECS/coordinator.hpp"
-#include "../EMS/event.hpp"
 
 extern Coordinator gCoordinator;
 extern EventCoordinator eventCoordinator;
@@ -23,7 +22,7 @@ public:
 
             if ((transform.y > DEATH_Y || respawnable.isRespawn) && !respawnable.isDead) {
                 Event event{
-                    EntityDeath,
+                    eventTypeToString(EntityDeath),
                     EntityDeathData{
                         entity,
                         {

@@ -17,8 +17,8 @@ extern EventCoordinator eventCoordinator;
 class KeyboardSystem : public System {
 private:
     EventHandler keyboardHandler = [this](const std::shared_ptr<Event> &event) {
-        if (event->type == EventType::EntityInput) {
-            const auto &data = std::get<EntityInputData>(event->data);
+        if (event->type == eventTypeToString(EventType::EntityInput)) {
+            const EntityInputData &data = event->data;
             auto entity = data.entity;
             auto &kinematic = gCoordinator.getComponent<CKinematic>(entity);
             auto &keyboard = gCoordinator.getComponent<KeyboardMovement>(entity);
@@ -50,17 +50,17 @@ private:
                     break;
                 }
                 case SDL_SCANCODE_8: {
-                    Event startReplayEvent{EventType::StartRecording, {}};
+                    Event startReplayEvent{eventTypeToString(EventType::StartRecording), {}};
                     eventCoordinator.emit(std::make_shared<Event>(startReplayEvent));
                     break;
                 }
                 case SDL_SCANCODE_9: {
-                    Event stopReplayEvent{EventType::StopRecording, {}};
+                    Event stopReplayEvent{eventTypeToString(EventType::StopRecording), {}};
                     eventCoordinator.emit(std::make_shared<Event>(stopReplayEvent));
                     break;
                 }
                 case SDL_SCANCODE_0: {
-                    Event replayReplayEvent{EventType::StartReplaying, {}};
+                    Event replayReplayEvent{eventTypeToString(EventType::StartReplaying), {}};
                     eventCoordinator.emit(std::make_shared<Event>(replayReplayEvent));
                     break;
                 }
@@ -93,12 +93,12 @@ private:
 
 public:
     KeyboardSystem() {
-        eventCoordinator.subscribe(keyboardHandler, EventType::EntityInput);
+        eventCoordinator.subscribe(keyboardHandler, eventTypeToString(EventType::EntityInput));
     }
 
     ~KeyboardSystem() {
         // unsubscribe keyboard events when the system is destroyed
-        eventCoordinator.unsubscribe(keyboardHandler, EventType::EntityDeath);
+        eventCoordinator.unsubscribe(keyboardHandler, eventTypeToString(EventType::EntityInput));
     }
 };
 

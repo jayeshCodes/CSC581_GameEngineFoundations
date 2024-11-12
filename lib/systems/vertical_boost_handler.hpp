@@ -14,8 +14,8 @@ extern std::string mainCharID;
 
 class VerticalBoostHandler : public System {
     EventHandler triggerHandler = [this](const std::shared_ptr<Event> &event) {
-        if (event->type == EventType::EntityTriggered) {
-            const auto &data = std::get<EntityTriggeredData>(event->data);
+        if (event->type == eventTypeToString(EventType::EntityTriggered)) {
+            const EntityTriggeredData &data = event->data;
             auto &triggerEntity = data.triggerEntity;
             auto &otherEntity = data.otherEntity;
 
@@ -32,10 +32,10 @@ class VerticalBoostHandler : public System {
 
 public:
     VerticalBoostHandler() {
-        eventCoordinator.subscribe(triggerHandler, EventType::EntityTriggered);
+        eventCoordinator.subscribe(triggerHandler, eventTypeToString(EventType::EntityTriggered));
     }
 
     ~VerticalBoostHandler() {
-        eventCoordinator.unsubscribe(triggerHandler, EventType::EntityTriggered);
+        eventCoordinator.unsubscribe(triggerHandler, eventTypeToString(EventType::EntityTriggered));
     }
 };

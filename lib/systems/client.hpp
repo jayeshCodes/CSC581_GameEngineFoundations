@@ -13,6 +13,7 @@
 #include "../helpers/network_helper.hpp"
 #include "../model/components.hpp"
 #include "../strategy/send_strategy.hpp"
+#include "../model/event.hpp"
 
 extern Coordinator gCoordinator;
 
@@ -21,26 +22,26 @@ class ClientSystem : public System {
     bool isReplaying = false;
 
     EventHandler startReplayHandler = [this](const std::shared_ptr<Event> &event) {
-        if (event->type == EventType::StartReplaying) {
+        if (event->type == eventTypeToString(EventType::StartReplaying)) {
             isReplaying = true;
         }
     };
 
     EventHandler stopReplayHandler = [this](const std::shared_ptr<Event> &event) {
-        if (event->type == EventType::StopReplaying) {
+        if (event->type == eventTypeToString(EventType::StopReplaying)) {
             isReplaying = false;
         }
     };
 
 public:
     ClientSystem() {
-        eventCoordinator.subscribe(startReplayHandler, EventType::StartReplaying);
-        eventCoordinator.subscribe(stopReplayHandler, EventType::StopReplaying);
+        eventCoordinator.subscribe(startReplayHandler, eventTypeToString(EventType::StartReplaying));
+        eventCoordinator.subscribe(stopReplayHandler, eventTypeToString(EventType::StopReplaying));
     }
 
     ~ClientSystem() {
-        eventCoordinator.unsubscribe(startReplayHandler, EventType::StartReplaying);
-        eventCoordinator.unsubscribe(stopReplayHandler, EventType::StopReplaying);
+        eventCoordinator.unsubscribe(startReplayHandler, eventTypeToString(EventType::StartReplaying));
+        eventCoordinator.unsubscribe(stopReplayHandler, eventTypeToString(EventType::StartReplaying));
     }
 
     void update(zmq::socket_t &client_socket, Send_Strategy *send_strategy) {
@@ -61,7 +62,7 @@ public:
             previous[entity] = transform;
 
             Event positionChangedEvent{
-                EventType::PositionChanged,
+                eventTypeToString(EventType::PositionChanged),
                 PositionChangedData{entity, send_strategy->get_message(entity, Message::UPDATE)}
             };
             eventCoordinator.emitServer(client_socket, std::make_shared<Event>(positionChangedEvent));

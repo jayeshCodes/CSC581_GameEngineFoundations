@@ -13,8 +13,8 @@ extern EventCoordinator eventCoordinator;
 class RespawnSystem : public System {
 private:
     EventHandler respawnHandler = [this](const std::shared_ptr<Event> &event) {
-        if (event->type == EventType::EntityDeath) {
-            const auto &data = std::get<EntityDeathData>(event->data);
+        if (event->type == eventTypeToString(EventType::EntityDeath)) {
+            const EntityDeathData &data = event->data;
             auto entity = data.entity;
             auto &transform = gCoordinator.getComponent<Transform>(entity);
             auto &kinematic = gCoordinator.getComponent<CKinematic>(entity);
@@ -26,17 +26,17 @@ private:
             kinematic.acceleration = {0, 0}; // Reset acceleration on respawn
 
             // Emit respawn event
-            Event respawnEvent{EntityRespawn, EntityRespawnData{entity}};
+            Event respawnEvent{eventTypeToString(EntityRespawn), EntityRespawnData{entity}};
             eventCoordinator.emit(std::make_shared<Event>(respawnEvent));
         }
     };
 
 public:
     RespawnSystem() {
-        eventCoordinator.subscribe(respawnHandler, EventType::EntityDeath);
+        eventCoordinator.subscribe(respawnHandler, eventTypeToString(EventType::EntityDeath));
     }
 
     ~RespawnSystem() {
-        eventCoordinator.unsubscribe(respawnHandler, EventType::EntityDeath);
+        eventCoordinator.unsubscribe(respawnHandler, eventTypeToString(EventType::EntityDeath));
     }
 };

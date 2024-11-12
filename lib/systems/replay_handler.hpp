@@ -24,7 +24,7 @@ class ReplayHandler : public System {
     Timeline replayTimeline = Timeline(&gameTimeline, 1);
 
     EventHandler startReplayHandler = [this](const std::shared_ptr<Event> &event) {
-        if (event->type == EventType::StartRecording) {
+        if (event->type == eventTypeToString(EventType::StartRecording)) {
             std::cout << "Recording started" << std::endl;
             replayTransforms.clear();
             creationOrder = std::queue<EntityTime>();
@@ -36,14 +36,14 @@ class ReplayHandler : public System {
     };
 
     EventHandler stopReplayHandler = [this](const std::shared_ptr<Event> &event) {
-        if (event->type == EventType::StopRecording) {
+        if (event->type == eventTypeToString(EventType::StopRecording)) {
             std::cout << "Recording stopped" << std::endl;
             recording = false;
         }
     };
 
     EventHandler replayHandler = [this](const std::shared_ptr<Event> &event) {
-        if (event->type == EventType::StartReplaying) {
+        if (event->type == eventTypeToString(EventType::StartReplaying)) {
             std::cout << "Starting Replay" << std::endl;
             gCoordinator.restore();
             replayTimeline.reset();
@@ -52,18 +52,18 @@ class ReplayHandler : public System {
     };
 
     EventHandler entityCreatedHandler = [this](const std::shared_ptr<Event> &event) {
-        if (event->type == EventType::EntityCreated) {
+        if (event->type == eventTypeToString(EventType::EntityCreated)) {
             if (!recording) return;
-            auto [entity, id] = std::get<EntityCreatedData>(event->data);
-            creationOrder.emplace(gCoordinator.createSnapshot(entity, id), replayTimeline.getElapsedTime());
+            const EntityCreatedData &data = event->data;
+            creationOrder.emplace(gCoordinator.createSnapshot(data.entity, data.id), replayTimeline.getElapsedTime());
         }
     };
 
     EventHandler entityDeletedHandler = [this](const std::shared_ptr<Event> &event) {
-        if (event->type == EventType::EntityDestroyed) {
+        if (event->type == eventTypeToString(EventType::EntityDestroyed)) {
             if (!recording) return;
-            auto [entity, id] = std::get<EntityDestroyedData>(event->data);
-            deletionOrder.emplace(gCoordinator.createSnapshot(entity, id), replayTimeline.getElapsedTime());
+            const EntityDestroyedData &data = event->data;
+            deletionOrder.emplace(gCoordinator.createSnapshot(data.entity, data.id), replayTimeline.getElapsedTime());
         }
     };
 
@@ -91,19 +91,19 @@ class ReplayHandler : public System {
 
 public:
     ReplayHandler() {
-        eventCoordinator.subscribe(startReplayHandler, EventType::StartRecording);
-        eventCoordinator.subscribe(stopReplayHandler, EventType::StopRecording);
-        eventCoordinator.subscribe(replayHandler, EventType::StartReplaying);
-        eventCoordinator.subscribe(entityCreatedHandler, EventType::EntityCreated);
-        eventCoordinator.subscribe(entityDeletedHandler, EventType::EntityDestroyed);
+        eventCoordinator.subscribe(startReplayHandler, eventTypeToString(EventType::StartRecording));
+        eventCoordinator.subscribe(stopReplayHandler, eventTypeToString(EventType::StopRecording));
+        eventCoordinator.subscribe(replayHandler, eventTypeToString(EventType::StartReplaying));
+        eventCoordinator.subscribe(entityCreatedHandler, eventTypeToString(EventType::EntityCreated));
+        eventCoordinator.subscribe(entityDeletedHandler, eventTypeToString(EventType::EntityDestroyed));
     }
 
     ~ReplayHandler() {
-        eventCoordinator.unsubscribe(startReplayHandler, EventType::StartRecording);
-        eventCoordinator.unsubscribe(stopReplayHandler, EventType::StopRecording);
-        eventCoordinator.unsubscribe(replayHandler, EventType::StartReplaying);
-        eventCoordinator.unsubscribe(entityCreatedHandler, EventType::EntityCreated);
-        eventCoordinator.unsubscribe(entityDeletedHandler, EventType::EntityDestroyed);
+        eventCoordinator.unsubscribe(startReplayHandler, eventTypeToString(EventType::StartRecording));
+        eventCoordinator.unsubscribe(stopReplayHandler, eventTypeToString(EventType::StopRecording));
+        eventCoordinator.unsubscribe(replayHandler, eventTypeToString(EventType::StartReplaying));
+        eventCoordinator.unsubscribe(entityCreatedHandler, eventTypeToString(EventType::EntityCreated));
+        eventCoordinator.unsubscribe(entityDeletedHandler, eventTypeToString(EventType::EntityDestroyed));
     }
 
     void update() {
@@ -132,7 +132,7 @@ public:
                     if (replayTransforms[entity].empty()) {
                         replaying = false;
                         std::cout << "Replay finished" << std::endl;
-                        Event stopReplayEvent{EventType::StopReplaying, {}};
+                        Event stopReplayEvent{eventTypeToString(EventType::StopReplaying), {}};
                         eventCoordinator.emit(std::make_shared<Event>(stopReplayEvent));
                         return;
                     }

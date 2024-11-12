@@ -15,11 +15,11 @@ public:
         eventManager = std::make_unique<EventManager>();
     }
 
-    void subscribe(const EventHandler &handler, const EventType type) const {
+    void subscribe(const EventHandler &handler, const std::string &type) const {
         eventManager->subscribe(handler, type);
     }
 
-    void unsubscribe(const EventHandler &handler, EventType type) const {
+    void unsubscribe(const EventHandler &handler, const std::string &type) const {
         eventManager->unsubscribe(handler, type);
     }
 
