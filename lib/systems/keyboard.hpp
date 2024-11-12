@@ -39,7 +39,8 @@ private:
                     kinematic.velocity.x = keyboard.speed;
                     keyboard.movingRight = true;
                     break;
-                case SDL_SCANCODE_SPACE:
+                }
+                case SDL_SCANCODE_SPACE: {
                     if (jump.canJump && !jump.isJumping) {
                         kinematic.velocity.y = -jump.initialJumpVelocity;
                         jump.isJumping = true;
@@ -48,26 +49,44 @@ private:
                     }
                     break;
                 }
+                case SDL_SCANCODE_8: {
+                    Event startReplayEvent{EventType::StartRecording, {}};
+                    eventCoordinator.emit(std::make_shared<Event>(startReplayEvent));
+                    break;
+                }
+                case SDL_SCANCODE_9: {
+                    Event stopReplayEvent{EventType::StopRecording, {}};
+                    eventCoordinator.emit(std::make_shared<Event>(stopReplayEvent));
+                    break;
+                }
+                case SDL_SCANCODE_0: {
+                    Event replayReplayEvent{EventType::StartReplaying, {}};
+                    eventCoordinator.emit(std::make_shared<Event>(replayReplayEvent));
+                    break;
+                }
                 // handle key release events
                 case SDL_SCANCODE_LEFT | 0x8000: // Affordance for left arrow key
-                case SDL_SCANCODE_A | 0x8000:
+                case SDL_SCANCODE_A | 0x8000: {
                     keyboard.movingLeft = false;
                     keyboard.wasLeftReleased = true;
                     if (!dash.isDashing) {
                         kinematic.velocity.x = 0;
                     }
                     break;
+                }
                 case SDL_SCANCODE_RIGHT | 0x8000: // Affordance for right arrow key
-                case SDL_SCANCODE_D | 0x8000:
+                case SDL_SCANCODE_D | 0x8000: {
                     keyboard.movingRight = false;
                     keyboard.wasRightReleased = true;
                     if (!dash.isDashing) {
                         kinematic.velocity.x = 0;
                     }
                     break;
-                case SDL_SCANCODE_SPACE | 0x8000:
+                }
+                case SDL_SCANCODE_SPACE | 0x8000: {
                     keyboard.wasSpaceReleased = true;
                     break;
+                }
             }
         }
     };

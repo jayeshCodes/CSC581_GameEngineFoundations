@@ -34,6 +34,7 @@
 #include "lib/systems/dash.hpp"
 #include "lib/systems/entity_created_handler.hpp"
 #include "lib/systems/position_update_handler.hpp"
+#include "lib/systems/replay_handler.hpp"
 #include "lib/systems/vertical_boost_handler.hpp"
 
 class ReceiverSystem;
@@ -157,6 +158,7 @@ int main(int argc, char *argv[]) {
     auto positionUpdateHandler = gCoordinator.registerSystem<PositionUpdateHandler>();
     auto dashSystem = gCoordinator.registerSystem<DashSystem>();
     auto comboEventHandler = gCoordinator.registerSystem<ComboEventHandler>();
+    auto replayHandler = gCoordinator.registerSystem<ReplayHandler>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
@@ -306,6 +308,7 @@ int main(int argc, char *argv[]) {
         renderSystem->update(mainCamera);
         eventSystem->update();
         dashSystem->update(dt);
+        replayHandler->update();
 
         auto elapsed_time = gameTimeline.getElapsedTime();
         auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - current_time); // Ensure float division

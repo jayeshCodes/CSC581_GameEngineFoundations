@@ -18,9 +18,33 @@ extern Coordinator gCoordinator;
 
 class ClientSystem : public System {
     std::map<Entity, Transform> previous;
+    bool isReplaying = false;
+
+    EventHandler startReplayHandler = [this](const std::shared_ptr<Event> &event) {
+        if (event->type == EventType::StartReplaying) {
+            isReplaying = true;
+        }
+    };
+
+    EventHandler stopReplayHandler = [this](const std::shared_ptr<Event> &event) {
+        if (event->type == EventType::StopReplaying) {
+            isReplaying = false;
+        }
+    };
 
 public:
+    ClientSystem() {
+        eventCoordinator.subscribe(startReplayHandler, EventType::StartReplaying);
+        eventCoordinator.subscribe(stopReplayHandler, EventType::StopReplaying);
+    }
+
+    ~ClientSystem() {
+        eventCoordinator.unsubscribe(startReplayHandler, EventType::StartReplaying);
+        eventCoordinator.unsubscribe(stopReplayHandler, EventType::StopReplaying);
+    }
+
     void update(zmq::socket_t &client_socket, Send_Strategy *send_strategy) {
+        if(isReplaying) return;
         for (auto entity: entities) {
             auto &client_entity = gCoordinator.getComponent<ClientEntity>(entity);
             if (!client_entity.synced) {

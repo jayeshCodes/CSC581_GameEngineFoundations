@@ -12,7 +12,19 @@
 extern Coordinator gCoordinator;
 
 class ReceiverSystem : public System {
-    bool testStarted = false;
+    bool isReplaying = false;
+
+    EventHandler startReplayHandler = [this](const std::shared_ptr<Event> &event) {
+        if (event->type == EventType::StartReplaying) {
+            isReplaying = true;
+        }
+    };
+
+    EventHandler stopReplayHandler = [this](const std::shared_ptr<Event> &event) {
+        if (event->type == EventType::StopReplaying) {
+            isReplaying = false;
+        }
+    };
 
 private:
     void handleNormalMessage(Send_Strategy *send_strategy, zmq::message_t &copy, std::string &entity_id) {
@@ -82,7 +94,18 @@ private:
     }
 
 public:
+    ReceiverSystem() {
+        eventCoordinator.subscribe(startReplayHandler, EventType::StartReplaying);
+        eventCoordinator.subscribe(stopReplayHandler, EventType::StopReplaying);
+    }
+
+    ~ReceiverSystem() {
+        eventCoordinator.unsubscribe(startReplayHandler, EventType::StartReplaying);
+        eventCoordinator.unsubscribe(stopReplayHandler, EventType::StopReplaying);
+    }
+
     void update(zmq::socket_t &socket, Send_Strategy *send_strategy) {
+        if (isReplaying) return;
         zmq::pollitem_t items[] = {{static_cast<void *>(socket), 0, ZMQ_POLLIN, 0}};
         zmq::poll(items, 1, std::chrono::milliseconds(17));
         if (items[0].revents & ZMQ_POLLIN) {

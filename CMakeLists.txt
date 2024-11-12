@@ -60,7 +60,9 @@ set(SOURCES
         lib/systems/entity_created_handler.hpp
         lib/systems/position_update_handler.hpp
         lib/systems/dash.hpp
-        lib/systems/combo_event_handler.hpp)
+        lib/systems/combo_event_handler.hpp
+        lib/systems/replay_handler.hpp
+        lib/systems/position.hpp)
 
 
 add_executable(shade_engine ${SOURCES} main.cpp)

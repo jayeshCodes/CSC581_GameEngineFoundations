@@ -37,6 +37,9 @@ public:
         prevKeyState[SDL_SCANCODE_A] = false;
         prevKeyState[SDL_SCANCODE_LSHIFT] = false;
         prevKeyState[SDL_SCANCODE_SPACE] = false;
+        prevKeyState[SDL_SCANCODE_8] = false;
+        prevKeyState[SDL_SCANCODE_9] = false;
+        prevKeyState[SDL_SCANCODE_0] = false;
     }
 
     void update() {

@@ -2,8 +2,7 @@
 // Created by Utsav Lal on 10/2/24.
 //
 
-#ifndef TRANSFORM_HPP
-#define TRANSFORM_HPP
+#pragma once
 #include <SDL.h>
 #include <zmq.hpp>
 #include <nlohmann/json.hpp>
@@ -202,7 +201,8 @@ struct Dash {
     float cooldownTimeRemaining = 0.0f;
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Dash, dashSpeed, dashDuration, dashCooldown, isDashing, dashTimeRemaining, cooldownTimeRemaining)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Dash, dashSpeed, dashDuration, dashCooldown, isDashing, dashTimeRemaining,
+                                   cooldownTimeRemaining)
 
 struct Stomp {
     bool isStomping = false;
@@ -213,7 +213,8 @@ struct Stomp {
     float cooldownTimeRemaining = 0.0f;
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Stomp, isStomping, stompSpeed, stompDuration, stompCooldown, stompTimeRemaining, cooldownTimeRemaining)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Stomp, isStomping, stompSpeed, stompDuration, stompCooldown, stompTimeRemaining,
+                                   cooldownTimeRemaining)
 
 struct VerticalBoost {
     float velocity = -100.f;
@@ -221,4 +222,6 @@ struct VerticalBoost {
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(VerticalBoost, velocity)
 
-#endif //TRANSFORM_HPP
+using ALL_COMPONENTS = std::variant<Transform, Color, CKinematic, Camera, Gravity, KeyboardMovement, Server, Receiver,
+    MovingPlatform, ServerEntity, ClientEntity, Destroy, Collision, Jump, Respawnable, RigidBody, Dash, Stomp,
+    VerticalBoost>;
