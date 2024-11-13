@@ -6,6 +6,10 @@
 #define COLORS_HPP
 #include <SDL_pixels.h>
 
+inline std::random_device rd;
+inline std::mt19937 gen(rd());
+
+
 /**
  * This namespace helps us define colors for the engine
  */
@@ -33,6 +37,20 @@ namespace shade_color {
         Uint8 g = static_cast<Uint8>(Random::generateRandomInt(0, 255));
         Uint8 b = static_cast<Uint8>(Random::generateRandomInt(0, 255));
         return {r, g, b, 255};
+    }
+
+    static SDL_Color generateNonRepeatingColor(SDL_Color color1, SDL_Color color2) {
+        std::vector<SDL_Color> colors = {Blue, Red, Green};
+        SDL_Color newColor;
+        std::uniform_int_distribution<> dis(0, colors.size() - 1);
+        do {
+            newColor = colors[dis(gen)];
+        } while (
+            newColor.r == color1.r && newColor.g == color1.g && newColor.b == color1.b &&
+                    newColor.r == color2.r && newColor.g == color2.g && newColor.b == color2.b
+        );
+
+        return newColor;
     }
 }
 

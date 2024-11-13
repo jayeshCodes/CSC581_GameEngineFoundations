@@ -61,11 +61,24 @@ set(SOURCES
         lib/systems/dash.hpp
         lib/systems/combo_event_handler.hpp
         lib/systems/replay_handler.hpp
-        lib/systems/position.hpp)
+        lib/systems/position.hpp
+        lib/EMS/types.hpp
+        lib/model/event.hpp)
+
+set(BUBBLE_SHOOTER_SOURCE games/bubble_shooter/systems/keyboard_movement.hpp
+        games/bubble_shooter/handlers/keyboard_handler.hpp
+        games/bubble_shooter/model/component.hpp
+        games/bubble_shooter/model/events.hpp
+        games/bubble_shooter/handlers/movement_handler.hpp
+        games/bubble_shooter/handlers/launch_handler.hpp)
 
 
 add_executable(shade_engine ${SOURCES} main.cpp)
 add_executable(shade_engine_server ${SOURCES} server.cpp)
+
+add_executable(bubble_shooter ${SOURCES} ${BUBBLE_SHOOTER_SOURCE} games/bubble_shooter/game1.cpp
+        )
+add_executable(bubble_shooter_server ${SOURCES} ${BUBBLE_SHOOTER_SOURCE} games/bubble_shooter/server.cpp)
 
 find_package(SDL2 REQUIRED)
 find_package(cppzmq REQUIRED)
@@ -73,3 +86,7 @@ find_package(nlohmann_json 3.2.0 REQUIRED)
 
 target_link_libraries(shade_engine cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
 target_link_libraries(shade_engine_server cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
+
+
+target_link_libraries(bubble_shooter cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
+target_link_libraries(bubble_shooter_server cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)

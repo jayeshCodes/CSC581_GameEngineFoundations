@@ -8,6 +8,6 @@
 extern App *app;
 
 // Initialize SDL rendering window
-void initSDL();
+void initSDL(int, int);
 
 void cleanupSDL();

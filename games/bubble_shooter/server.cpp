@@ -7,31 +7,30 @@
 #include <csignal>
 #include <zmq.hpp>
 
-#include "main.hpp"
-#include "lib/game/GameManager.hpp"
-#include "lib/model/components.hpp"
-#include "lib/core/timeline.hpp"
-#include "lib/ECS/coordinator.hpp"
-#include "lib/helpers/colors.hpp"
-#include "lib/helpers/constants.hpp"
-#include "lib/helpers/random.hpp"
-#include "lib/server/worker.hpp"
-#include "lib/strategy/strategy_selector.hpp"
-#include "lib/systems/kinematic.cpp"
-#include "lib/systems/render.cpp"
-#include "lib/systems/gravity.cpp"
-#include "lib/systems/camera.cpp"
-#include "lib/systems/client.hpp"
-#include "lib/systems/collision.hpp"
-#include "lib/systems/destroy.hpp"
-#include "lib/systems/entity_created_handler.hpp"
-#include "lib/systems/event_system.hpp"
-#include "lib/systems/jump.hpp"
-#include "lib/systems/keyboard_movement.cpp"
-
-#include "lib/systems/move_between_2_point_system.hpp"
-#include "lib/systems/position_update_handler.hpp"
-#include "lib/systems/receiver.hpp"
+#include "../../main.hpp"
+#include "../../lib/game/GameManager.hpp"
+#include "../../lib/model/components.hpp"
+#include "../../lib/core/timeline.hpp"
+#include "../../lib/ECS/coordinator.hpp"
+#include "../../lib/helpers/colors.hpp"
+#include "../../lib/helpers/constants.hpp"
+#include "../../lib/helpers/random.hpp"
+#include "../../lib/server/worker.hpp"
+#include "../../lib/strategy/strategy_selector.hpp"
+#include "../../lib/systems/kinematic.cpp"
+#include "../../lib/systems/render.cpp"
+#include "../../lib/systems/gravity.cpp"
+#include "../../lib/systems/camera.cpp"
+#include "../../lib/systems/client.hpp"
+#include "../../lib/systems/collision.hpp"
+#include "../../lib/systems/destroy.hpp"
+#include "../../lib/systems/entity_created_handler.hpp"
+#include "../../lib/systems/event_system.hpp"
+#include "../../lib/systems/jump.hpp"
+#include "../../lib/systems/keyboard_movement.cpp"
+#include "../../lib/systems/move_between_2_point_system.hpp"
+#include "../../lib/systems/position_update_handler.hpp"
+#include "../../lib/systems/receiver.hpp"
 
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
 void platform_movement(Timeline &timeline, MoveBetween2PointsSystem &moveBetween2PointsSystem) {
@@ -197,70 +196,6 @@ int main(int argc, char *argv[]) {
     gCoordinator.setSystemSignature<JumpSystem>(jumpSignature);
 
 
-    // create a platform
-    auto ground = gCoordinator.createEntity();
-    gCoordinator.addComponent(ground, Transform{0, static_cast<float>(screen_height) - 100.f, 500.f, 300.f, 0});
-    gCoordinator.addComponent(ground, Color{shade_color::Green});
-    gCoordinator.addComponent(ground, ClientEntity{.synced = true});
-    gCoordinator.addComponent(ground, RigidBody{-1.f});
-    gCoordinator.addComponent(ground, Collision{true, false, CollisionLayer::OTHER});
-    gCoordinator.addComponent(ground, CKinematic{});
-
-    std::cout << "Ground1: " << gCoordinator.getEntityKey(ground) << std::endl;
-
-    auto ground2 = gCoordinator.createEntity();
-    gCoordinator.addComponent(ground2, Transform{800, static_cast<float>(screen_height) - 100.f, 500.f, 1000.f, 0});
-    gCoordinator.addComponent(ground2, Color{shade_color::Green});
-    gCoordinator.addComponent(ground2, ClientEntity{.synced = true});
-    gCoordinator.addComponent(ground2, RigidBody{-1.f});
-    gCoordinator.addComponent(ground2, Collision{true, false, CollisionLayer::OTHER});
-    gCoordinator.addComponent(ground2, CKinematic{});
-
-    std::cout << "Ground2: " << gCoordinator.getEntityKey(ground2) << std::endl;
-
-    auto ground3 = gCoordinator.createEntity();
-    gCoordinator.addComponent(ground3, Transform{1000, static_cast<float>(screen_height) / 2.f - 50.f, 50.f, 700.f, 0});
-    gCoordinator.addComponent(ground3, Color{shade_color::Black});
-    gCoordinator.addComponent(ground3, ClientEntity{0, true});
-    gCoordinator.addComponent(ground3, RigidBody{-1.f});
-    gCoordinator.addComponent(ground3, Collision{true, false, CollisionLayer::OTHER});
-    gCoordinator.addComponent(ground3, CKinematic{});
-
-    std::cout << "Ground3: " << gCoordinator.getEntityKey(ground3) << std::endl;
-
-    Entity platform = gCoordinator.createEntity();
-    gCoordinator.addComponent(platform, Transform{300, static_cast<float>(screen_height) - 100.f, 50, 200});
-    gCoordinator.addComponent(platform, Color{shade_color::Red});
-    gCoordinator.addComponent(platform, CKinematic{0, 0, 0, 0});
-    gCoordinator.addComponent(platform, MovingPlatform{300, 800 - 200, TO, 2, HORIZONTAL});
-    gCoordinator.addComponent(platform, Destroy{});
-    gCoordinator.addComponent(platform, ClientEntity{0, true});
-    gCoordinator.addComponent(platform, RigidBody{-1.f});
-    gCoordinator.addComponent(platform, Collision{true, false, CollisionLayer::MOVING_PLATFORM});
-
-    std::cout << "Platform: " << gCoordinator.getEntityKey(platform) << std::endl;
-
-    Entity platform2 = gCoordinator.createEntity();
-    gCoordinator.addComponent(platform2, Transform{300, 500, 50, 200});
-    gCoordinator.addComponent(platform2, Color{shade_color::Cyan});
-    gCoordinator.addComponent(platform2, CKinematic{0, 0, 0, 0});
-    gCoordinator.addComponent(platform2, MovingPlatform{100, 400, TO, 2, VERTICAL});
-    gCoordinator.addComponent(platform2, Destroy{});
-    gCoordinator.addComponent(platform2, ClientEntity{.synced = true});
-    gCoordinator.addComponent(platform2, RigidBody{-1.f});
-    gCoordinator.addComponent(platform2, Collision{true, false, CollisionLayer::MOVING_PLATFORM});
-
-    auto trigger = gCoordinator.createEntity();
-    gCoordinator.addComponent(trigger, Transform{150.f, static_cast<float>(screen_height) - 110.f, 32, 32, 0});
-    gCoordinator.addComponent(trigger, Color{shade_color::Black});
-    gCoordinator.addComponent(trigger, CKinematic{});
-    gCoordinator.addComponent(trigger, Destroy{});
-    gCoordinator.addComponent(trigger, RigidBody{0.f});
-    gCoordinator.addComponent(trigger, ClientEntity{0, true});
-    gCoordinator.addComponent(trigger, Collision{false, true, CollisionLayer::OTHER});
-    gCoordinator.addComponent(trigger, VerticalBoost{-200.f});
-
-    std::cout << "Platform2: " << gCoordinator.getEntityKey(platform2) << std::endl;
 
     zmq::context_t context(1);
     zmq::socket_t frontend(context, ZMQ_ROUTER);

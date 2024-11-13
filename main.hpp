@@ -15,6 +15,8 @@ inline Timeline anchorTimeline(nullptr, 1000);
 inline Timeline gameTimeline(&anchorTimeline, 1);
 inline Timeline eventTimeline(&anchorTimeline, 1);
 inline std::string mainCharID;
+inline int screen_width = 1280;
+inline int screen_height = 720;
 
 std::atomic<bool> gameRunning{false};
 EventCoordinator eventCoordinator;

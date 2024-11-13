@@ -1,7 +1,7 @@
 #include "init.hpp"
 
 
-void initSDL() {
+void initSDL(int width, int height) {
     //Name the window
     std::string windowName = std::string(ENGINE_NAME) + " " + std::string(ENGINE_VERSION);
 
@@ -18,8 +18,8 @@ void initSDL() {
     }
 
     //If SDL initialized successfully, attempt to create the SDL window.
-    app->window = SDL_CreateWindow(windowName.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH,
-                                   SCREEN_HEIGHT, windowFlags);
+    app->window = SDL_CreateWindow(windowName.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width,
+                                   height, windowFlags);
 
     //If the window pointer is null we have an error
     if (!app->window) {

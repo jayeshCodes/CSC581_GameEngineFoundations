@@ -9,9 +9,10 @@
 
 extern Coordinator gCoordinator;
 extern EventCoordinator eventCoordinator;
+extern int screen_height;
 
 class DeathSystem : public System {
-    const float DEATH_Y = SCREEN_HEIGHT + 100.f;
+    const float DEATH_Y = static_cast<float>(screen_height) + 100.f;
     const float RESPAWN_HEIGHT = 10.f;
 
 public:

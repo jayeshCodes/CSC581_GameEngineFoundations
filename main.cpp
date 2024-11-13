@@ -89,7 +89,11 @@ int main(int argc, char *argv[]) {
     std::cout << ENGINE_NAME << " v" << ENGINE_VERSION << " initializing" << std::endl;
     std::cout << "Created by Utsav and Jayesh" << std::endl;
     std::cout << std::endl;
-    initSDL();
+
+    screen_width = 1280;
+    screen_height = 720;
+
+    initSDL(screen_width, screen_height);
     GameManager::getInstance()->gameRunning = true;
     catch_signals();
 
@@ -246,10 +250,10 @@ int main(int argc, char *argv[]) {
 
 
     Entity mainCamera = gCoordinator.createEntity();
-    gCoordinator.addComponent(mainCamera, Camera{0, 0, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT});
+    gCoordinator.addComponent(mainCamera, Camera{0, 0, 1.f, 0.f, static_cast<float>(screen_width), static_cast<float>(screen_height)});
 
     auto mainChar = gCoordinator.createEntity();
-    gCoordinator.addComponent(mainChar, Transform{0.f, SCREEN_HEIGHT - 200.f, 32, 32, 0});
+    gCoordinator.addComponent(mainChar, Transform{0.f, static_cast<float>(screen_height) - 200.f, 32, 32, 0});
     gCoordinator.addComponent(mainChar, Color{shade_color::generateRandomSolidColor()});
     gCoordinator.addComponent(mainChar, CKinematic{});
     gCoordinator.addComponent(mainChar, KeyboardMovement{150.f});
@@ -258,7 +262,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(mainChar, Jump{50.f, 1.f, false, 0.0f, true, 120.f});
     gCoordinator.addComponent(mainChar, Gravity{0, 100});
     gCoordinator.addComponent(mainChar, Respawnable{
-                                  {0, SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false
+                                  {0, static_cast<float>(screen_height) - 200.f, 32, 32, 0, 1}, false
                               });
     gCoordinator.addComponent(mainChar, RigidBody{1.f});
     gCoordinator.addComponent(mainChar, Collision{true, false, CollisionLayer::PLAYER});
