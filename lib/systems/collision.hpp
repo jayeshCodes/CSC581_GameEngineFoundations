@@ -86,23 +86,7 @@ private:
     }
 
     static void resolveCollision(Entity entityA, Entity entityB) {
-        if (!hasRequiredComponents(entityA) || !hasRequiredComponents(entityB)) {
-            // Log an error or handle the missing component case
-            if (!hasRequiredComponents(entityA))
-                std::cerr << "Error: Entity " << entityA << " is missing required components for collision resolution."
-                        << std::endl;
-            if (!hasRequiredComponents(entityB))
-                std::cerr << "Error: Entity " << entityB << " is missing required components for collision resolution."
-                        << std::endl;
-            return;
-        }
         Event event{eventTypeToString(EventType::EntityCollided), EntityCollidedData{entityA, entityB}};
         eventCoordinator.emit(std::make_shared<Event>(event));
-    }
-
-    static bool hasRequiredComponents(Entity entity) {
-        return gCoordinator.hasComponent<Transform>(entity) &&
-               gCoordinator.hasComponent<RigidBody>(entity) &&
-               gCoordinator.hasComponent<CKinematic>(entity);
     }
 };
