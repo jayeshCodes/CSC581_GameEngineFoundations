@@ -64,7 +64,9 @@ set(SOURCES
         lib/systems/position.hpp)
 
 
-add_executable(shade_engine ${SOURCES} main.cpp)
+add_executable(shade_engine ${SOURCES} main.cpp
+        lib/systems/bubble_shooter.hpp
+        lib/systems/bubble_movement.hpp)
 add_executable(shade_engine_server ${SOURCES} server.cpp)
 
 find_package(SDL2 REQUIRED)

@@ -14,28 +14,23 @@
 #include "lib/systems/client.hpp"
 #include "lib/systems/collision.hpp"
 #include "lib/systems/destroy.hpp"
-#include "lib/systems/gravity.cpp"
 #include "lib/systems/jump.hpp"
 #include "lib/systems/keyboard_movement.cpp"
 #include "lib/systems/kinematic.cpp"
 #include "lib/systems/move_between_2_point_system.hpp"
-#include "lib/systems/death.hpp"
 #include "lib/systems/receiver.hpp"
 #include "lib/systems/render.cpp"
 #include <csignal>
 
 #include "lib/strategy/send_strategy.hpp"
 #include "lib/strategy/strategy_selector.hpp"
+#include "lib/systems/bubble_shooter.hpp"
+#include "lib/systems/bubble_movement.hpp"
 #include "lib/systems/event_system.hpp"
-#include "lib/systems/keyboard.hpp"
-#include "lib/systems/respawn.hpp"
 #include "lib/systems/collision_handler.hpp"
-#include "lib/systems/combo_event_handler.hpp"
-#include "lib/systems/dash.hpp"
 #include "lib/systems/entity_created_handler.hpp"
 #include "lib/systems/position_update_handler.hpp"
 #include "lib/systems/replay_handler.hpp"
-#include "lib/systems/vertical_boost_handler.hpp"
 
 class ReceiverSystem;
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
@@ -122,19 +117,12 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Color>();
     gCoordinator.registerComponent<CKinematic>();
     gCoordinator.registerComponent<Camera>();
-    gCoordinator.registerComponent<Gravity>();
-    gCoordinator.registerComponent<KeyboardMovement>();
     gCoordinator.registerComponent<Receiver>();
     gCoordinator.registerComponent<MovingPlatform>();
     gCoordinator.registerComponent<ClientEntity>();
     gCoordinator.registerComponent<Destroy>();
     gCoordinator.registerComponent<Collision>();
-    gCoordinator.registerComponent<Jump>();
-    gCoordinator.registerComponent<Respawnable>();
     gCoordinator.registerComponent<RigidBody>();
-    gCoordinator.registerComponent<Dash>();
-    gCoordinator.registerComponent<Stomp>();
-    gCoordinator.registerComponent<VerticalBoost>();
     gCoordinator.registerComponent<Bubble>();
     gCoordinator.registerComponent<BubbleShooter>();
     gCoordinator.registerComponent<BubbleProjectile>();
@@ -143,26 +131,18 @@ int main(int argc, char *argv[]) {
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
     auto kinematicSystem = gCoordinator.registerSystem<KinematicSystem>();
-    auto gravitySystem = gCoordinator.registerSystem<GravitySystem>();
     auto cameraSystem = gCoordinator.registerSystem<CameraSystem>();
-    auto keyboardMovementSystem = gCoordinator.registerSystem<KeyboardMovementSystem>();
-    auto moveBetween2PointsSystem = gCoordinator.registerSystem<MoveBetween2PointsSystem>();
     auto destroySystem = gCoordinator.registerSystem<DestroySystem>();
     auto collisionSystem = gCoordinator.registerSystem<CollisionSystem>();
-    auto jumpSystem = gCoordinator.registerSystem<JumpSystem>();
-    auto deathSystem = gCoordinator.registerSystem<DeathSystem>();
     auto clientSystem = gCoordinator.registerSystem<ClientSystem>();
     auto receiverSystem = gCoordinator.registerSystem<ReceiverSystem>();
-    auto respawnSystem = gCoordinator.registerSystem<RespawnSystem>();
-    auto keyboardSystem = gCoordinator.registerSystem<KeyboardSystem>();
     auto collisonHandlerSystem = gCoordinator.registerSystem<CollisionHandlerSystem>();
-    auto triggerHandlerSystem = gCoordinator.registerSystem<VerticalBoostHandler>();
     auto eventSystem = gCoordinator.registerSystem<EventSystem>();
     auto entityCreatedSystem = gCoordinator.registerSystem<EntityCreatedHandler>();
     auto positionUpdateHandler = gCoordinator.registerSystem<PositionUpdateHandler>();
-    auto dashSystem = gCoordinator.registerSystem<DashSystem>();
-    auto comboEventHandler = gCoordinator.registerSystem<ComboEventHandler>();
     auto replayHandler = gCoordinator.registerSystem<ReplayHandler>();
+    auto bubbleShooterSystem = gCoordinator.registerSystem<BubbleShooterSystem>();
+    auto bubbleMovementSystem = gCoordinator.registerSystem<BubbleMovementSystem>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
@@ -174,33 +154,13 @@ int main(int argc, char *argv[]) {
     kinematicSignature.set(gCoordinator.getComponentType<CKinematic>());
     gCoordinator.setSystemSignature<KinematicSystem>(kinematicSignature);
 
-    Signature gravitySignature;
-    gravitySignature.set(gCoordinator.getComponentType<Transform>());
-    gravitySignature.set(gCoordinator.getComponentType<Gravity>());
-    gCoordinator.setSystemSignature<GravitySystem>(gravitySignature);
-
     Signature cameraSignature;
     cameraSignature.set(gCoordinator.getComponentType<Camera>());
     gCoordinator.setSystemSignature<CameraSystem>(cameraSignature);
 
-    Signature keyboardMovementSignature;
-    keyboardMovementSignature.set(gCoordinator.getComponentType<Transform>());
-    keyboardMovementSignature.set(gCoordinator.getComponentType<CKinematic>());
-    keyboardMovementSignature.set(gCoordinator.getComponentType<KeyboardMovement>());
-    keyboardMovementSignature.set(gCoordinator.getComponentType<Jump>());
-    keyboardMovementSignature.set(gCoordinator.getComponentType<Dash>());
-    gCoordinator.setSystemSignature<KeyboardMovementSystem>(keyboardMovementSignature);
-
     Signature clientSignature;
     clientSignature.set(gCoordinator.getComponentType<Receiver>());
     gCoordinator.setSystemSignature<ReceiverSystem>(clientSignature);
-
-    Signature movingPlatformSignature;
-    movingPlatformSignature.set(gCoordinator.getComponentType<Transform>());
-    movingPlatformSignature.set(gCoordinator.getComponentType<MovingPlatform>());
-    movingPlatformSignature.set(gCoordinator.getComponentType<CKinematic>());
-    movingPlatformSignature.set(gCoordinator.getComponentType<MovingPlatform>());
-    gCoordinator.setSystemSignature<MoveBetween2PointsSystem>(movingPlatformSignature);
 
     Signature clientEntitySignature;
     clientEntitySignature.set(gCoordinator.getComponentType<ClientEntity>());
@@ -220,23 +180,6 @@ int main(int argc, char *argv[]) {
     collisionSignature.set(gCoordinator.getComponentType<RigidBody>());
     gCoordinator.setSystemSignature<CollisionSystem>(collisionSignature);
 
-    Signature jumpSignature;
-    jumpSignature.set(gCoordinator.getComponentType<Transform>());
-    jumpSignature.set(gCoordinator.getComponentType<CKinematic>());
-    jumpSignature.set(gCoordinator.getComponentType<Jump>());
-    gCoordinator.setSystemSignature<JumpSystem>(jumpSignature);
-
-    Signature respawnSignature;
-    respawnSignature.set(gCoordinator.getComponentType<Respawnable>());
-    respawnSignature.set(gCoordinator.getComponentType<Transform>());
-    respawnSignature.set(gCoordinator.getComponentType<Collision>());
-    gCoordinator.setSystemSignature<DeathSystem>(respawnSignature);
-
-    Signature dashSignature;
-    dashSignature.set(gCoordinator.getComponentType<Dash>());
-    dashSignature.set(gCoordinator.getComponentType<CKinematic>());
-    gCoordinator.setSystemSignature<DashSystem>(dashSignature);
-
     zmq::socket_t reply_socket(context, ZMQ_DEALER);
     std::string id = identity + "R";
     reply_socket.set(zmq::sockopt::routing_id, id);
@@ -252,22 +195,23 @@ int main(int argc, char *argv[]) {
     Entity mainCamera = gCoordinator.createEntity();
     gCoordinator.addComponent(mainCamera, Camera{0, 0, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT});
 
-    auto mainChar = gCoordinator.createEntity();
-    gCoordinator.addComponent(mainChar, Transform{0.f, SCREEN_HEIGHT - 200.f, 32, 32, 0});
-    gCoordinator.addComponent(mainChar, Color{shade_color::generateRandomSolidColor()});
-    gCoordinator.addComponent(mainChar, CKinematic{});
-    gCoordinator.addComponent(mainChar, KeyboardMovement{150.f});
-    gCoordinator.addComponent(mainChar, ClientEntity{0, false});
-    gCoordinator.addComponent(mainChar, Destroy{});
-    gCoordinator.addComponent(mainChar, Jump{50.f, 1.f, false, 0.0f, true, 120.f});
-    gCoordinator.addComponent(mainChar, Gravity{0, 100});
-    gCoordinator.addComponent(mainChar, Respawnable{
-                                  {0, SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false
-                              });
-    gCoordinator.addComponent(mainChar, RigidBody{1.f});
-    gCoordinator.addComponent(mainChar, Collision{true, false, CollisionLayer::PLAYER});
-    gCoordinator.addComponent(mainChar, Dash{});
-    gCoordinator.addComponent(mainChar, Stomp{});
+    // auto mainChar = gCoordinator.createEntity();
+    // gCoordinator.addComponent(mainChar, Transform{0.f, SCREEN_HEIGHT - 200.f, 32, 32, 0});
+    // gCoordinator.addComponent(mainChar, Color{shade_color::generateRandomSolidColor()});
+    // gCoordinator.addComponent(mainChar, CKinematic{});
+    // gCoordinator.addComponent(mainChar, KeyboardMovement{150.f});
+    // gCoordinator.addComponent(mainChar, ClientEntity{0, false});
+    // gCoordinator.addComponent(mainChar, Destroy{});
+    // gCoordinator.addComponent(mainChar, Jump{50.f, 1.f, false, 0.0f, true, 120.f});
+    // gCoordinator.addComponent(mainChar, Gravity{0, 100});
+    // gCoordinator.addComponent(mainChar, Respawnable{
+    //                               {0, SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false
+    //                           });
+    // gCoordinator.addComponent(mainChar, RigidBody{1.f});
+    // gCoordinator.addComponent(mainChar, Collision{true, false, CollisionLayer::PLAYER});
+    // gCoordinator.addComponent(mainChar, Dash{});
+    // gCoordinator.addComponent(mainChar, Stomp{});
+
     std::cout << "MainChar: " << gCoordinator.getEntityKey(mainChar) << std::endl;
     mainCharID = gCoordinator.getEntityKey(mainChar);
 
@@ -302,16 +246,11 @@ int main(int argc, char *argv[]) {
         dt = std::max(dt, engine_constants::FRAME_RATE); // Cap the maximum dt to 60fps
 
         kinematicSystem->update(dt);
-        jumpSystem->update(dt);
-        gravitySystem->update(dt);
-        keyboardMovementSystem->update();
         collisionSystem->update();
-        deathSystem->update();
         destroySystem->update();
         cameraSystem->update(mainChar);
         renderSystem->update(mainCamera);
         eventSystem->update();
-        dashSystem->update(dt);
         replayHandler->update();
 
         auto elapsed_time = gameTimeline.getElapsedTime();
