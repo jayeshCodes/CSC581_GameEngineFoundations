@@ -31,6 +31,8 @@
 #include "../../lib/systems/move_between_2_point_system.hpp"
 #include "../../lib/systems/position_update_handler.hpp"
 #include "../../lib/systems/receiver.hpp"
+#include "model/component.hpp"
+#include "strategy/send_strategy.hpp"
 
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
 void platform_movement(Timeline &timeline, MoveBetween2PointsSystem &moveBetween2PointsSystem) {
@@ -104,12 +106,7 @@ int main(int argc, char *argv[]) {
     std::cout << std::endl;
     GameManager::getInstance()->gameRunning = true;
     anchorTimeline.start();
-    std::unique_ptr<Send_Strategy> strategy = nullptr;
-    if (argv[1] != nullptr) {
-        strategy = Strategy::select_message_strategy(argv[1]);
-    } else {
-        strategy = Strategy::select_message_strategy("float");
-    }
+    std::unique_ptr<Send_Strategy> strategy = std::make_unique<BrickBreakerStrategy>();
 
     Timeline gameTimeline(&anchorTimeline, 1);
     gameTimeline.start();
@@ -132,6 +129,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<RigidBody>();
     gCoordinator.registerComponent<Respawnable>();
     gCoordinator.registerComponent<VerticalBoost>();
+    gCoordinator.registerComponent<Brick>();
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
     auto kinematicSystem = gCoordinator.registerSystem<KinematicSystem>();
@@ -237,6 +235,31 @@ int main(int argc, char *argv[]) {
             receiverSystem->update(socket, strategy.get());
         }
     });
+
+    screen_height = 640;
+    screen_width = 640;
+
+    float brick_size = 40.f;
+    int rows = screen_height / brick_size;
+    int cols = screen_width / brick_size;
+    int row_offset_top = 2;
+    int row_offset_bottom = 7;
+
+    for (int i = row_offset_top; i < rows - row_offset_bottom; i++) {
+        SDL_Color color1 = shade_color::Red;
+        SDL_Color color2 = shade_color::Blue;
+        for (int j = 0; j < cols; j++) {
+            auto entity = gCoordinator.createEntity();
+            auto newColor = shade_color::generateNonRepeatingColor(color1, color2);
+            gCoordinator.addComponent(entity, Transform{j * brick_size, i * brick_size, brick_size, brick_size, 0});
+            gCoordinator.addComponent(entity, Color{newColor});
+            gCoordinator.addComponent(entity, Collision{true, false, CollisionLayer::BRICK});
+            gCoordinator.addComponent(entity, Brick{});
+            gCoordinator.addComponent(entity, ClientEntity{0, true});
+            color1 = color2;
+            color2 = newColor;
+        }
+    }
 
 
     while (GameManager::getInstance()->gameRunning) {

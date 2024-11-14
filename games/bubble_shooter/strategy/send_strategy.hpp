@@ -1,69 +1,59 @@
 //
-// Created by Utsav Lal on 10/16/24.
+// Created by Utsav Lal on 11/13/24.
 //
 
-#ifndef SEND_STRATEGY_HPP
-#define SEND_STRATEGY_HPP
-
-#include "../ECS/types.hpp"
-#include "../enum/enum.hpp"
-#include "../model/components.hpp"
+#pragma once
+#include "../../../lib/ECS/coordinator.hpp"
+#include "../../../lib/EMS/types.hpp"
+#include "../../../lib/strategy/send_strategy.hpp"
+#include "../model/component.hpp"
 #include "../model/data_model.hpp"
-
-
-class Send_Strategy {
-public:
-    virtual ~Send_Strategy() = default;
-
-    virtual std::string get_message(Entity entity, Message type) = 0;
-
-    virtual nlohmann::json parse_message(zmq::message_t &message) = 0;
-
-    virtual std::string copy_message(zmq::message_t &message) = 0;
-
-    virtual Event parse_event(zmq::message_t &message) = 0;
-
-    virtual std::string get_event(Event &event) = 0;
-};
 
 extern Coordinator gCoordinator;
 
-class JSON_Strategy : public Send_Strategy {
+class BrickBreakerStrategy : public Send_Strategy {
 public:
     std::string get_message(Entity entity, Message type) override {
         // Get the message
-        SimpleMessage json_message{};
+        BBMessage json_message{};
         nlohmann::json json;
         json_message.type = type;
         json_message.entity_key = gCoordinator.getEntityKey(entity);
         if (type == SYNC || type == DELETE) {
             json = json_message;
-        }
-        else if (type == CREATE) {
+        } else if (type == CREATE) {
             if (gCoordinator.hasComponent<Transform>(entity)) {
-                json_message.components.emplace_back(gCoordinator.getComponent<Transform>(entity));
+                nlohmann::json component_json = gCoordinator.getComponent<Transform>(entity);
+                component_json["type"] = "Transform";
+                json_message.components.push_back(component_json);
             }
             if (gCoordinator.hasComponent<Color>(entity)) {
-                json_message.components.emplace_back(gCoordinator.getComponent<Color>(entity));
-            }
-            if (gCoordinator.hasComponent<RigidBody>(entity)) {
-                json_message.components.emplace_back(gCoordinator.getComponent<RigidBody>(entity));
+                nlohmann::json component_json = gCoordinator.getComponent<Color>(entity);
+                component_json["type"] = "Color";
+                json_message.components.push_back(component_json);
             }
             if (gCoordinator.hasComponent<Collision>(entity)) {
-                json_message.components.emplace_back(gCoordinator.getComponent<Collision>(entity));
+                nlohmann::json component_json = gCoordinator.getComponent<Collision>(entity);
+                component_json["type"] = "Collision";
+                json_message.components.push_back(component_json);
             }
             if (gCoordinator.hasComponent<CKinematic>(entity)) {
-                json_message.components.emplace_back(gCoordinator.getComponent<CKinematic>(entity));
+                nlohmann::json component_json = gCoordinator.getComponent<CKinematic>(entity);
+                component_json["type"] = "CKinematic";
+                json_message.components.push_back(component_json);
             }
             if (gCoordinator.hasComponent<Destroy>(entity)) {
-                json_message.components.emplace_back(gCoordinator.getComponent<Destroy>(entity));
+                nlohmann::json component_json = gCoordinator.getComponent<Destroy>(entity);
+                component_json["type"] = "Destroy";
+                json_message.components.push_back(component_json);
             }
-            if(gCoordinator.hasComponent<VerticalBoost>(entity)) {
-                json_message.components.emplace_back(gCoordinator.getComponent<VerticalBoost>(entity));
+            if (gCoordinator.hasComponent<Brick>(entity)) {
+                nlohmann::json component_json = gCoordinator.getComponent<Brick>(entity);
+                component_json["type"] = "Brick";
+                json_message.components.push_back(component_json);
             }
             json = json_message;
-        }
-        else if (type == UPDATE) {
+        } else if (type == UPDATE) {
             if (gCoordinator.hasComponent<Transform>(entity)) {
                 json_message.components.emplace_back(gCoordinator.getComponent<Transform>(entity));
             }
@@ -101,5 +91,3 @@ public:
         return event;
     }
 };
-
-#endif //SEND_STRATEGY_HPP

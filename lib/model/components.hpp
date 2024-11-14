@@ -150,6 +150,9 @@ enum CollisionLayer {
     OTHER = 0,
     PLAYER,
     MOVING_PLATFORM,
+    BRICK,
+    LAUNCHER,
+    BALL
 };
 
 struct Collision {

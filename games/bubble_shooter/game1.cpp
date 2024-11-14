@@ -13,27 +13,29 @@
 #include "../../lib/helpers/random.hpp"
 #include "../../lib/model/components.hpp"
 #include "../../lib/systems/camera.cpp"
-#include "../../lib/systems/client.hpp"
 #include "../../lib/systems/collision.hpp"
 #include "../../lib/systems/destroy.hpp"
 #include "../../lib/systems/gravity.cpp"
 #include "../../lib/systems/jump.hpp"
 #include "../../lib/systems/kinematic.cpp"
 #include "../../lib/systems/move_between_2_point_system.hpp"
-#include "../../lib/systems/receiver.hpp"
 #include "../../lib/systems/render.cpp"
 #include "../../lib/strategy/send_strategy.hpp"
-#include "../../lib/strategy/strategy_selector.hpp"
 #include "../../lib/systems/event_system.hpp"
 #include "../../lib/systems/position_update_handler.hpp"
+#include "handlers/collision_handler.hpp"
 #include "model/component.hpp"
 #include "handlers/keyboard_handler.hpp"
 #include "handlers/launch_handler.hpp"
 #include "systems/keyboard_movement.hpp"
 #include "handlers/movement_handler.hpp"
+#include "handlers/out_of_bound_handler.hpp"
+#include "strategy/send_strategy.hpp"
+#include "systems/client.hpp"
+#include "systems/out_of_bound_detector.hpp"
+#include "systems/receiver.hpp"
 
 
-class ReceiverSystem;
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
 
 
@@ -93,12 +95,7 @@ int main(int argc, char *argv[]) {
     GameManager::getInstance()->gameRunning = true;
     catch_signals();
 
-    std::unique_ptr<Send_Strategy> strategy = nullptr;
-    if (argv[1] != nullptr) {
-        strategy = Strategy::select_message_strategy(argv[1]);
-    } else {
-        strategy = Strategy::select_message_strategy("float");
-    }
+    std::unique_ptr<Send_Strategy> strategy = std::make_unique<BrickBreakerStrategy>();
 
     std::string identity = Random::generateRandomID(10);
     std::cout << "Identity: " << identity << std::endl;
@@ -129,6 +126,8 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Destroy>();
     gCoordinator.registerComponent<Collision>();
     gCoordinator.registerComponent<Ball>();
+    gCoordinator.registerComponent<Brick>();
+    gCoordinator.registerComponent<Launcher>();
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
     auto kinematicSystem = gCoordinator.registerSystem<KinematicSystem>();
@@ -140,12 +139,15 @@ int main(int argc, char *argv[]) {
     auto clientSystem = gCoordinator.registerSystem<ClientSystem>();
     auto receiverSystem = gCoordinator.registerSystem<ReceiverSystem>();
     auto eventSystem = gCoordinator.registerSystem<EventSystem>();
+    auto oobDetectorSystem = gCoordinator.registerSystem<OutOfBoundsDetectorSystem>();
 
 
     auto positionUpdateHandler = gCoordinator.registerSystem<PositionUpdateHandler>();
     auto movementHandler = gCoordinator.registerSystem<MovementHandler>();
     auto keyboardHandler = gCoordinator.registerSystem<KeyboardHandler>();
     auto launchHandler = gCoordinator.registerSystem<LaunchHandler>();
+    auto collisionHandler = gCoordinator.registerSystem<CollisionHandler>();
+    auto outOfBoundHandler = gCoordinator.registerSystem<OutOfBoundHandler>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
@@ -156,6 +158,11 @@ int main(int argc, char *argv[]) {
     kinematicSignature.set(gCoordinator.getComponentType<Transform>());
     kinematicSignature.set(gCoordinator.getComponentType<CKinematic>());
     gCoordinator.setSystemSignature<KinematicSystem>(kinematicSignature);
+
+    Signature ooBSignature;
+    ooBSignature.set(gCoordinator.getComponentType<Transform>());
+    ooBSignature.set(gCoordinator.getComponentType<CKinematic>());
+    gCoordinator.setSystemSignature<OutOfBoundsDetectorSystem>(ooBSignature);
 
     Signature launchSignature;
     launchSignature.set(gCoordinator.getComponentType<Ball>());
@@ -195,7 +202,6 @@ int main(int argc, char *argv[]) {
     Signature collisionSignature;
     collisionSignature.set(gCoordinator.getComponentType<Transform>());
     collisionSignature.set(gCoordinator.getComponentType<Collision>());
-    collisionSignature.set(gCoordinator.getComponentType<CKinematic>());
     gCoordinator.setSystemSignature<CollisionSystem>(collisionSignature);
 
     zmq::socket_t reply_socket(context, ZMQ_DEALER);
@@ -216,35 +222,41 @@ int main(int argc, char *argv[]) {
                               });
 
 
-    int rows = screen_height / 40;
-    int cols = screen_width / 40;
-    int row_offset_top = 2;
-    int row_offset_bottom = 7;
+    // int rows = screen_height / 40;
+    // int cols = screen_width / 40;
+    // int row_offset_top = 2;
+    // int row_offset_bottom = 7;
+    //
+    //
+    // for (int i = row_offset_top; i < rows - row_offset_bottom; i++) {
+    //     SDL_Color color1 = shade_color::Red;
+    //     SDL_Color color2 = shade_color::Blue;
+    //     for (int j = 0; j < cols; j++) {
+    //         auto entity = gCoordinator.createEntity();
+    //         auto newColor = shade_color::generateNonRepeatingColor(color1, color2);
+    //         gCoordinator.addComponent(entity, Transform{j * 40.f, i * 40.f, 40, 40, 0});
+    //         gCoordinator.addComponent(entity, Color{newColor});
+    //         gCoordinator.addComponent(entity, Collision{true, false, CollisionLayer::BRICK});
+    //         gCoordinator.addComponent(entity, Brick{});
+    //         color1 = color2;
+    //         color2 = newColor;
+    //     }
+    // }
 
-
-    for (int i = row_offset_top; i < rows - row_offset_bottom; i++) {
-        SDL_Color color1 = shade_color::Red;
-        SDL_Color color2 = shade_color::Blue;
-        for (int j = 0; j < cols; j++) {
-            auto entity = gCoordinator.createEntity();
-            auto newColor = shade_color::generateNonRepeatingColor(color1, color2);
-            gCoordinator.addComponent(entity, Transform{j * 40.f, i * 40.f, 40, 40, 0});
-            gCoordinator.addComponent(entity, Color{newColor});
-            color1 = color2;
-            color2 = newColor;
-        }
-    }
     auto mainChar = gCoordinator.createEntity();
     gCoordinator.addComponent(mainChar, Transform{screen_width / 2.f, screen_height - 40.f, 40, 100, 0});
     gCoordinator.addComponent(mainChar, Color{shade_color::generateRandomSolidColor()});
     gCoordinator.addComponent(mainChar, CKinematic{});
+    gCoordinator.addComponent(mainChar, Collision{true, false, CollisionLayer::LAUNCHER});
     gCoordinator.addComponent(mainChar, KeyboardMovement{150.f});
+    gCoordinator.addComponent(mainChar, Launcher{});
 
     auto ball = gCoordinator.createEntity();
     gCoordinator.addComponent(ball, Transform{screen_width / 2.f + 50 - 7.5f, screen_height - 40.f - 15.f, 15, 15, 0});
     gCoordinator.addComponent(ball, Color{shade_color::Gray});
     gCoordinator.addComponent(ball, CKinematic{});
     gCoordinator.addComponent(ball, Ball{false});
+    gCoordinator.addComponent(ball, Collision{true, false, CollisionLayer::BALL});
     gCoordinator.addComponent(ball, KeyboardMovement{150.f});
 
 
@@ -258,6 +270,20 @@ int main(int argc, char *argv[]) {
     std::thread t2([&client_socket, &clientSystem, &strategy] {
         while (GameManager::getInstance()->gameRunning) {
             clientSystem->update(client_socket, strategy.get());
+        }
+    });
+
+    std::thread t3([&collisionSystem, &destroySystem] {
+        auto current_time = gameTimeline.getElapsedTime();
+        while (GameManager::getInstance()->gameRunning) {
+            collisionSystem->update();
+            destroySystem->update();
+
+            auto elapsed_time = gameTimeline.getElapsedTime();
+            auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - current_time); // Ensure float division
+            if (time_to_sleep > 0) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(time_to_sleep * 1000)));
+            }
         }
     });
 
@@ -275,14 +301,14 @@ int main(int argc, char *argv[]) {
         kinematicSystem->update(dt);
         gravitySystem->update(dt);
         keyboardMovementSystem->update();
-        collisionSystem->update();
-        destroySystem->update();
+
         cameraSystem->update(mainChar);
         renderSystem->update(INVALID_ENTITY);
         eventSystem->update();
+        oobDetectorSystem->update(screen_width, screen_height);
 
         auto elapsed_time = gameTimeline.getElapsedTime();
-        auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - current_time); // Ensure float division
+        auto time_to_sleep = engine_constants::FRAME_RATE - (elapsed_time - current_time); // Ensure float division
         if (time_to_sleep > 0) {
             std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(time_to_sleep * 1000)));
         }

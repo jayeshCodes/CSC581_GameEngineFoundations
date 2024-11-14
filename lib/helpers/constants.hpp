@@ -6,7 +6,7 @@
 #define CONSTANTS_HPP
 
 namespace engine_constants {
-    constexpr float FRAME_RATE = 1.f / 60.f;
+    constexpr float FRAME_RATE = 1.f / 120.f;
     constexpr int SERVER_CONNECT_PORT = 5555;
 }
 

@@ -6,6 +6,7 @@
 #include "../ECS/system.hpp"
 #include "../model/components.hpp"
 #include "../ECS/coordinator.hpp"
+#include "../model/event.hpp"
 #include <mutex>
 #include <algorithm>
 

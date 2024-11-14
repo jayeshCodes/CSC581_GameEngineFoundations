@@ -10,12 +10,14 @@ using SERIALIZABLE_COMPONENTS = std::variant<Transform, Color, RigidBody, Collis
     , Jump
     , Respawnable, Camera, KeyboardMovement, Gravity, VerticalBoost>;
 
-struct SimpleMessage {
+struct NetworkedMessage {};
+
+struct SimpleMessage: NetworkedMessage {
     Message type;
     std::string entity_key;
     std::vector<SERIALIZABLE_COMPONENTS> components;
 
-        SimpleMessage() {
+    SimpleMessage() {
         components.reserve(MAX_COMPONENTS);
     }
 };
