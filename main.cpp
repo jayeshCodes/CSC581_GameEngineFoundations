@@ -135,6 +135,10 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Dash>();
     gCoordinator.registerComponent<Stomp>();
     gCoordinator.registerComponent<VerticalBoost>();
+    gCoordinator.registerComponent<Bubble>();
+    gCoordinator.registerComponent<BubbleShooter>();
+    gCoordinator.registerComponent<BubbleProjectile>();
+    gCoordinator.registerComponent<BubbleGridManager>();
 
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();

@@ -8,6 +8,7 @@
 #include <nlohmann/json.hpp>
 #include "../enum/enum.hpp"
 #include "../core/timeline.hpp"
+#include "../ECS/types.hpp"
 
 inline Timeline timeline;
 
@@ -225,3 +226,49 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(VerticalBoost, velocity)
 using ALL_COMPONENTS = std::variant<Transform, Color, CKinematic, Camera, Gravity, KeyboardMovement, Server, Receiver,
     MovingPlatform, ServerEntity, ClientEntity, Destroy, Collision, Jump, Respawnable, RigidBody, Dash, Stomp,
     VerticalBoost>;
+
+// Represents a bubble in the grid
+struct Bubble {
+    bool isActive = true;
+    int row = 0;
+    int col = 0;
+    float radius = 16.f; // Radius of the bubble
+    int colorIndex = 0; // Index of the color in the color palette
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Bubble, isActive, row, col, radius, colorIndex)
+
+// Component for the bubble shooter/canon
+struct BubbleShooter {
+    float rotationSpeed = 2.f; // Speed at which the canon rotates (degrees per frame)
+    float minAngle = -85.f; // Minimum angle the canon can rotate to
+    float maxAngle = 85.f; // Maximum angle the canon can rotate to
+    float currentAngle = 0.f; // Current angle of the canon
+    float shootForce = 400.f; // Speed at which the bubble is shot
+    bool canShoot = true; // Whether the canon can shoot a bubble
+    float reloadTime = 0.5f; // Time it takes to reload the canon
+    float currentReloadTime = 0.f; // Time since the canon last shot a bubble
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(BubbleShooter, rotationSpeed, minAngle, maxAngle, currentAngle, shootForce, canShoot,
+                                   reloadTime, currentReloadTime)
+
+// Component for the moving bubble projectile
+struct BubbleProjectile {
+    SDL_FPoint velocity = {0.f, 0.f}; // Velocity of the bubble
+    bool isMoving = false; // Whether the bubble is moving
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(BubbleProjectile, velocity, isMoving)
+
+// Component for the bubble grid manager (co-authored by github copilot)
+struct BubbleGridManager {
+    static constexpr int GRID_ROWS = 12; // Number of rows in the grid
+    static constexpr int GRID_COLS = 8; // Number of columns in the grid
+    static constexpr float BUBBLE_SPACING = 32.f; // Spacing between bubbles
+    static constexpr float START_X = 100.f; // X-coordinate of the top-left corner of the grid
+    static constexpr float START_Y = 50.f; // Y-coordinate of the top-left corner of the grid
+    std::vector<Entity> grid; // List of entities representing the bubbles in the grid
+    int currentLevel = 1;
+    int score = 0;
+};
