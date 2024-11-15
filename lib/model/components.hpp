@@ -107,7 +107,10 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Server, listen_port, publish_port)
 
 
 struct Receiver {
+    bool isServer = false;
 };
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Receiver, isServer)
 
 
 struct MovingPlatform {
@@ -128,6 +131,8 @@ struct ClientEntity {
     int noOfTimes = 0;
     bool synced = false;
 };
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ClientEntity, noOfTimes, synced)
 
 struct Destroy {
     int slot = -1;

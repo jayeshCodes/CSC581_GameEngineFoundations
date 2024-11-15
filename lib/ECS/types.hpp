@@ -26,13 +26,8 @@ using Signature = std::bitset<MAX_COMPONENTS>;
 
 constexpr Entity EntityNotCreated = -1;
 
-struct EntitySnapshot {
-    Entity entity;
-    std::string id;
-    std::vector<ALL_COMPONENTS> components;
-};
 
-using Snapshot = std::vector<EntitySnapshot>;
+using Snapshot = std::vector<nlohmann::json>;
 
 
 #endif //TYPES_HPP
