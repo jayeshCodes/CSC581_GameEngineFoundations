@@ -33,6 +33,7 @@
 #include "handlers/powerup_handler.hpp"
 #include "strategy/send_strategy.hpp"
 #include "systems/client.hpp"
+#include "systems/game_state_checker.hpp"
 #include "systems/out_of_bound_detector.hpp"
 #include "systems/receiver.hpp"
 
@@ -142,6 +143,7 @@ int main(int argc, char *argv[]) {
     auto receiverSystem = gCoordinator.registerSystem<ReceiverSystem>();
     auto eventSystem = gCoordinator.registerSystem<EventSystem>();
     auto oobDetectorSystem = gCoordinator.registerSystem<OutOfBoundsDetectorSystem>();
+    auto gameStateChecker = gCoordinator.registerSystem<GameStateChecker>();
 
 
     auto positionUpdateHandler = gCoordinator.registerSystem<PositionUpdateHandler>();
@@ -180,6 +182,10 @@ int main(int argc, char *argv[]) {
     Signature cameraSignature;
     cameraSignature.set(gCoordinator.getComponentType<Camera>());
     gCoordinator.setSystemSignature<CameraSystem>(cameraSignature);
+
+    Signature gameStateSig;
+    gameStateSig.set(gCoordinator.getComponentType<Brick>());
+    gCoordinator.setSystemSignature<GameStateChecker>(gameStateSig);
 
     Signature movementHandlerSignature;
     movementHandlerSignature.set(gCoordinator.getComponentType<Transform>());
@@ -287,6 +293,7 @@ int main(int argc, char *argv[]) {
         cameraSystem->update(mainChar);
         renderSystem->update(INVALID_ENTITY);
         eventSystem->update();
+        gameStateChecker->update();
         oobDetectorSystem->update(screen_width, screen_height);
 
         auto elapsed_time = gameTimeline.getElapsedTime();

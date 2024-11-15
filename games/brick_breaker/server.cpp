@@ -239,11 +239,11 @@ int main(int argc, char *argv[]) {
     screen_height = 640;
     screen_width = 640;
 
-    float brick_size = 40.f;
+    float brick_size = 80.f;
     int rows = screen_height / brick_size;
     int cols = screen_width / brick_size;
-    int row_offset_top = 2;
-    int row_offset_bottom = 7;
+    int row_offset_top = 1;
+    int row_offset_bottom = 3;
 
     for (int i = row_offset_top; i < rows - row_offset_bottom; i++) {
         SDL_Color color1 = shade_color::Red;

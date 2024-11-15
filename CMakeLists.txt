@@ -65,28 +65,30 @@ set(SOURCES
         lib/EMS/types.hpp
         lib/model/event.hpp)
 
-set(BUBBLE_SHOOTER_SOURCE games/bubble_shooter/systems/keyboard_movement.hpp
-        games/bubble_shooter/handlers/keyboard_handler.hpp
-        games/bubble_shooter/model/component.hpp
-        games/bubble_shooter/model/events.hpp
-        games/bubble_shooter/handlers/movement_handler.hpp
-        games/bubble_shooter/handlers/launch_handler.hpp
-        games/bubble_shooter/systems/out_of_bound_detector.hpp
-        games/bubble_shooter/strategy/send_strategy.hpp
-        games/bubble_shooter/model/data_model.hpp
-        games/bubble_shooter/systems/receiver.hpp
-        games/bubble_shooter/handlers/collision_handler.hpp
-        games/bubble_shooter/handlers/out_of_bound_handler.hpp
-        games/bubble_shooter/systems/client.hpp
-        games/bubble_shooter/handlers/powerup_handler.hpp
+set(BUBBLE_SHOOTER_SOURCE games/brick_breaker/systems/keyboard_movement.hpp
+        games/brick_breaker/handlers/keyboard_handler.hpp
+        games/brick_breaker/model/component.hpp
+        games/brick_breaker/model/events.hpp
+        games/brick_breaker/handlers/movement_handler.hpp
+        games/brick_breaker/handlers/launch_handler.hpp
+        games/brick_breaker/systems/out_of_bound_detector.hpp
+        games/brick_breaker/strategy/send_strategy.hpp
+        games/brick_breaker/model/data_model.hpp
+        games/brick_breaker/systems/receiver.hpp
+        games/brick_breaker/handlers/collision_handler.hpp
+        games/brick_breaker/handlers/out_of_bound_handler.hpp
+        games/brick_breaker/systems/client.hpp
+        games/brick_breaker/handlers/powerup_handler.hpp
+        games/brick_breaker/systems/game_state_checker.hpp
+        games/brick_breaker/handlers/game_state_handler.hpp
 )
 
 
 add_executable(shade_engine ${SOURCES} main.cpp)
 add_executable(shade_engine_server ${SOURCES} server.cpp)
 
-add_executable(bubble_shooter ${SOURCES} ${BUBBLE_SHOOTER_SOURCE} games/bubble_shooter/game1.cpp)
-add_executable(bubble_shooter_server ${SOURCES} ${BUBBLE_SHOOTER_SOURCE} games/bubble_shooter/server.cpp)
+add_executable(bubble_shooter ${SOURCES} ${BUBBLE_SHOOTER_SOURCE} games/brick_breaker/game1.cpp)
+add_executable(bubble_shooter_server ${SOURCES} ${BUBBLE_SHOOTER_SOURCE} games/brick_breaker/server.cpp)
 
 find_package(SDL2 REQUIRED)
 find_package(cppzmq REQUIRED)

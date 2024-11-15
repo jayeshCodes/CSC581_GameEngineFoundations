@@ -13,7 +13,9 @@ namespace GameEvents {
         Launch,
         OutOfBounds,
         Stop,
-        PowerUpCollected
+        PowerUpCollected,
+        GameStart,
+        GameOver
     };
 
     inline std::string eventTypeToString(EventType type) {
@@ -30,6 +32,10 @@ namespace GameEvents {
                 return "OutOfBounds";
             case PowerUpCollected:
                 return "PowerUpCollected";
+            case GameStart:
+                return "GameStart";
+            case GameOver:
+                return "GameOver";
             default: return "Unknown";
         }
     }

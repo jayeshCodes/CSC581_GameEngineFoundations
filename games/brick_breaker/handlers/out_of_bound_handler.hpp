@@ -29,6 +29,8 @@ class OutOfBoundHandler : public System {
                 } else if (data.direction == GameEvents::OutOfBoundsData::Direction::Top) {
                     kinematic.velocity.y *= -1;
                 } else if (data.direction == GameEvents::OutOfBoundsData::Direction::Bottom) {
+                    Event gameOverEvent{GameEvents::eventTypeToString(GameEvents::GameOver), {}};
+                    eventCoordinator.emit(std::make_shared<Event>(gameOverEvent));
                 }
             }
 

@@ -19,6 +19,8 @@ class LaunchHandler : public System {
             for (const auto entity: entities) {
                 auto &ball = gCoordinator.getComponent<Ball>(entity);
                 auto &kinematic = gCoordinator.getComponent<CKinematic>(entity);
+                Event gameStartEvent{GameEvents::eventTypeToString(GameEvents::GameStart), {}};
+                eventCoordinator.emit(std::make_shared<Event>(gameStartEvent));
                 ball.isLaunched = true;
                 kinematic.velocity.y = -150.f;
                 if (gCoordinator.hasComponent<KeyboardMovement>(entity)) {
