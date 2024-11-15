@@ -15,6 +15,17 @@ extern Coordinator gCoordinator;
 extern EventCoordinator eventCoordinator;
 
 class CollisionHandler : public System {
+    void generatePowerup(float x, float y) {
+        int idx = Random::generateRandomInt(0, 3);
+        Entity entity = gCoordinator.createEntity();
+        gCoordinator.addComponent(entity, Transform{x, y, 40, 40, 0});
+        gCoordinator.addComponent(entity, CKinematic{});
+        gCoordinator.addComponent(entity, Color{PowerUpColors[idx]});
+        gCoordinator.addComponent(entity, Gravity{0, 100});
+        gCoordinator.addComponent(entity, PowerUp{false, static_cast<PowerUpType>(idx)});
+        gCoordinator.addComponent(entity, Collision{false, false, CollisionLayer::POWERUP});
+    }
+
     void brickAndBallCollision(Entity brick, Entity ball) {
         auto &ballKinematic = gCoordinator.getComponent<CKinematic>(ball);
         auto &ballTransform = gCoordinator.getComponent<Transform>(ball);
@@ -51,11 +62,15 @@ class CollisionHandler : public System {
 
         // Queue the brick for destruction after collision processing
         gCoordinator.addComponent(brick, Destroy{0, true, true});
+
+        if (Random::generateRandom185percent()) {
+            generatePowerup(brickTransform.x, brickTransform.y);
+        }
     }
 
     void ballAndLauncherCollision(Entity launcher, Entity ball) {
         auto &b = gCoordinator.getComponent<Ball>(ball);
-        if(!b.isLaunched) return;
+        if (!b.isLaunched) return;
 
         auto &ballKinematic = gCoordinator.getComponent<CKinematic>(ball);
         auto &ballTransform = gCoordinator.getComponent<Transform>(ball);
@@ -70,19 +85,33 @@ class CollisionHandler : public System {
         ballKinematic.velocity.y = -std::abs(ballKinematic.velocity.y);
     }
 
+    void launcherAndPowerupCollision(Entity launcher, Entity powerup) {
+        auto &powerupType = gCoordinator.getComponent<PowerUp>(powerup).type;
+        Event event{
+            GameEvents::eventTypeToString(GameEvents::PowerUpCollected),
+            GameEvents::PowerUpCollectedData{powerupType, false}
+        };
+        eventCoordinator.emit(std::make_shared<Event>(event));
+        gCoordinator.addComponent(powerup, Destroy{0, true, true});
+    }
+
     EventHandler collisionHandler = [this](const std::shared_ptr<Event> &event) {
         if (event->type == eventTypeToString(EventType::EntityCollided)) {
             const EntityCollidedData data = event->data;
             auto &entityA = data.entityA;
             auto &entityB = data.entityB;
-            if (gCoordinator.hasComponent<Brick>(entityA)) {
+            if (gCoordinator.hasComponent<Brick>(entityA) && gCoordinator.hasComponent<Ball>(entityB)) {
                 brickAndBallCollision(entityA, entityB);
-            } else if (gCoordinator.hasComponent<Brick>(entityB)) {
+            } else if (gCoordinator.hasComponent<Brick>(entityB) && gCoordinator.hasComponent<Ball>(entityA)) {
                 brickAndBallCollision(entityB, entityA);
-            } else if (gCoordinator.hasComponent<Launcher>(entityA)) {
+            } else if (gCoordinator.hasComponent<Launcher>(entityA) && gCoordinator.hasComponent<Ball>(entityB)) {
                 ballAndLauncherCollision(entityA, entityB);
-            } else if (gCoordinator.hasComponent<Launcher>(entityB)) {
+            } else if (gCoordinator.hasComponent<Launcher>(entityB) && gCoordinator.hasComponent<Ball>(entityA)) {
                 ballAndLauncherCollision(entityB, entityA);
+            } else if (gCoordinator.hasComponent<PowerUp>(entityA) && gCoordinator.hasComponent<Launcher>(entityB)) {
+                launcherAndPowerupCollision(entityB, entityA);
+            } else if (gCoordinator.hasComponent<PowerUp>(entityB) && gCoordinator.hasComponent<Launcher>(entityA)) {
+                launcherAndPowerupCollision(entityA, entityB);
             }
         }
     };
@@ -96,4 +125,3 @@ public:
         eventCoordinator.unsubscribe(collisionHandler, eventTypeToString(EventType::EntityCollided));
     }
 };
-

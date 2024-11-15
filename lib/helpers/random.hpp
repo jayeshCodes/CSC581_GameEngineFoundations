@@ -35,7 +35,7 @@ public:
     static int generateRandomInt(const int min, const int max) {
         static std::random_device rd;
         static std::mt19937 gen(rd());
-        static std::uniform_int_distribution<> dis(min, max);
+        std::uniform_int_distribution<> dis(min, max);
         return dis(gen);
     }
 
@@ -46,6 +46,12 @@ public:
         return std::round(dis(gen) * 100.0) / 100.0;
     }
 
+    static int generateRandom185percent() {
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        static std::bernoulli_distribution dis(0.15);
+        return dis(gen);
+    }
 };
 
 #endif //RANDOM_HPP

@@ -13,6 +13,7 @@ namespace GameEvents {
         Launch,
         OutOfBounds,
         Stop,
+        PowerUpCollected
     };
 
     inline std::string eventTypeToString(EventType type) {
@@ -27,6 +28,8 @@ namespace GameEvents {
                 return "Launch";
             case OutOfBounds:
                 return "OutOfBounds";
+            case PowerUpCollected:
+                return "PowerUpCollected";
             default: return "Unknown";
         }
     }
@@ -46,5 +49,11 @@ namespace GameEvents {
         } direction;
     };
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(OutOfBoundsData, entity, direction)
+
+    struct PowerUpCollectedData {
+        PowerUpType type;
+        bool isFinal = false;
+    };
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(PowerUpCollectedData, type, isFinal)
 
 }

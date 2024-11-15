@@ -78,6 +78,7 @@ set(BUBBLE_SHOOTER_SOURCE games/bubble_shooter/systems/keyboard_movement.hpp
         games/bubble_shooter/handlers/collision_handler.hpp
         games/bubble_shooter/handlers/out_of_bound_handler.hpp
         games/bubble_shooter/systems/client.hpp
+        games/bubble_shooter/handlers/powerup_handler.hpp
 )
 
 

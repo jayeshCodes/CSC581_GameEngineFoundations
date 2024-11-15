@@ -30,6 +30,7 @@
 #include "systems/keyboard_movement.hpp"
 #include "handlers/movement_handler.hpp"
 #include "handlers/out_of_bound_handler.hpp"
+#include "handlers/powerup_handler.hpp"
 #include "strategy/send_strategy.hpp"
 #include "systems/client.hpp"
 #include "systems/out_of_bound_detector.hpp"
@@ -128,6 +129,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Ball>();
     gCoordinator.registerComponent<Brick>();
     gCoordinator.registerComponent<Launcher>();
+    gCoordinator.registerComponent<PowerUp>();
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
     auto kinematicSystem = gCoordinator.registerSystem<KinematicSystem>();
@@ -148,6 +150,7 @@ int main(int argc, char *argv[]) {
     auto launchHandler = gCoordinator.registerSystem<LaunchHandler>();
     auto collisionHandler = gCoordinator.registerSystem<CollisionHandler>();
     auto outOfBoundHandler = gCoordinator.registerSystem<OutOfBoundHandler>();
+    auto powerupHandler = gCoordinator.registerSystem<PowerupHandler>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
@@ -222,27 +225,6 @@ int main(int argc, char *argv[]) {
                               });
 
 
-    // int rows = screen_height / 40;
-    // int cols = screen_width / 40;
-    // int row_offset_top = 2;
-    // int row_offset_bottom = 7;
-    //
-    //
-    // for (int i = row_offset_top; i < rows - row_offset_bottom; i++) {
-    //     SDL_Color color1 = shade_color::Red;
-    //     SDL_Color color2 = shade_color::Blue;
-    //     for (int j = 0; j < cols; j++) {
-    //         auto entity = gCoordinator.createEntity();
-    //         auto newColor = shade_color::generateNonRepeatingColor(color1, color2);
-    //         gCoordinator.addComponent(entity, Transform{j * 40.f, i * 40.f, 40, 40, 0});
-    //         gCoordinator.addComponent(entity, Color{newColor});
-    //         gCoordinator.addComponent(entity, Collision{true, false, CollisionLayer::BRICK});
-    //         gCoordinator.addComponent(entity, Brick{});
-    //         color1 = color2;
-    //         color2 = newColor;
-    //     }
-    // }
-
     auto mainChar = gCoordinator.createEntity();
     gCoordinator.addComponent(mainChar, Transform{screen_width / 2.f, screen_height - 40.f, 40, 100, 0});
     gCoordinator.addComponent(mainChar, Color{shade_color::generateRandomSolidColor()});
@@ -316,12 +298,10 @@ int main(int argc, char *argv[]) {
         presentScene();
     }
 
-    /**
-     * This is the cleanup code. The order is very important here since otherwise the program will crash.
-     */
-    send_delete_signal(client_socket, mainChar, strategy.get());
+
     t1.join();
     t2.join();
+    t3.join();
     cleanupSDL();
     std::cout << "Closing " << ENGINE_NAME << " Engine" << std::endl;
     return 0;

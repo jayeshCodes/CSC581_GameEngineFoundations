@@ -136,7 +136,6 @@ public:
     }
 
     std::unordered_map<std::string, Entity> &getEntityIds() {
-        std::shared_lock lock(mutex);
         return entities;
     }
 

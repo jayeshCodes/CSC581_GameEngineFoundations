@@ -152,6 +152,7 @@ enum CollisionLayer {
     MOVING_PLATFORM,
     BRICK,
     LAUNCHER,
+    POWERUP,
     BALL
 };
 
