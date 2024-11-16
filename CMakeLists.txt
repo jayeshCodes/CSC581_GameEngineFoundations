@@ -65,7 +65,7 @@ set(SOURCES
         lib/EMS/types.hpp
         lib/model/event.hpp)
 
-set(BUBBLE_SHOOTER_SOURCE games/brick_breaker/systems/keyboard_movement.hpp
+set(BRICK_BREAKER_SOURCE games/brick_breaker/systems/keyboard_movement.hpp
         games/brick_breaker/handlers/keyboard_handler.hpp
         games/brick_breaker/model/component.hpp
         games/brick_breaker/model/events.hpp
@@ -87,8 +87,8 @@ set(BUBBLE_SHOOTER_SOURCE games/brick_breaker/systems/keyboard_movement.hpp
 add_executable(shade_engine ${SOURCES} main.cpp)
 add_executable(shade_engine_server ${SOURCES} server.cpp)
 
-add_executable(bubble_shooter ${SOURCES} ${BUBBLE_SHOOTER_SOURCE} games/brick_breaker/game1.cpp)
-add_executable(bubble_shooter_server ${SOURCES} ${BUBBLE_SHOOTER_SOURCE} games/brick_breaker/server.cpp)
+add_executable(brick_breaker ${SOURCES} ${BRICK_BREAKER_SOURCE} games/brick_breaker/game1.cpp)
+add_executable(brick_breaker_server ${SOURCES} ${BRICK_BREAKER_SOURCE} games/brick_breaker/server.cpp)
 
 find_package(SDL2 REQUIRED)
 find_package(cppzmq REQUIRED)
@@ -98,5 +98,5 @@ target_link_libraries(shade_engine cppzmq SDL2::SDL2 nlohmann_json::nlohmann_jso
 target_link_libraries(shade_engine_server cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
 
 
-target_link_libraries(bubble_shooter cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
-target_link_libraries(bubble_shooter_server cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
+target_link_libraries(brick_breaker cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
+target_link_libraries(brick_breaker_server cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
