@@ -83,6 +83,16 @@ set(BRICK_BREAKER_SOURCE games/brick_breaker/systems/keyboard_movement.hpp
         games/brick_breaker/handlers/game_state_handler.hpp
 )
 
+set (SNAKE_SOURCE
+        games/snake/systems/keyboard_movement.hpp
+        games/snake/model/event.hpp
+        games/snake/systems/receiver.hpp
+        games/snake/systems/client.hpp
+        games/snake/handlers/movement_handler.hpp
+        games/snake/handlers/keyboard_handler.hpp
+        games/snake/model/components.hpp
+)
+
 
 add_executable(shade_engine ${SOURCES} main.cpp)
 add_executable(shade_engine_server ${SOURCES} server.cpp)
@@ -90,8 +100,8 @@ add_executable(shade_engine_server ${SOURCES} server.cpp)
 add_executable(brick_breaker ${SOURCES} ${BRICK_BREAKER_SOURCE} games/brick_breaker/game1.cpp)
 add_executable(brick_breaker_server ${SOURCES} ${BRICK_BREAKER_SOURCE} games/brick_breaker/server.cpp)
 
-add_executable(snake ${SOURCES} games/snake/snake.cpp)
-add_executable(snake_server ${SOURCES} games/snake/server.cpp)
+add_executable(snake ${SOURCES} ${SNAKE_SOURCE} games/snake/snake.cpp)
+add_executable(snake_server ${SOURCES} ${SNAKE_SOURCE} games/snake/server.cpp)
 
 find_package(SDL2 REQUIRED)
 find_package(cppzmq REQUIRED)
