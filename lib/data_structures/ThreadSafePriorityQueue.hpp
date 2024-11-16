@@ -49,4 +49,12 @@ public:
         item = pq.top();
         return true;
     }
+
+    void clear() {
+        std::lock_guard<std::mutex> lock(mtx);
+        while (!pq.empty()) {
+            pq = std::priority_queue<T, std::vector<T>, Compare>();
+        }
+        std::cout << "Queue cleared" << std::endl;
+    }
 };

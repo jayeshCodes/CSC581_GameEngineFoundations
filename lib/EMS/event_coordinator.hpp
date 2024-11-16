@@ -36,6 +36,10 @@ public:
         eventManager->queueEvent(std::make_shared<EventData>(eventData));
     }
 
+    void clearQueue() const {
+        eventManager->clearQueue();
+    }
+
     void processEventsInQueue(const int64_t timestamp) const {
         eventManager->processEventQueue(timestamp);
     }

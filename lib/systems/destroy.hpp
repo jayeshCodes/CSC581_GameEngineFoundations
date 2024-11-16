@@ -39,8 +39,6 @@ public:
 
         for (const auto entity: entitiesToDestroy) {
             gCoordinator.destroyEntity(entity);
-            Event event{eventTypeToString(EntityDestroyed), EntityDestroyedData{entity, gCoordinator.getEntityKey(entity)}};
-            eventCoordinator.emit(std::make_shared<Event>(event));
         }
     }
 };
