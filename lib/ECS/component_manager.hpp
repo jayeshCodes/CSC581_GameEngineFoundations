@@ -18,6 +18,7 @@ private:
     std::shared_ptr<ComponentArray<T> > getComponentArray() {
         const char *typeName = typeid(T).name();
 
+
         assert(component_types.find(typeName) != component_types.end() && "Component not registered before use.");
 
         return std::static_pointer_cast<ComponentArray<T> >(component_arrays[typeName]);
@@ -39,7 +40,6 @@ public:
     template<typename T>
     ComponentType getComponentType() {
         const char *typeName = typeid(T).name();
-
         assert(component_types.find(typeName) != component_types.end() && "Component not registered before use.");
 
         return component_types[typeName];

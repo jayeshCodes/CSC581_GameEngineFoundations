@@ -66,7 +66,8 @@ set(SOURCES
 
 add_executable(shade_engine ${SOURCES} main.cpp
         lib/systems/bubble_shooter.hpp
-        lib/systems/bubble_movement.hpp)
+        lib/systems/bubble_movement.hpp
+        lib/systems/bubble_grid.hpp)
 add_executable(shade_engine_server ${SOURCES} server.cpp)
 
 find_package(SDL2 REQUIRED)

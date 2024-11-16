@@ -135,6 +135,12 @@ public:
         system_manager->setSignature<T>(signature);
     }
 
+    template<typename T>
+    std::shared_ptr<T> getSystem() const {
+        std::shared_lock lock(mutex);
+        return system_manager->getSystem<T>();
+    }
+
     std::unordered_map<std::string, Entity> &getEntityIds() {
         std::shared_lock lock(mutex);
         return entities;

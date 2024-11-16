@@ -17,11 +17,17 @@ extern Coordinator gCoordinator;
 extern EventCoordinator eventCoordinator;
 
 class BubbleShooterSystem : public System {
+private:
+    SDL_Color nextBubbleColor;
 public:
+    BubbleShooterSystem() : nextBubbleColor(shade_color::getRandomBubbleColor()) {}
     void update(float dt) {
         for (auto const &entity: entities) {
             auto &shooter = gCoordinator.getComponent<BubbleShooter>(entity);
             auto &transform = gCoordinator.getComponent<Transform>(entity);
+            auto &color = gCoordinator.getComponent<Color>(entity);
+
+            color.color = nextBubbleColor;
 
             // Update reload timer
             if (!shooter.canShoot) {
@@ -29,6 +35,8 @@ public:
                 if (shooter.currentReloadTime >= shooter.reloadTime) {
                     shooter.canShoot = true;
                     shooter.currentReloadTime = 0.f;
+                    // Generate next color when reloaded
+                    nextBubbleColor = shade_color::getRandomBubbleColor();
                 }
             }
 
@@ -57,26 +65,30 @@ private:
     void shootBubble(Entity shooterEntity, BubbleShooter &shooter) {
         auto &shooterTransform = gCoordinator.getComponent<Transform>(shooterEntity);
 
-        // Create a new bubble
         Entity bubble = gCoordinator.createEntity();
 
         // Calculate starting position at the tip of the shooter
         float angle = shooter.currentAngle * M_PI / 180.f;
-        float start_x = shooterTransform.x + shooterTransform.w / 2.f;
-        float start_y = shooterTransform.y + shooterTransform.h / 2.f;
+        float start_x = shooterTransform.x;
+        float start_y = shooterTransform.y;
 
         // Add components
-        gCoordinator.addComponent<Transform>(bubble, Transform{start_x, start_y, 32.f, 32.f, shooter.currentAngle});
-
-        gCoordinator.addComponent(bubble, Color{shade_color::generateRandomSolidColor()});
+        gCoordinator.addComponent(bubble, Transform{start_x, start_y, 32.f, 32.f, shooter.currentAngle});
+        gCoordinator.addComponent(bubble, Color{nextBubbleColor});  // Use stored color
+        gCoordinator.addComponent(bubble, CKinematic{{0, 0}, 0, {0, 0}, 0});
         gCoordinator.addComponent(bubble, BubbleProjectile{
                                       SDL_FPoint{
-                                          shooter.shootForce * std::cos(angle),
+                                          shooter.shootForce * std::cos(angle), // Standard trig for direction
                                           shooter.shootForce * std::sin(angle)
-                                      }
+                                      },
+                                      true
                                   });
-        gCoordinator.addComponent(bubble, Collision{true, false, CollisionLayer::OTHER});
-        gCoordinator.addComponent(bubble, CKinematic{});
+        gCoordinator.addComponent(bubble, RigidBody{-1.0f, 0.0f, 0.0f, 1.0f});
+        gCoordinator.addComponent(bubble, Collision{true, false, CollisionLayer::BUBBLE});
+        gCoordinator.addComponent(bubble, Destroy{});
+        gCoordinator.addComponent(bubble, ClientEntity{});
+
+        nextBubbleColor = shade_color::getRandomBubbleColor();
     }
 };
 

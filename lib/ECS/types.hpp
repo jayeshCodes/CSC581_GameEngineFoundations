@@ -9,7 +9,32 @@
 #include <bitset>
 #include <cstdint>
 
-#include "../model/components.hpp"
+// Forward declare ALL_COMPONENTS to avoid circular dependency
+namespace Components {
+    struct Transform;
+    struct Color;
+    struct CKinematic;
+    struct Camera;
+    struct Gravity;
+    struct KeyboardMovement;
+    struct Server;
+    struct Receiver;
+    struct MovingPlatform;
+    struct ServerEntity;
+    struct ClientEntity;
+    struct Destroy;
+    struct Collision;
+    struct Jump;
+    struct Respawnable;
+    struct RigidBody;
+    struct Dash;
+    struct Stomp;
+    struct VerticalBoost;
+    struct Bubble;
+    struct BubbleShooter;
+    struct BubbleProjectile;
+    struct BubbleGridManager;
+}
 
 // Giving an alias to the data type and defining the maximum number of entities
 using Entity = std::uint32_t;
@@ -26,13 +51,17 @@ using Signature = std::bitset<MAX_COMPONENTS>;
 
 constexpr Entity EntityNotCreated = -1;
 
+
+struct EntitySnapshot;
+using Snapshot = std::vector<EntitySnapshot>;
+
+#include "../model/components.hpp"
+
 struct EntitySnapshot {
     Entity entity;
     std::string id;
     std::vector<ALL_COMPONENTS> components;
 };
-
-using Snapshot = std::vector<EntitySnapshot>;
 
 
 #endif //TYPES_HPP

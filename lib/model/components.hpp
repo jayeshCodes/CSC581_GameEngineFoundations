@@ -8,8 +8,8 @@
 #include <nlohmann/json.hpp>
 #include "../enum/enum.hpp"
 #include "../core/timeline.hpp"
-#include "../ECS/types.hpp"
 
+using Entity = std::uint32_t;
 inline Timeline timeline;
 
 struct Transform {
@@ -151,6 +151,7 @@ enum CollisionLayer {
     OTHER = 0,
     PLAYER,
     MOVING_PLATFORM,
+    BUBBLE
 };
 
 struct Collision {
@@ -223,10 +224,6 @@ struct VerticalBoost {
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(VerticalBoost, velocity)
 
-using ALL_COMPONENTS = std::variant<Transform, Color, CKinematic, Camera, Gravity, KeyboardMovement, Server, Receiver,
-    MovingPlatform, ServerEntity, ClientEntity, Destroy, Collision, Jump, Respawnable, RigidBody, Dash, Stomp,
-    VerticalBoost>;
-
 // Represents a bubble in the grid
 struct Bubble {
     bool isActive = true;
@@ -272,3 +269,7 @@ struct BubbleGridManager {
     int currentLevel = 1;
     int score = 0;
 };
+
+using ALL_COMPONENTS = std::variant<Transform, Color, CKinematic, Camera, Gravity, KeyboardMovement, Server, Receiver,
+    MovingPlatform, ServerEntity, ClientEntity, Destroy, Collision, Jump, Respawnable, RigidBody, Dash, Stomp,
+    VerticalBoost, Bubble, BubbleProjectile, BubbleShooter, BubbleGridManager>;

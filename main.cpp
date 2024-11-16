@@ -24,6 +24,7 @@
 
 #include "lib/strategy/send_strategy.hpp"
 #include "lib/strategy/strategy_selector.hpp"
+#include "lib/systems/bubble_grid.hpp"
 #include "lib/systems/bubble_shooter.hpp"
 #include "lib/systems/bubble_movement.hpp"
 #include "lib/systems/event_system.hpp"
@@ -127,6 +128,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<BubbleShooter>();
     gCoordinator.registerComponent<BubbleProjectile>();
     gCoordinator.registerComponent<BubbleGridManager>();
+    gCoordinator.registerComponent<VerticalBoost>();
 
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
@@ -143,6 +145,7 @@ int main(int argc, char *argv[]) {
     auto replayHandler = gCoordinator.registerSystem<ReplayHandler>();
     auto bubbleShooterSystem = gCoordinator.registerSystem<BubbleShooterSystem>();
     auto bubbleMovementSystem = gCoordinator.registerSystem<BubbleMovementSystem>();
+    auto bubbleGridSystem = gCoordinator.registerSystem<BubbleGridSystem>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
@@ -180,6 +183,23 @@ int main(int argc, char *argv[]) {
     collisionSignature.set(gCoordinator.getComponentType<RigidBody>());
     gCoordinator.setSystemSignature<CollisionSystem>(collisionSignature);
 
+    Signature bubbleShooterSignature;
+    bubbleShooterSignature.set(gCoordinator.getComponentType<BubbleShooter>());
+    bubbleShooterSignature.set(gCoordinator.getComponentType<Transform>());
+    bubbleShooterSignature.set(gCoordinator.getComponentType<CKinematic>());
+    gCoordinator.setSystemSignature<BubbleShooterSystem>(bubbleShooterSignature);
+
+    Signature bubbleMovementSignature;
+    bubbleMovementSignature.set(gCoordinator.getComponentType<BubbleProjectile>());
+    bubbleMovementSignature.set(gCoordinator.getComponentType<Transform>());
+    bubbleMovementSignature.set(gCoordinator.getComponentType<CKinematic>());
+    gCoordinator.setSystemSignature<BubbleMovementSystem>(bubbleMovementSignature);
+
+    Signature bubbleGridSignature;
+    bubbleGridSignature.set(gCoordinator.getComponentType<Transform>());
+    bubbleGridSignature.set(gCoordinator.getComponentType<Color>());
+    gCoordinator.setSystemSignature<BubbleGridSystem>(bubbleGridSignature);
+
     zmq::socket_t reply_socket(context, ZMQ_DEALER);
     std::string id = identity + "R";
     reply_socket.set(zmq::sockopt::routing_id, id);
@@ -191,34 +211,34 @@ int main(int argc, char *argv[]) {
         }
     });
 
+    Entity shooter = gCoordinator.createEntity();
+    gCoordinator.addComponent(shooter, Transform{SCREEN_WIDTH / 2.f, SCREEN_HEIGHT - 50.f, 32.f, 32.f, 0});
+    gCoordinator.addComponent(shooter, BubbleShooter{
+                                  2.0f, // rotationSpeed
+                                  225.0f, // minAngle (pointing up-left)
+                                  315.0f, // maxAngle (pointing up-right)
+                                  270.0f, // currentAngle (pointing straight up)
+                                  400.f, // shootForce
+                                  true, // canShoot
+                                  0.5f, // reloadTime
+                                  0.0f // currentReloadTime
+                              });
+    gCoordinator.addComponent(shooter, Color{shade_color::White});
+    gCoordinator.addComponent(shooter, ClientEntity{});
+    gCoordinator.addComponent(shooter, CKinematic{{0, 0}, 0, {0, 0}, 0}); // Add with initial values
+    gCoordinator.addComponent(shooter, Destroy{});
+
 
     Entity mainCamera = gCoordinator.createEntity();
     gCoordinator.addComponent(mainCamera, Camera{0, 0, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT});
 
-    // auto mainChar = gCoordinator.createEntity();
-    // gCoordinator.addComponent(mainChar, Transform{0.f, SCREEN_HEIGHT - 200.f, 32, 32, 0});
-    // gCoordinator.addComponent(mainChar, Color{shade_color::generateRandomSolidColor()});
-    // gCoordinator.addComponent(mainChar, CKinematic{});
-    // gCoordinator.addComponent(mainChar, KeyboardMovement{150.f});
-    // gCoordinator.addComponent(mainChar, ClientEntity{0, false});
-    // gCoordinator.addComponent(mainChar, Destroy{});
-    // gCoordinator.addComponent(mainChar, Jump{50.f, 1.f, false, 0.0f, true, 120.f});
-    // gCoordinator.addComponent(mainChar, Gravity{0, 100});
-    // gCoordinator.addComponent(mainChar, Respawnable{
-    //                               {0, SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false
-    //                           });
-    // gCoordinator.addComponent(mainChar, RigidBody{1.f});
-    // gCoordinator.addComponent(mainChar, Collision{true, false, CollisionLayer::PLAYER});
-    // gCoordinator.addComponent(mainChar, Dash{});
-    // gCoordinator.addComponent(mainChar, Stomp{});
 
-    std::cout << "MainChar: " << gCoordinator.getEntityKey(mainChar) << std::endl;
-    mainCharID = gCoordinator.getEntityKey(mainChar);
+    mainCharID = gCoordinator.getEntityKey(shooter);
 
     Event entityCreatedEvent{eventTypeToString(MainCharCreated), {}};
-    entityCreatedEvent.data = MainCharCreatedData{mainChar, strategy->get_message(mainChar, Message::CREATE)};
+    entityCreatedEvent.data = MainCharCreatedData{shooter, strategy->get_message(shooter, Message::CREATE)};
     eventCoordinator.emitServer(client_socket, std::make_shared<Event>(entityCreatedEvent));
-    gCoordinator.getComponent<ClientEntity>(mainChar).synced = true;
+    gCoordinator.getComponent<ClientEntity>(shooter).synced = true;
 
 
     auto clientEntity = gCoordinator.createEntity();
@@ -246,12 +266,14 @@ int main(int argc, char *argv[]) {
         dt = std::max(dt, engine_constants::FRAME_RATE); // Cap the maximum dt to 60fps
 
         kinematicSystem->update(dt);
-        collisionSystem->update();
         destroySystem->update();
-        cameraSystem->update(mainChar);
+        cameraSystem->update(shooter);
         renderSystem->update(mainCamera);
         eventSystem->update();
         replayHandler->update();
+        bubbleShooterSystem->update(dt);
+        bubbleMovementSystem->update(dt);
+        collisionSystem->update();
 
         auto elapsed_time = gameTimeline.getElapsedTime();
         auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - current_time); // Ensure float division
@@ -265,7 +287,7 @@ int main(int argc, char *argv[]) {
     /**
      * This is the cleanup code. The order is very important here since otherwise the program will crash.
      */
-    send_delete_signal(client_socket, mainChar, strategy.get());
+    send_delete_signal(client_socket, shooter, strategy.get());
     t1.join();
     t2.join();
     cleanupSDL();

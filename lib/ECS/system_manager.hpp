@@ -27,6 +27,17 @@ public:
     }
 
     template<typename T>
+    std::shared_ptr<T> getSystem() {
+        const char* typeName = typeid(T).name();
+        auto it = systems.find(typeName);
+        if(it == systems.end()) {
+            return nullptr;
+        }
+
+        return std::static_pointer_cast<T>(systems[typeName]);
+    }
+
+    template<typename T>
     void setSignature(Signature signature) {
         const char* typeName = typeid(T).name();
         assert(systems.find(typeName) != systems.end() && "System used before registered.");

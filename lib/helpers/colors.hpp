@@ -34,6 +34,20 @@ namespace shade_color {
         Uint8 b = static_cast<Uint8>(Random::generateRandomInt(0, 255));
         return {r, g, b, 255};
     }
+
+    constexpr SDL_Color BubbleColors[] = {
+        Red,
+        Green,
+        Blue,
+        Yellow,
+        Purple
+    };
+
+    static SDL_Color getRandomBubbleColor() {
+        constexpr size_t numColors = 5;  // Number of colors in BubbleColors array
+        size_t index = Random::generateRandomInt(0, numColors - 1);
+        return BubbleColors[index];
+    }
 }
 
 #endif //COLORS_HPP
