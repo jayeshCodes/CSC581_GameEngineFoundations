@@ -80,6 +80,26 @@ void send_delete_signal(zmq::socket_t &client_socket, Entity entity, Send_Strate
     }
 }
 
+void collision_update(Timeline &timeline, CollisionSystem *collisionSystem) {
+    Timeline collisionTimeline(&timeline, 1);
+    int64_t lastTime = collisionTimeline.getElapsedTime();
+
+    while (GameManager::getInstance()->gameRunning) {
+        int64_t currentTime = collisionTimeline.getElapsedTime();
+        float dT = (currentTime - lastTime) / 1000.f;
+        lastTime = currentTime;
+
+        collisionSystem->update();
+
+        auto elapsed_time = collisionTimeline.getElapsedTime();
+        auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - currentTime); // Ensure float division
+        if (time_to_sleep > 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(time_to_sleep * 1000)));
+        }
+    }
+
+    std::cout << "Kill collision thread" << std::endl;
+}
 
 int main(int argc, char *argv[]) {
     std::cout << ENGINE_NAME << " v" << ENGINE_VERSION << " initializing" << std::endl;
@@ -254,6 +274,11 @@ int main(int argc, char *argv[]) {
         }
     });
 
+    // Collision thread
+    // std::thread collision_thread([&]() {
+    //     collision_update(gameTimeline, collisionSystem.get());
+    // });
+
     while (GameManager::getInstance()->gameRunning) {
         doInput();
         prepareScene();
@@ -273,7 +298,7 @@ int main(int argc, char *argv[]) {
         replayHandler->update();
         bubbleShooterSystem->update(dt);
         bubbleMovementSystem->update(dt);
-        collisionSystem->update();
+
 
         auto elapsed_time = gameTimeline.getElapsedTime();
         auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - current_time); // Ensure float division
@@ -283,7 +308,7 @@ int main(int argc, char *argv[]) {
 
         presentScene();
     }
-
+    // collision_thread.join();
     /**
      * This is the cleanup code. The order is very important here since otherwise the program will crash.
      */
