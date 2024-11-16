@@ -111,6 +111,10 @@ public:
         }
     }
 
+    void clearQueue() {
+        eventQueue.clear();
+    }
+
 
 };
 
