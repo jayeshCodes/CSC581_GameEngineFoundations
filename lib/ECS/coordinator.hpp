@@ -60,6 +60,12 @@ public:
         entities.erase(getEntityKey(entity));
     }
 
+    void destroyEntity(const std::string &key) {
+        if (entities.contains(key)) {
+            destroyEntity(entities[key]);
+        }
+    }
+
     template<typename T>
     void registerComponent() const {
         std::lock_guard<std::shared_mutex> lock(mutex);
@@ -168,7 +174,7 @@ public:
         return Random::generateRandomID(12);
     }
 
-    nlohmann::json createSnapshot(Entity entity, const std::string& id, const StateSerializer& serializer) const {
+    nlohmann::json createSnapshot(Entity entity, const std::string &id, const StateSerializer &serializer) const {
         nlohmann::json snapshot;
         snapshot["entity"] = entity;
         snapshot["eId"] = id;
@@ -176,21 +182,22 @@ public:
         return snapshot;
     }
 
-    void backup(const StateSerializer& serializer) {
+    void backup(const StateSerializer &serializer) {
         this->snapshot.clear();
         for (auto &[id, entity]: entities) {
             this->snapshot.emplace_back(createSnapshot(entity, id, serializer));
         }
-    }
-
-    void restoreEntity(const nlohmann::json &entitySnap) {
-        const Entity entity = createEntity(entitySnap["eId"]);
 
     }
 
-    void restore() {
-        for (auto &entitySnap: this->snapshot) {
-            restoreEntity(entitySnap);
+    void restoreEntity(nlohmann::json &entitySnap, const StateDeserializer &deserializer) {
+        Entity entity = createEntity(entitySnap["eId"]);
+        deserializer(entitySnap, entity);
+    }
+
+    void restore(StateDeserializer &deserializer) {
+        for (nlohmann::json &entitySnap: this->snapshot) {
+            restoreEntity(entitySnap, deserializer);
         }
     }
 };
