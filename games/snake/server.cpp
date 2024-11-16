@@ -1,3 +1,7 @@
+//
+// Created by Utsav Lal on 11/16/24.
+//
+
 #include <csignal>
 #include <memory>
 #include <thread>
@@ -23,21 +27,6 @@
 #include "../../lib/strategy/send_strategy.hpp"
 #include "../../lib/systems/event_system.hpp"
 #include "../../lib/systems/position_update_handler.hpp"
-#include "handlers/collision_handler.hpp"
-#include "handlers/game_state_handler.hpp"
-#include "model/component.hpp"
-#include "handlers/keyboard_handler.hpp"
-#include "handlers/launch_handler.hpp"
-#include "systems/keyboard_movement.hpp"
-#include "handlers/movement_handler.hpp"
-#include "handlers/out_of_bound_handler.hpp"
-#include "handlers/powerup_handler.hpp"
-#include "strategy/send_strategy.hpp"
-#include "systems/client.hpp"
-#include "systems/game_state_checker.hpp"
-#include "systems/out_of_bound_detector.hpp"
-#include "systems/receiver.hpp"
-
 
 void catch_signals() {
     std::signal(SIGINT, [](int signal) {
@@ -67,7 +56,7 @@ int main(int argc, char *argv[]) {
     GameManager::getInstance()->gameRunning = true;
     catch_signals();
 
-    std::unique_ptr<Send_Strategy> strategy = std::make_unique<BrickBreakerStrategy>();
+    std::unique_ptr<Send_Strategy> strategy = std::make_unique<JSON_Strategy>();
 
     std::string identity = Random::generateRandomID(10);
     std::cout << "Identity: " << identity << std::endl;
@@ -97,33 +86,17 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<ClientEntity>();
     gCoordinator.registerComponent<Destroy>();
     gCoordinator.registerComponent<Collision>();
-    gCoordinator.registerComponent<Ball>();
-    gCoordinator.registerComponent<Brick>();
-    gCoordinator.registerComponent<Launcher>();
-    gCoordinator.registerComponent<PowerUp>();
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
     auto kinematicSystem = gCoordinator.registerSystem<KinematicSystem>();
     auto gravitySystem = gCoordinator.registerSystem<GravitySystem>();
     auto cameraSystem = gCoordinator.registerSystem<CameraSystem>();
-    auto keyboardMovementSystem = gCoordinator.registerSystem<KeyboardMovementSystem>();
     auto destroySystem = gCoordinator.registerSystem<DestroySystem>();
     auto collisionSystem = gCoordinator.registerSystem<CollisionSystem>();
-    auto clientSystem = gCoordinator.registerSystem<ClientSystem>();
-    auto receiverSystem = gCoordinator.registerSystem<ReceiverSystem>();
     auto eventSystem = gCoordinator.registerSystem<EventSystem>();
-    auto oobDetectorSystem = gCoordinator.registerSystem<OutOfBoundsDetectorSystem>();
-    auto gameStateChecker = gCoordinator.registerSystem<GameStateChecker>();
 
 
     auto positionUpdateHandler = gCoordinator.registerSystem<PositionUpdateHandler>();
-    auto movementHandler = gCoordinator.registerSystem<MovementHandler>();
-    auto keyboardHandler = gCoordinator.registerSystem<KeyboardHandler>();
-    auto launchHandler = gCoordinator.registerSystem<LaunchHandler>();
-    auto collisionHandler = gCoordinator.registerSystem<CollisionHandler>();
-    auto outOfBoundHandler = gCoordinator.registerSystem<OutOfBoundHandler>();
-    auto powerupHandler = gCoordinator.registerSystem<PowerupHandler>();
-    auto game_state_handler = gCoordinator.registerSystem<GameStateHandler>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
@@ -138,12 +111,6 @@ int main(int argc, char *argv[]) {
     Signature ooBSignature;
     ooBSignature.set(gCoordinator.getComponentType<Transform>());
     ooBSignature.set(gCoordinator.getComponentType<CKinematic>());
-    gCoordinator.setSystemSignature<OutOfBoundsDetectorSystem>(ooBSignature);
-
-    Signature launchSignature;
-    launchSignature.set(gCoordinator.getComponentType<Ball>());
-    launchSignature.set(gCoordinator.getComponentType<CKinematic>());
-    gCoordinator.setSystemSignature<LaunchHandler>(launchSignature);
 
     Signature gravitySignature;
     gravitySignature.set(gCoordinator.getComponentType<Transform>());
@@ -153,27 +120,6 @@ int main(int argc, char *argv[]) {
     Signature cameraSignature;
     cameraSignature.set(gCoordinator.getComponentType<Camera>());
     gCoordinator.setSystemSignature<CameraSystem>(cameraSignature);
-
-    Signature gameStateSig;
-    gameStateSig.set(gCoordinator.getComponentType<Brick>());
-    gCoordinator.setSystemSignature<GameStateChecker>(gameStateSig);
-
-    Signature movementHandlerSignature;
-    movementHandlerSignature.set(gCoordinator.getComponentType<Transform>());
-    movementHandlerSignature.set(gCoordinator.getComponentType<CKinematic>());
-    movementHandlerSignature.set(gCoordinator.getComponentType<KeyboardMovement>());
-    gCoordinator.setSystemSignature<MovementHandler>(movementHandlerSignature);
-
-    Signature clientSignature;
-    clientSignature.set(gCoordinator.getComponentType<Receiver>());
-    gCoordinator.setSystemSignature<ReceiverSystem>(clientSignature);
-
-    Signature clientEntitySignature;
-    clientEntitySignature.set(gCoordinator.getComponentType<ClientEntity>());
-    clientEntitySignature.set(gCoordinator.getComponentType<Transform>());
-    clientEntitySignature.set(gCoordinator.getComponentType<Color>());
-    clientEntitySignature.set(gCoordinator.getComponentType<Destroy>());
-    gCoordinator.setSystemSignature<ClientSystem>(clientEntitySignature);
 
     Signature destroySig;
     destroySig.set(gCoordinator.getComponentType<Destroy>());
@@ -189,11 +135,11 @@ int main(int argc, char *argv[]) {
     reply_socket.set(zmq::sockopt::routing_id, id);
     reply_socket.connect("tcp://localhost:5570");
 
-    std::thread t1([receiverSystem, &reply_socket, &strategy]() {
-        while (GameManager::getInstance()->gameRunning) {
-            receiverSystem->update(reply_socket, strategy.get());
-        }
-    });
+    // std::thread t1([receiverSystem, &reply_socket, &strategy]() {
+    //     while (GameManager::getInstance()->gameRunning) {
+    //         receiverSystem->update(reply_socket, strategy.get());
+    //     }
+    // });
 
 
     Entity mainCamera = gCoordinator.createEntity();
@@ -201,22 +147,6 @@ int main(int argc, char *argv[]) {
                                   0, 0, 1.f, 0.f, static_cast<float>(screen_width), static_cast<float>(screen_height)
                               });
 
-
-    auto mainChar = gCoordinator.createEntity();
-    gCoordinator.addComponent(mainChar, Transform{screen_width / 2.f, screen_height - 40.f, 40, 100, 0});
-    gCoordinator.addComponent(mainChar, Color{shade_color::generateRandomSolidColor()});
-    gCoordinator.addComponent(mainChar, CKinematic{});
-    gCoordinator.addComponent(mainChar, Collision{true, false, CollisionLayer::LAUNCHER});
-    gCoordinator.addComponent(mainChar, KeyboardMovement{150.f});
-    gCoordinator.addComponent(mainChar, Launcher{});
-
-    auto ball = gCoordinator.createEntity();
-    gCoordinator.addComponent(ball, Transform{screen_width / 2.f + 50 - 7.5f, screen_height - 40.f - 15.f, 15, 15, 0});
-    gCoordinator.addComponent(ball, Color{shade_color::Gray});
-    gCoordinator.addComponent(ball, CKinematic{});
-    gCoordinator.addComponent(ball, Ball{false});
-    gCoordinator.addComponent(ball, Collision{true, false, CollisionLayer::BALL});
-    gCoordinator.addComponent(ball, KeyboardMovement{150.f});
 
 
     auto clientEntity = gCoordinator.createEntity();
@@ -226,11 +156,11 @@ int main(int argc, char *argv[]) {
 
 
     // Start the message sending thread
-    std::thread t2([&client_socket, &clientSystem, &strategy] {
-        while (GameManager::getInstance()->gameRunning) {
-            clientSystem->update(client_socket, strategy.get());
-        }
-    });
+    // std::thread t2([&client_socket, &clientSystem, &strategy] {
+    //     while (GameManager::getInstance()->gameRunning) {
+    //         clientSystem->update(client_socket, strategy.get());
+    //     }
+    // });
 
     std::thread t3([&collisionSystem, &destroySystem] {
         auto current_time = gameTimeline.getElapsedTime();
@@ -259,13 +189,10 @@ int main(int argc, char *argv[]) {
 
         kinematicSystem->update(dt);
         gravitySystem->update(dt);
-        keyboardMovementSystem->update();
 
-        cameraSystem->update(mainChar);
+        // cameraSystem->update(INVALID_ENTITY);
         renderSystem->update(INVALID_ENTITY);
         eventSystem->update();
-        gameStateChecker->update();
-        oobDetectorSystem->update(screen_width, screen_height);
 
         auto elapsed_time = gameTimeline.getElapsedTime();
         auto time_to_sleep = engine_constants::FRAME_RATE - (elapsed_time - current_time); // Ensure float division
@@ -277,8 +204,8 @@ int main(int argc, char *argv[]) {
     }
 
 
-    t1.join();
-    t2.join();
+    // t1.join();
+    // t2.join();
     t3.join();
     cleanupSDL();
     std::cout << "Closing " << ENGINE_NAME << " Engine" << std::endl;

@@ -34,27 +34,6 @@
 #include "model/component.hpp"
 #include "strategy/send_strategy.hpp"
 
-// Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
-void platform_movement(Timeline &timeline, MoveBetween2PointsSystem &moveBetween2PointsSystem) {
-    Timeline platformTimeline(&timeline, 1);
-    int64_t lastTime = platformTimeline.getElapsedTime();
-
-    while (GameManager::getInstance()->gameRunning) {
-        int64_t currentTime = platformTimeline.getElapsedTime();
-        float dT = (currentTime - lastTime) / 1000.f;
-        lastTime = currentTime;
-
-        moveBetween2PointsSystem.update(dT, platformTimeline);
-        auto elapsed_time = platformTimeline.getElapsedTime();
-        auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - currentTime); // Ensure float division
-        if (time_to_sleep > 0) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(time_to_sleep * 1000)));
-        }
-    }
-
-    std::cout << "Kill platform thread" << std::endl;
-}
-
 void server_run(zmq::context_t &context, zmq::socket_ref frontend, zmq::socket_ref backend,
                 Send_Strategy *send_strategy) {
     int max_threads = 5;
@@ -216,10 +195,6 @@ int main(int argc, char *argv[]) {
 
     auto last_time = gameTimeline.getElapsedTime();
 
-    std::thread platform_thread([&gameTimeline, &moveBetween2PointsSystem]() {
-        platform_movement(gameTimeline, *moveBetween2PointsSystem);
-    });
-
     std::thread t2([&client_socket, &clientSystem, &strategy] {
         while (GameManager::getInstance()->gameRunning) {
             clientSystem->update(client_socket, strategy.get());
@@ -280,7 +255,6 @@ int main(int argc, char *argv[]) {
     }
 
     // Create 4 Rectangle instances
-    platform_thread.join();
     t2.join();
     server_thread.join();
 

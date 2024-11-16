@@ -90,6 +90,9 @@ add_executable(shade_engine_server ${SOURCES} server.cpp)
 add_executable(brick_breaker ${SOURCES} ${BRICK_BREAKER_SOURCE} games/brick_breaker/game1.cpp)
 add_executable(brick_breaker_server ${SOURCES} ${BRICK_BREAKER_SOURCE} games/brick_breaker/server.cpp)
 
+add_executable(snake ${SOURCES} games/snake/snake.cpp)
+add_executable(snake_server ${SOURCES} games/snake/server.cpp)
+
 find_package(SDL2 REQUIRED)
 find_package(cppzmq REQUIRED)
 find_package(nlohmann_json 3.2.0 REQUIRED)
@@ -97,6 +100,8 @@ find_package(nlohmann_json 3.2.0 REQUIRED)
 target_link_libraries(shade_engine cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
 target_link_libraries(shade_engine_server cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
 
-
 target_link_libraries(brick_breaker cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
 target_link_libraries(brick_breaker_server cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
+
+target_link_libraries(snake cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
+target_link_libraries(snake_server cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
