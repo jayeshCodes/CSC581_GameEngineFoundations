@@ -24,6 +24,7 @@
 #include "../../lib/systems/event_system.hpp"
 #include "../../lib/systems/position_update_handler.hpp"
 #include "handlers/collision_handler.hpp"
+#include "handlers/game_state_handler.hpp"
 #include "model/component.hpp"
 #include "handlers/keyboard_handler.hpp"
 #include "handlers/launch_handler.hpp"
@@ -153,6 +154,7 @@ int main(int argc, char *argv[]) {
     auto collisionHandler = gCoordinator.registerSystem<CollisionHandler>();
     auto outOfBoundHandler = gCoordinator.registerSystem<OutOfBoundHandler>();
     auto powerupHandler = gCoordinator.registerSystem<PowerupHandler>();
+    auto game_state_handler = gCoordinator.registerSystem<GameStateHandler>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());

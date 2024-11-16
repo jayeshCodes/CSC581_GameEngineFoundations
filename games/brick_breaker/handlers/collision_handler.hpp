@@ -80,7 +80,7 @@ class CollisionHandler : public System {
         float hitPosition = ballTransform.x - launcherMid;
         float normalizedHitPosition = hitPosition / (launcherTransform.w / 2);
 
-        float angleFactor = 0.5f;
+        float angleFactor = 1.0f;
         ballKinematic.velocity.x = normalizedHitPosition * angleFactor * 100;
         ballKinematic.velocity.y = -std::abs(ballKinematic.velocity.y);
     }

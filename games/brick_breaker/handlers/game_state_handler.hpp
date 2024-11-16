@@ -16,126 +16,178 @@ extern EventCoordinator eventCoordinator;
 
 class GameStateHandler : public System {
     StateSerializer serializer = [](nlohmann::json &snapshot, Entity &entity) {
+        snapshot["c"] = nlohmann::json::array();
         if (gCoordinator.hasComponent<Transform>(entity)) {
-            snapshot["c"]["type"] = "Transform";
-            snapshot["c"]["v"].emplace_back(gCoordinator.getComponent<Transform>(entity));
+            nlohmann::json j;
+            j["type"] = "Transform";
+            j["v"] = gCoordinator.getComponent<Transform>(entity);
+            snapshot["c"].emplace_back(j);
         }
         if (gCoordinator.hasComponent<Color>(entity)) {
-            snapshot["c"]["type"] = "Color";
-            snapshot["c"]["v"].emplace_back(gCoordinator.getComponent<Color>(entity));
+            nlohmann::json j;
+            j["type"] = "Color";
+            j["v"] = gCoordinator.getComponent<Color>(entity);
+            snapshot["c"].emplace_back(j);
         }
         if (gCoordinator.hasComponent<Gravity>(entity)) {
-            snapshot["c"]["type"] = "Gravity";
-            snapshot["c"]["v"].emplace_back(gCoordinator.getComponent<Gravity>(entity));
+            nlohmann::json j;
+            j["type"] = "Gravity";
+            j["v"] = gCoordinator.getComponent<Gravity>(entity);
+            snapshot["c"].emplace_back(j);
         }
         if (gCoordinator.hasComponent<CKinematic>(entity)) {
-            snapshot["c"]["type"] = "CKinematic";
-            snapshot["c"]["v"].emplace_back(gCoordinator.getComponent<CKinematic>(entity));
+            nlohmann::json j;
+            j["type"] = "CKinematic";
+            j["v"] = gCoordinator.getComponent<CKinematic>(entity);
+            snapshot["c"].emplace_back(j);
         }
         if (gCoordinator.hasComponent<Camera>(entity)) {
-            snapshot["c"]["type"] = "Camera";
-            snapshot["c"]["v"].emplace_back(gCoordinator.getComponent<Camera>(entity));
+            nlohmann::json j;
+            j["type"] = "Camera";
+            j["v"] = gCoordinator.getComponent<Camera>(entity);
+            snapshot["c"].emplace_back(j);
         }
         if (gCoordinator.hasComponent<Destroy>(entity)) {
-            snapshot["c"]["type"] = "Destroy";
-            snapshot["c"]["v"].emplace_back(gCoordinator.getComponent<Destroy>(entity));
+            nlohmann::json j;
+            j["type"] = "Destroy";
+            j["v"] = gCoordinator.getComponent<Destroy>(entity);
+            snapshot["c"].emplace_back(j);
         }
         if (gCoordinator.hasComponent<Collision>(entity)) {
-            snapshot["c"]["type"] = "Collision";
-            snapshot["c"]["v"].emplace_back(gCoordinator.getComponent<Collision>(entity));
+            nlohmann::json j;
+            j["type"] = "Collision";
+            j["v"] = gCoordinator.getComponent<Collision>(entity);
+            snapshot["c"].emplace_back(j);
         }
         if (gCoordinator.hasComponent<Receiver>(entity)) {
-            snapshot["c"]["type"] = "Receiver";
-            snapshot["c"]["v"].emplace_back(gCoordinator.getComponent<Receiver>(entity));
+            nlohmann::json j;
+            j["type"] = "Receiver";
+            j["v"] = gCoordinator.getComponent<Receiver>(entity);
+            snapshot["c"].emplace_back(j);
         }
         if (gCoordinator.hasComponent<ClientEntity>(entity)) {
-            snapshot["c"]["type"] = "ClientEntity";
-            snapshot["c"]["v"].emplace_back(gCoordinator.getComponent<ClientEntity>(entity));
+            nlohmann::json j;
+            j["type"] = "ClientEntity";
+            j["v"] = gCoordinator.getComponent<ClientEntity>(entity);
+            snapshot["c"].emplace_back(j);
         }
         if (gCoordinator.hasComponent<KeyboardMovement>(entity)) {
-            snapshot["c"]["type"] = "KeyboardMovement";
-            snapshot["c"]["v"].emplace_back(gCoordinator.getComponent<KeyboardMovement>(entity));
+            nlohmann::json j;
+            j["type"] = "KeyboardMovement";
+            j["v"] = gCoordinator.getComponent<KeyboardMovement>(entity);
+            snapshot["c"].emplace_back(j);
         }
         if (gCoordinator.hasComponent<Ball>(entity)) {
-            snapshot["c"]["type"] = "Ball";
-            snapshot["c"]["v"].emplace_back(gCoordinator.getComponent<Ball>(entity));
+            nlohmann::json j;
+            j["type"] = "Ball";
+            j["v"] = gCoordinator.getComponent<Ball>(entity);
+            snapshot["c"].emplace_back(j);
         }
         if (gCoordinator.hasComponent<Brick>(entity)) {
-            snapshot["c"]["type"] = "Brick";
-            snapshot["c"]["v"].emplace_back(gCoordinator.getComponent<Brick>(entity));
+            nlohmann::json j;
+            j["type"] = "Brick";
+            j["v"] = gCoordinator.getComponent<Brick>(entity);
+            snapshot["c"].emplace_back(j);
         }
         if (gCoordinator.hasComponent<Launcher>(entity)) {
-            snapshot["c"]["type"] = "Launcher";
-            snapshot["c"]["v"].emplace_back(gCoordinator.getComponent<Launcher>(entity));
+            nlohmann::json j;
+            j["type"] = "Launcher";
+            j["v"] = gCoordinator.getComponent<Launcher>(entity);
+            snapshot["c"].emplace_back(j);
+        }
+        if (gCoordinator.hasComponent<PowerUp>(entity)) {
+            nlohmann::json j;
+            j["type"] = "PowerUp";
+            j["v"] = gCoordinator.getComponent<PowerUp>(entity);
+            snapshot["c"].emplace_back(j);
         }
     };
 
     StateDeserializer deserializer = [](nlohmann::json &entitySnap, Entity &entity) {
         for (auto &component: entitySnap["c"]) {
             if (component["type"] == "Transform") {
-                gCoordinator.addComponent(entity, component["v"]);
+                Transform t = component["v"];
+                gCoordinator.addComponent(entity, t);
                 auto &transform = gCoordinator.getComponent<Transform>(entity);
-                transform = component["v"];
+                transform = t;
             }
             if (component["type"] == "Color") {
-                gCoordinator.addComponent(entity, component["v"]);
+                Color c = component["v"];
+                gCoordinator.addComponent(entity, c);
                 auto &color = gCoordinator.getComponent<Color>(entity);
-                color = component["v"];
+                color = c;
             }
             if (component["type"] == "Gravity") {
-                gCoordinator.addComponent(entity, component["v"]);
+                Gravity g = component["v"];
+                gCoordinator.addComponent(entity, g);
                 auto &gravity = gCoordinator.getComponent<Gravity>(entity);
-                gravity = component["v"];
+                gravity = g;
             }
             if (component["type"] == "CKinematic") {
-                gCoordinator.addComponent(entity, component["v"]);
+                CKinematic k = component["v"];
+                gCoordinator.addComponent(entity, k);
                 auto &cKinematic = gCoordinator.getComponent<CKinematic>(entity);
-                cKinematic = component["v"];
+                cKinematic = k;
             }
             if (component["type"] == "Camera") {
-                gCoordinator.addComponent(entity, component["v"]);
+                Camera c = component["v"];
+                gCoordinator.addComponent(entity, c);
                 auto &camera = gCoordinator.getComponent<Camera>(entity);
-                camera = component["v"];
+                camera = c;
             }
             if (component["type"] == "Destroy") {
-                gCoordinator.addComponent(entity, component["v"]);
+                Destroy d = component["v"];
+                gCoordinator.addComponent(entity, d);
                 auto &destroy = gCoordinator.getComponent<Destroy>(entity);
-                destroy = component["v"];
+                destroy = d;
             }
             if (component["type"] == "Collision") {
-                gCoordinator.addComponent(entity, component["v"]);
+                Collision c = component["v"];
+                gCoordinator.addComponent(entity, c);
                 auto &collision = gCoordinator.getComponent<Collision>(entity);
-                collision = component["v"];
-            }
-            if (component["type"] == "Receiver") {
-                gCoordinator.addComponent(entity, component["v"]);
-                auto &receiver = gCoordinator.getComponent<Receiver>(entity);
-                receiver = component["v"];
+                collision = c;
             }
             if (component["type"] == "ClientEntity") {
-                gCoordinator.addComponent(entity, component["v"]);
+                ClientEntity ce = component["v"];
+                gCoordinator.addComponent(entity, ce);
                 auto &clientEntity = gCoordinator.getComponent<ClientEntity>(entity);
-                clientEntity = component["v"];
+                clientEntity = ce;
             }
             if (component["type"] == "KeyboardMovement") {
-                gCoordinator.addComponent(entity, component["v"]);
+                KeyboardMovement k = component["v"];
+                gCoordinator.addComponent(entity, k);
                 auto &keyboardMovement = gCoordinator.getComponent<KeyboardMovement>(entity);
-                keyboardMovement = component["v"];
+                keyboardMovement = k;
+            }
+            if (component["type"] == "Receiver") {
+                Receiver r = component["v"];
+                gCoordinator.addComponent(entity, r);
+                auto &receiver = gCoordinator.getComponent<Receiver>(entity);
+                receiver = r;
             }
             if (component["type"] == "Ball") {
-                gCoordinator.addComponent(entity, component["v"]);
+                Ball b = component["v"];
+                gCoordinator.addComponent(entity, b);
                 auto &ball = gCoordinator.getComponent<Ball>(entity);
-                ball = component["v"];
+                ball = b;
             }
             if (component["type"] == "Brick") {
-                gCoordinator.addComponent(entity, component["v"]);
+                Brick b = component["v"];
+                gCoordinator.addComponent(entity, b);
                 auto &brick = gCoordinator.getComponent<Brick>(entity);
-                brick = component["v"];
+                brick = b;
             }
             if (component["type"] == "Launcher") {
-                gCoordinator.addComponent(entity, component["v"]);
+                Launcher l = component["v"];
+                gCoordinator.addComponent(entity, l);
                 auto &launcher = gCoordinator.getComponent<Launcher>(entity);
-                launcher = component["v"];
+                launcher = l;
+            }
+            if (component["type"] == "PowerUp") {
+                PowerUp p = component["v"];
+                gCoordinator.addComponent(entity, p);
+                auto &powerUp = gCoordinator.getComponent<PowerUp>(entity);
+                powerUp = p;
             }
         }
     };
@@ -143,16 +195,24 @@ class GameStateHandler : public System {
     EventHandler gameStartHandler = [this](const std::shared_ptr<Event> &event) {
         if (event->type == GameEvents::eventTypeToString(GameEvents::GameStart)) {
             gCoordinator.backup(serializer);
-            for (const auto entity: entities) {
-                auto &ball = gCoordinator.getComponent<Ball>(entity);
-                ball.isLaunched = true;
-            }
         }
     };
 
     EventHandler gameEndHandler = [this](const std::shared_ptr<Event> &event) {
         if (event->type == GameEvents::eventTypeToString(GameEvents::GameOver)) {
             gCoordinator.restore(deserializer);
+            eventCoordinator.clearQueue();
         }
     };
+
+public:
+    GameStateHandler() {
+        eventCoordinator.subscribe(gameStartHandler, GameEvents::eventTypeToString(GameEvents::GameStart));
+        eventCoordinator.subscribe(gameEndHandler, GameEvents::eventTypeToString(GameEvents::GameOver));
+    }
+
+    ~GameStateHandler() {
+        eventCoordinator.unsubscribe(gameStartHandler, GameEvents::eventTypeToString(GameEvents::GameStart));
+        eventCoordinator.unsubscribe(gameEndHandler, GameEvents::eventTypeToString(GameEvents::GameOver));
+    }
 };

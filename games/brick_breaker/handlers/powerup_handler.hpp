@@ -34,11 +34,9 @@ class PowerupHandler : public System {
             const GameEvents::PowerUpCollectedData data = event->data;
             auto &powerupType = data.type;
             if (powerupType == PowerUpType::Elongate) {
-                std::cout << "Elongate" << std::endl;
                 auto &launcherTransform = gCoordinator.getComponent<Transform>(launcher);
                 launcherTransform.w += 20;
                 launcherTransform.x -= 10;
-                std::cout << data.isFinal << std::endl;
                 if (data.isFinal) return;
                 Event qEvent{
                     GameEvents::eventTypeToString(GameEvents::PowerUpCollected),
@@ -47,11 +45,9 @@ class PowerupHandler : public System {
                 eventCoordinator.queueEvent(std::make_shared<Event>(qEvent), eventTimeline.getElapsedTime() + 10000,
                                             Priority::HIGH);
             } else if (powerupType == PowerUpType::Shorten) {
-                std::cout << "Shorten" << std::endl;
                 auto &launcherTransform = gCoordinator.getComponent<Transform>(launcher);
                 launcherTransform.w -= 20;
                 launcherTransform.x += 10;
-                std::cout << data.isFinal << std::endl;
                 if (data.isFinal) return;
                 Event qEvent{
                     GameEvents::eventTypeToString(GameEvents::PowerUpCollected),
@@ -60,11 +56,9 @@ class PowerupHandler : public System {
                 eventCoordinator.queueEvent(std::make_shared<Event>(qEvent), eventTimeline.getElapsedTime() + 10000,
                                             Priority::HIGH);
             } else if (powerupType == PowerUpType::SpeedUp) {
-                std::cout << "SpeedUp" << std::endl;
                 auto &ballKinematic = gCoordinator.getComponent<CKinematic>(ball);
                 ballKinematic.velocity.y *= 2.f;
                 ballKinematic.velocity.x *= 2.f;
-                std::cout << data.isFinal << std::endl;
                 if (data.isFinal) return;
                 Event qEvent{
                     GameEvents::eventTypeToString(GameEvents::PowerUpCollected),
@@ -73,11 +67,9 @@ class PowerupHandler : public System {
                 eventCoordinator.queueEvent(std::make_shared<Event>(qEvent), eventTimeline.getElapsedTime() + 10000,
                                             Priority::HIGH);
             } else if (powerupType == PowerUpType::SpeedDown) {
-                std::cout << "SpeedDown" << std::endl;
                 auto &ballKinematic = gCoordinator.getComponent<CKinematic>(ball);
                 ballKinematic.velocity.y /= 2.f;
                 ballKinematic.velocity.x /= 2.f;
-                std::cout << data.isFinal << std::endl;
                 if (data.isFinal) return;
                 Event qEvent{
                     GameEvents::eventTypeToString(GameEvents::PowerUpCollected),
