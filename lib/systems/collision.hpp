@@ -7,50 +7,43 @@ class CollisionSystem : public System {
 public:
     void update() {
         try {
-            std::cout << "\n=== Starting Collision Detection ===" << std::endl;
-
             // Get all entities with Collision component
             std::vector<Entity> entities = gCoordinator.getEntitiesWithComponent<Collision>();
-            std::cout << "Number of collidable entities: " << entities.size() << std::endl;
 
             if (entities.empty()) {
                 return;
             }
 
             // Broad phase
-            std::cout << "Starting broad phase..." << std::endl;
+
             sweepAndPrune(entities);
 
             // Narrow phase
-            std::cout << "Starting narrow phase..." << std::endl;
-            narrowPhaseCollisionAndResolution(entities);
 
-            std::cout << "=== Collision Detection Complete ===" << std::endl;
-        } catch (const std::exception& e) {
+            narrowPhaseCollisionAndResolution(entities);
+        } catch (const std::exception &e) {
             std::cerr << "Error in collision system update: " << e.what() << std::endl;
         }
     }
 
 private:
-    static void sweepAndPrune(std::vector<Entity>& entities) {
+    static void sweepAndPrune(std::vector<Entity> &entities) {
         try {
             // Sort entities based on their x position
             std::sort(entities.begin(), entities.end(), [](Entity a, Entity b) {
                 if (!gCoordinator.hasComponent<Transform>(a) || !gCoordinator.hasComponent<Transform>(b)) {
                     return false;
                 }
-                auto& transformA = gCoordinator.getComponent<Transform>(a);
-                auto& transformB = gCoordinator.getComponent<Transform>(b);
+                auto &transformA = gCoordinator.getComponent<Transform>(a);
+                auto &transformB = gCoordinator.getComponent<Transform>(b);
                 return transformA.x < transformB.x;
             });
-
-            std::cout << "Sweep and prune sorted " << entities.size() << " entities" << std::endl;
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             std::cerr << "Error in sweep and prune: " << e.what() << std::endl;
         }
     }
 
-    static void narrowPhaseCollisionAndResolution(const std::vector<Entity>& entities) {
+    static void narrowPhaseCollisionAndResolution(const std::vector<Entity> &entities) {
         for (size_t i = 0; i < entities.size(); ++i) {
             for (size_t j = i + 1; j < entities.size(); ++j) {
                 try {
@@ -62,10 +55,10 @@ private:
                         continue;
                     }
 
-                    auto& transformA = gCoordinator.getComponent<Transform>(entityA);
-                    auto& transformB = gCoordinator.getComponent<Transform>(entityB);
-                    auto& collisionA = gCoordinator.getComponent<Collision>(entityA);
-                    auto& collisionB = gCoordinator.getComponent<Collision>(entityB);
+                    auto &transformA = gCoordinator.getComponent<Transform>(entityA);
+                    auto &transformB = gCoordinator.getComponent<Transform>(entityB);
+                    auto &collisionA = gCoordinator.getComponent<Collision>(entityA);
+                    auto &collisionB = gCoordinator.getComponent<Collision>(entityB);
 
                     // Skip if same layer
                     if (collisionA.layer == collisionB.layer) {
@@ -74,19 +67,19 @@ private:
 
                     // Check collision
                     if (checkAABBCollision(transformA, transformB)) {
-                        std::cout << "Collision detected between entities " << entityA << " and " << entityB << std::endl;
-
                         // Only emit collision event for moving objects (e.g., bubbles) colliding with boundaries
                         bool isABubble = gCoordinator.hasComponent<BubbleProjectile>(entityA);
                         bool isBBubble = gCoordinator.hasComponent<BubbleProjectile>(entityB);
 
                         if (isABubble || isBBubble) {
-                            Event event{eventTypeToString(EventType::EntityCollided),
-                                      EntityCollidedData{entityA, entityB}};
+                            Event event{
+                                eventTypeToString(EventType::EntityCollided),
+                                EntityCollidedData{entityA, entityB}
+                            };
                             eventCoordinator.emit(std::make_shared<Event>(event));
                         }
                     }
-                } catch (const std::exception& e) {
+                } catch (const std::exception &e) {
                     std::cerr << "Error processing collision pair: " << e.what() << std::endl;
                 }
             }
@@ -98,7 +91,7 @@ private:
                gCoordinator.hasComponent<Collision>(entity);
     }
 
-    static bool checkAABBCollision(const Transform& a, const Transform& b) {
+    static bool checkAABBCollision(const Transform &a, const Transform &b) {
         return (a.x < b.x + b.w &&
                 a.x + a.w > b.x &&
                 a.y < b.y + b.h &&

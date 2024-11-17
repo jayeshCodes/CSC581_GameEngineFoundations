@@ -1,6 +1,7 @@
 #include "init.hpp"
 
 
+// lib/core/init.cpp
 void initSDL() {
     //Name the window
     std::string windowName = std::string(ENGINE_NAME) + " " + std::string(ENGINE_VERSION);
@@ -17,6 +18,12 @@ void initSDL() {
         exit(1);
     }
 
+    // Initialize TTF
+    if (TTF_Init() < 0) {
+        std::cout << "Couldn't initialize SDL_ttf: " << TTF_GetError();
+        exit(1);
+    }
+
     //If SDL initialized successfully, attempt to create the SDL window.
     app->window = SDL_CreateWindow(windowName.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH,
                                    SCREEN_HEIGHT, windowFlags);
@@ -26,7 +33,6 @@ void initSDL() {
         std::cout << "Failed to open Window: " << SDL_GetError();
         exit(1);
     }
-
 
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 
@@ -38,10 +44,18 @@ void initSDL() {
         std::cout << "Failed to create renderer: " << SDL_GetError();
         exit(1);
     }
+
+    // Load the default font
+    auto* fontHelper = FontHelper::getInstance();
+    if (!fontHelper->loadFont("game_font", "assets/fonts/Arial.ttf", 24)) {
+        std::cout << "Failed to load font" << std::endl;
+        // Don't exit here as the game can still run without font
+    }
 }
 
 void cleanupSDL() {
     SDL_DestroyRenderer(app->renderer);
     SDL_DestroyWindow(app->window);
+    TTF_Quit();
     SDL_Quit();
 }

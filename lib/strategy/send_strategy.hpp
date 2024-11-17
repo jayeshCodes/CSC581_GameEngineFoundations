@@ -58,9 +58,6 @@ public:
             if (gCoordinator.hasComponent<Destroy>(entity)) {
                 json_message.components.emplace_back(gCoordinator.getComponent<Destroy>(entity));
             }
-            if(gCoordinator.hasComponent<VerticalBoost>(entity)) {
-                json_message.components.emplace_back(gCoordinator.getComponent<VerticalBoost>(entity));
-            }
             json = json_message;
         }
         else if (type == UPDATE) {

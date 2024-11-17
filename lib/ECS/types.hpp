@@ -29,11 +29,11 @@ namespace Components {
     struct RigidBody;
     struct Dash;
     struct Stomp;
-    struct VerticalBoost;
     struct Bubble;
     struct BubbleShooter;
     struct BubbleProjectile;
     struct BubbleGridManager;
+    struct Score;
 }
 
 // Giving an alias to the data type and defining the maximum number of entities

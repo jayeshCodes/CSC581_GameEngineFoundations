@@ -31,7 +31,7 @@
 #include "lib/systems/collision_handler.hpp"
 #include "lib/systems/entity_created_handler.hpp"
 #include "lib/systems/position_update_handler.hpp"
-#include "lib/systems/replay_handler.hpp"
+#include "lib/systems/score_display.hpp"
 
 class ReceiverSystem;
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
@@ -90,9 +90,7 @@ void collision_update(Timeline &timeline, CollisionSystem *collisionSystem) {
             float dT = (currentTime - lastTime) / 1000.f;
             lastTime = currentTime;
 
-            std::cout << "\n=== Starting Collision Update ===" << std::endl;
             collisionSystem->update();
-            std::cout << "=== Collision Update Complete ===" << std::endl;
 
             // Add a small sleep to reduce CPU usage and give other threads a chance
             std::this_thread::sleep_for(std::chrono::milliseconds(16)); // ~60 fps
@@ -142,7 +140,6 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<CKinematic>();
     gCoordinator.registerComponent<Camera>();
     gCoordinator.registerComponent<Receiver>();
-    gCoordinator.registerComponent<MovingPlatform>();
     gCoordinator.registerComponent<ClientEntity>();
     gCoordinator.registerComponent<Destroy>();
     gCoordinator.registerComponent<Collision>();
@@ -151,7 +148,9 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<BubbleShooter>();
     gCoordinator.registerComponent<BubbleProjectile>();
     gCoordinator.registerComponent<BubbleGridManager>();
-    gCoordinator.registerComponent<VerticalBoost>();
+    // Debug component registration
+    gCoordinator.registerComponent<Score>();
+    std::cout << "Score component registered with type ID: " << gCoordinator.getComponentType<Score>() << std::endl;
 
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
@@ -165,10 +164,10 @@ int main(int argc, char *argv[]) {
     auto eventSystem = gCoordinator.registerSystem<EventSystem>();
     auto entityCreatedSystem = gCoordinator.registerSystem<EntityCreatedHandler>();
     auto positionUpdateHandler = gCoordinator.registerSystem<PositionUpdateHandler>();
-    auto replayHandler = gCoordinator.registerSystem<ReplayHandler>();
     auto bubbleShooterSystem = gCoordinator.registerSystem<BubbleShooterSystem>();
     auto bubbleMovementSystem = gCoordinator.registerSystem<BubbleMovementSystem>();
     auto bubbleGridSystem = gCoordinator.registerSystem<BubbleGridSystem>();
+    auto scoreDisplaySystem = gCoordinator.registerSystem<ScoreDisplaySystem>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
@@ -221,7 +220,12 @@ int main(int argc, char *argv[]) {
     Signature bubbleGridSignature;
     bubbleGridSignature.set(gCoordinator.getComponentType<Transform>());
     bubbleGridSignature.set(gCoordinator.getComponentType<Color>());
+    bubbleGridSignature.set(gCoordinator.getComponentType<Score>());
     gCoordinator.setSystemSignature<BubbleGridSystem>(bubbleGridSignature);
+
+    Signature scoreDisplaySignature;
+    scoreDisplaySignature.set(gCoordinator.getComponentType<Score>());
+    gCoordinator.setSystemSignature<ScoreDisplaySystem>(scoreDisplaySignature);
 
     zmq::socket_t reply_socket(context, ZMQ_DEALER);
     std::string id = identity + "R";
@@ -286,6 +290,30 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(rightBoundary, CKinematic{}); // Required for collision system
 
 
+    Entity scoreEntity = gCoordinator.createEntity();
+    std::cout << "Created score entity: " << scoreEntity << std::endl;
+
+    Score initialScore{};  // Initialize with default values
+    initialScore.value = 0;
+    initialScore.multiplier = 1;
+    initialScore.bubbleScore = 100;
+    initialScore.comboBonus = 50;
+
+    try {
+        gCoordinator.addComponent(scoreEntity, initialScore);
+        std::cout << "Successfully added Score component to entity " << scoreEntity << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Error adding Score component: " << e.what() << std::endl;
+    }
+
+    // Verify the component was added
+    if (gCoordinator.hasComponent<Score>(scoreEntity)) {
+        std::cout << "Score component verified on entity " << scoreEntity << std::endl;
+    } else {
+        std::cerr << "Failed to verify Score component on entity " << scoreEntity << std::endl;
+    }
+
+
     Entity mainCamera = gCoordinator.createEntity();
     gCoordinator.addComponent(mainCamera, Camera{0, 0, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT});
 
@@ -328,24 +356,17 @@ int main(int argc, char *argv[]) {
         dt = std::max(dt, engine_constants::FRAME_RATE); // Cap the maximum dt to 60fps
 
         try {
-            std::cout << "Starting frame update" << std::endl;
-
-            // Debug entity count
-            std::cout << "Entities to render: " << renderSystem->entities.size() << std::endl;
 
             kinematicSystem->update(dt);
             // collisionSystem->update();
             bubbleMovementSystem->update(  dt);
             destroySystem->update();
             cameraSystem->update(shooter);
-
-            // Debug render
-            std::cout << "About to render frame" << std::endl;
             renderSystem->update(mainCamera);
 
             eventSystem->update();
-            replayHandler->update();
             bubbleShooterSystem->update(dt);
+            scoreDisplaySystem->update();
         } catch (const std::exception& e) {
             std::cerr << "Error in game loop: " << e.what() << std::endl;
         }

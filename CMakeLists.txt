@@ -51,7 +51,6 @@ set(SOURCES
         lib/data_structures/ThreadSafePriorityQueue.hpp
         lib/systems/keyboard.hpp
         lib/systems/collision_handler.hpp
-        lib/systems/vertical_boost_handler.hpp
         lib/systems/event_system.hpp
         lib/systems/respawn.hpp
         lib/helpers/network_helper.hpp
@@ -59,20 +58,39 @@ set(SOURCES
         lib/systems/entity_created_handler.hpp
         lib/systems/position_update_handler.hpp
         lib/systems/dash.hpp
-        lib/systems/combo_event_handler.hpp
         lib/systems/replay_handler.hpp
-        lib/systems/position.hpp)
-
+        lib/systems/position.hpp
+        lib/helpers/font_helper.cpp)
 
 add_executable(shade_engine ${SOURCES} main.cpp
         lib/systems/bubble_shooter.hpp
         lib/systems/bubble_movement.hpp
-        lib/systems/bubble_grid.hpp)
-add_executable(shade_engine_server ${SOURCES} server.cpp)
+        lib/systems/bubble_grid.hpp
+        lib/systems/score_display.hpp
+        lib/helpers/font_helper.hpp
+        lib/helpers/font_helper.cpp)
+add_executable(shade_engine_server ${SOURCES} server.cpp
+        lib/helpers/font_helper.cpp)
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 find_package(SDL2 REQUIRED)
+find_package(SDL2_ttf REQUIRED)
 find_package(cppzmq REQUIRED)
 find_package(nlohmann_json 3.2.0 REQUIRED)
 
-target_link_libraries(shade_engine cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
-target_link_libraries(shade_engine_server cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
+# Combine all libraries for shade_engine in a single command
+target_link_libraries(shade_engine PRIVATE
+        SDL2_ttf::SDL2_ttf
+        SDL2::SDL2
+        cppzmq
+        nlohmann_json::nlohmann_json
+)
+
+# Link libraries for shade_engine_server
+target_link_libraries(shade_engine_server PRIVATE
+        SDL2::SDL2
+        cppzmq
+        nlohmann_json::nlohmann_json
+)
+

@@ -8,7 +8,7 @@
 
 using SERIALIZABLE_COMPONENTS = std::variant<Transform, Color, RigidBody, Collision, CKinematic, MovingPlatform, Destroy
     , Jump
-    , Respawnable, Camera, KeyboardMovement, Gravity, VerticalBoost>;
+    , Respawnable, Camera, KeyboardMovement, Gravity>;
 
 struct SimpleMessage {
     Message type;
@@ -48,8 +48,6 @@ inline void to_json(nlohmann::json &j,
             j["comp"]["keyboardMovement"] = std::get<KeyboardMovement>(component);
         } else if (std::holds_alternative<Gravity>(component)) {
             j["comp"]["gravity"] = std::get<Gravity>(component);
-        } else if (std::holds_alternative<VerticalBoost>(component)) {
-            j["comp"]["vb"] = std::get<VerticalBoost>(component);
         }
     }
 }
@@ -94,9 +92,6 @@ inline void from_json(const nlohmann::json &j, std::vector<SERIALIZABLE_COMPONEN
         }
         if (comp.contains("keyboardMovement")) {
             components.emplace_back(comp.at("keyboardMovement").get<KeyboardMovement>());
-        }
-        if (comp.contains("vb")) {
-            components.emplace_back(comp.at("vb").get<VerticalBoost>());
         }
     }
 }

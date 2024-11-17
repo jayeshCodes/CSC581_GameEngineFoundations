@@ -218,11 +218,6 @@ struct Stomp {
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Stomp, isStomping, stompSpeed, stompDuration, stompCooldown, stompTimeRemaining,
                                    cooldownTimeRemaining)
 
-struct VerticalBoost {
-    float velocity = -100.f;
-};
-
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(VerticalBoost, velocity)
 
 // Represents a bubble in the grid
 struct Bubble {
@@ -270,6 +265,20 @@ struct BubbleGridManager {
     int score = 0;
 };
 
+// Component for the score system
+struct Score {
+    int value = 0;
+    int multiplier = 1;
+    int bubbleScore = 100; // Score for popping a bubble
+    int comboBonus = 50; // Bonus for popping multiple bubbles in a row (more than 3)
+
+    Score() = default;
+    Score(int value, int multiplier, int bubbleScore, int comboBonus) : value(value), multiplier(multiplier),
+                                                                       bubbleScore(bubbleScore), comboBonus(comboBonus) {}
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Score, value, multiplier, bubbleScore, comboBonus)
+
 using ALL_COMPONENTS = std::variant<Transform, Color, CKinematic, Camera, Gravity, KeyboardMovement, Server, Receiver,
     MovingPlatform, ServerEntity, ClientEntity, Destroy, Collision, Jump, Respawnable, RigidBody, Dash, Stomp,
-    VerticalBoost, Bubble, BubbleProjectile, BubbleShooter, BubbleGridManager>;
+    Bubble, BubbleProjectile, BubbleShooter, BubbleGridManager, Score>;

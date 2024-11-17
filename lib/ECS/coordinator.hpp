@@ -199,9 +199,6 @@ public:
         if (component_manager->hasComponent<Camera>(entity)) {
             snapshot.components.emplace_back(component_manager->getComponent<Camera>(entity));
         }
-        if (component_manager->hasComponent<VerticalBoost>(entity)) {
-            snapshot.components.emplace_back(component_manager->getComponent<VerticalBoost>(entity));
-        }
         if (component_manager->hasComponent<Stomp>(entity)) {
             snapshot.components.emplace_back(component_manager->getComponent<Stomp>(entity));
         }
@@ -278,11 +275,6 @@ public:
                 addComponent(entitySnap.entity, std::get<Camera>(component));
                 auto &camera = getComponent<Camera>(entitySnap.entity);
                 camera = std::get<Camera>(component);
-            }
-            if (std::holds_alternative<VerticalBoost>(component)) {
-                addComponent(entitySnap.entity, std::get<VerticalBoost>(component));
-                auto &verticalBoost = getComponent<VerticalBoost>(entitySnap.entity);
-                verticalBoost = std::get<VerticalBoost>(component);
             }
             if (std::holds_alternative<Stomp>(component)) {
                 addComponent(entitySnap.entity, std::get<Stomp>(component));

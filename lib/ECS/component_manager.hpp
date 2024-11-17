@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include "types.hpp"
 #include  "component_array.hpp"
+#include <iostream>
 
 class ComponentManager {
 private:
@@ -18,7 +19,6 @@ private:
     std::shared_ptr<ComponentArray<T> > getComponentArray() {
         const char *typeName = typeid(T).name();
 
-
         assert(component_types.find(typeName) != component_types.end() && "Component not registered before use.");
 
         return std::static_pointer_cast<ComponentArray<T> >(component_arrays[typeName]);
@@ -28,6 +28,7 @@ public:
     template<typename T>
     void registerComponent() {
         const char *typeName = typeid(T).name();
+
 
         assert(component_types.find(typeName) == component_types.end() && "Registering component type more than once.");
 
@@ -66,7 +67,7 @@ public:
     }
 
     void entityDestroyed(Entity entity) {
-        for (auto const &pair : component_arrays) {
+        for (auto const &pair: component_arrays) {
             auto const &component = pair.second;
 
             component->entityDestroyed(entity);

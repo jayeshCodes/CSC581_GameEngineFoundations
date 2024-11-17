@@ -51,11 +51,11 @@ private:
         col = std::clamp(col, 0, COLS - 1);
         row = std::clamp(row, 0, ROWS - 1);
 
-        std::cout << "World to Grid: (" << x << ", " << y << ") -> (" << row << ", " << col << ")" << std::endl;
+        // std::cout << "World to Grid: (" << x << ", " << y << ") -> (" << row << ", " << col << ")" << std::endl;
         return {row, col};
     }
 
-    SDL_FPoint gridToWorld(const GridPosition& pos) {
+    SDL_FPoint gridToWorld(const GridPosition &pos) {
         return {
             GRID_OFFSET_X + (pos.col * GRID_SIZE),
             GRID_OFFSET_Y + (pos.row * GRID_SIZE)
@@ -63,9 +63,10 @@ private:
     }
 
     // Find empty spot in expanding radius
-    GridPosition findEmptyPosition(const GridPosition& startPos) {
+    GridPosition findEmptyPosition(const GridPosition &startPos) {
         // Check in expanding rings
-        for (int radius = 1; radius <= 3; radius++) {  // Check up to 3 cells away
+        for (int radius = 1; radius <= 3; radius++) {
+            // Check up to 3 cells away
             for (int dr = -radius; dr <= radius; dr++) {
                 for (int dc = -radius; dc <= radius; dc++) {
                     // Only check positions exactly 'radius' cells away
@@ -77,12 +78,12 @@ private:
                             newCol >= 0 && newCol < COLS &&
                             grid[newRow][newCol] == INVALID_ENTITY) {
                             return {newRow, newCol};
-                            }
+                        }
                     }
                 }
             }
         }
-        return {-1, -1};  // No position found
+        return {-1, -1}; // No position found
     }
 
     std::vector<GridPosition> getNeighbors(int row, int col) {
@@ -157,13 +158,24 @@ private:
         return matches;
     }
 
-    void removeBubbles(const std::vector<Entity> &bubbles) {
-        for (Entity bubble: bubbles) {
-            auto &transform = gCoordinator.getComponent<Transform>(bubble);
-            GridPosition pos = worldToGrid(transform.x, transform.y);
-            grid[pos.row][pos.col] = INVALID_ENTITY;
-            gCoordinator.addComponent<Destroy>(bubble, Destroy{});
-            gCoordinator.getComponent<Destroy>(bubble).destroy = true;
+    void removeBubbles(const std::vector<Entity>& bubbles) {
+        try {
+            // Update score before removing bubbles
+            updateScore(bubbles);
+
+            // Then remove the bubbles
+            for (Entity bubble : bubbles) {
+                auto& transform = gCoordinator.getComponent<Transform>(bubble);
+                GridPosition pos = worldToGrid(transform.x, transform.y);
+                grid[pos.row][pos.col] = INVALID_ENTITY;
+                gCoordinator.addComponent<Destroy>(bubble, Destroy{});
+                gCoordinator.getComponent<Destroy>(bubble).destroy = true;
+            }
+
+            // Handle floating bubbles after removal
+            handleFloatingBubbles();
+        } catch (const std::exception& e) {
+            std::cerr << "Error removing bubbles: " << e.what() << std::endl;
         }
     }
 
@@ -240,13 +252,13 @@ private:
 public:
     BubbleGridSystem() {
         grid.resize(ROWS, std::vector<Entity>(COLS, INVALID_ENTITY));
-        std::cout << "Grid dimensions: " << ROWS << "x" << COLS << std::endl;
-        std::cout << "Grid offset: (" << GRID_OFFSET_X << ", " << GRID_OFFSET_Y << ")" << std::endl;
+        // std::cout << "Grid dimensions: " << ROWS << "x" << COLS << std::endl;
+        // std::cout << "Grid offset: (" << GRID_OFFSET_X << ", " << GRID_OFFSET_Y << ")" << std::endl;
     }
 
     void addBubble(Entity entity) {
         try {
-            auto& transform = gCoordinator.getComponent<Transform>(entity);
+            auto &transform = gCoordinator.getComponent<Transform>(entity);
 
             // Get initial grid position
             GridPosition pos = worldToGrid(transform.x, transform.y);
@@ -254,7 +266,8 @@ public:
             // Check if position is occupied
             if (grid[pos.row][pos.col] != INVALID_ENTITY) {
                 GridPosition newPos = findEmptyPosition(pos);
-                if (newPos.row >= 0) {  // Valid position found
+                if (newPos.row >= 0) {
+                    // Valid position found
                     pos = newPos;
                     // Update transform to match grid position
                     SDL_FPoint worldPos = gridToWorld(pos);
@@ -269,7 +282,7 @@ public:
             // Add to grid
             grid[pos.row][pos.col] = entity;
 
-            std::cout << "Placed bubble at grid position: (" << pos.row << ", " << pos.col << ")" << std::endl;
+            // std::cout << "Placed bubble at grid position: (" << pos.row << ", " << pos.col << ")" << std::endl;
 
             // Check for matches
             auto matches = findMatchingGroup(entity);
@@ -277,8 +290,56 @@ public:
                 removeBubbles(matches);
                 handleFloatingBubbles();
             }
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             std::cout << "Error in addBubble: " << e.what() << std::endl;
+        }
+    }
+
+    // Modify BubbleGridSystem to include scoring
+    void updateScore(const std::vector<Entity>& matches) {
+        try {
+            std::cout << "Updating score for " << matches.size() << " matches" << std::endl;
+
+            auto scoreEntities = gCoordinator.getEntitiesWithComponent<Score>();
+            if (scoreEntities.empty()) {
+                std::cerr << "No score entities found" << std::endl;
+                return;
+            }
+
+            Entity scoreEntity = scoreEntities[0];
+            auto& score = gCoordinator.getComponent<Score>(scoreEntity);
+
+            // Calculate score for this match
+            int matchSize = static_cast<int>(matches.size());
+            if (matchSize >= 3) {
+                // Base score calculation
+                int baseScore = score.bubbleScore * matchSize;
+
+                // Bonus points for matches larger than 3
+                int comboBonus = 0;
+                if (matchSize > 3) {
+                    comboBonus = (matchSize - 3) * score.comboBonus;
+                }
+
+                // Multiplier logic - increases with larger matches
+                // For example: 3 bubbles = 1x, 4 bubbles = 1.5x, 5 bubbles = 2x, etc.
+                float matchMultiplier = 1.0f + (matchSize - 3) * 0.5f;
+
+                int newScore = static_cast<int>((baseScore + comboBonus) * matchMultiplier);
+
+                std::cout << "Score update:"
+                          << "\n  Match size: " << matchSize
+                          << "\n  Base score: " << baseScore
+                          << "\n  Combo bonus: " << comboBonus
+                          << "\n  Match multiplier: " << matchMultiplier
+                          << "\n  Total added: " << newScore
+                          << "\n  Previous score: " << score.value
+                          << "\n  New total: " << (score.value + newScore) << std::endl;
+
+                score.value += newScore;
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "Error updating score: " << e.what() << std::endl;
         }
     }
 };
