@@ -21,6 +21,7 @@ public:
 
         // Loop through all entities to render them
         for (const Entity entity: entities) {
+            if(!gCoordinator.hasComponent<Transform>(entity)) return;
             const auto &transform = gCoordinator.getComponent<Transform>(entity);
             const auto &color = gCoordinator.getComponent<Color>(entity);
 

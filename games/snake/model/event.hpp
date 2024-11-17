@@ -13,7 +13,10 @@ namespace GameEvents {
         Left,
         Right,
         Top,
-        Down
+        Down,
+        FoodEaten,
+        GameStart,
+        GameEnd
     };
 
     inline std::string eventTypeToString(EventType type) {
@@ -28,6 +31,12 @@ namespace GameEvents {
                 return "Top";
             case Down:
                 return "Down";
+            case FoodEaten:
+                return "FoodEaten";
+            case GameStart:
+                return "GameStart";
+            case GameEnd:
+                return "GameEnd";
             default: return "Unknown";
         }
     }
@@ -36,5 +45,10 @@ namespace GameEvents {
         SDL_Keycode key;
     };
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(EntityInputData, key)
+
+    struct GameStartData {
+        int length;
+    };
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(GameStartData, length)
 
 }

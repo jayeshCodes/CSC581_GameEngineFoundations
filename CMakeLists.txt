@@ -88,9 +88,13 @@ set (SNAKE_SOURCE
         games/snake/model/event.hpp
         games/snake/systems/receiver.hpp
         games/snake/systems/client.hpp
-        games/snake/handlers/movement_handler.hpp
         games/snake/handlers/keyboard_handler.hpp
         games/snake/model/components.hpp
+        games/snake/systems/move.hpp
+        games/snake/systems/move.hpp
+        games/snake/helpers/quantizer.hpp
+        games/snake/handlers/food_handler.hpp
+        games/snake/handlers/collision_handler.hpp
 )
 
 

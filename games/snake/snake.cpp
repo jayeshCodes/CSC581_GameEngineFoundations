@@ -21,12 +21,15 @@
 #include "../../lib/strategy/send_strategy.hpp"
 #include "../../lib/systems/event_system.hpp"
 #include "../../lib/systems/position_update_handler.hpp"
+#include "handlers/food_handler.hpp"
 #include "handlers/keyboard_handler.hpp"
-#include "handlers/movement_handler.hpp"
+#include "helpers/quantizer.hpp"
 #include "model/components.hpp"
 #include "systems/client.hpp"
 #include "systems/keyboard_movement.hpp"
+#include "systems/move.hpp"
 #include "systems/receiver.hpp"
+#include "handlers/collision_handler.hpp"
 
 void catch_signals() {
     std::signal(SIGINT, [](int signal) {
@@ -86,6 +89,8 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Destroy>();
     gCoordinator.registerComponent<Collision>();
     gCoordinator.registerComponent<Snake>();
+    gCoordinator.registerComponent<Map>();
+    gCoordinator.registerComponent<Food>();
 
     // Systems
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
@@ -97,12 +102,14 @@ int main(int argc, char *argv[]) {
     auto receiverSystem = gCoordinator.registerSystem<ReceiverSystem>();
     auto eventSystem = gCoordinator.registerSystem<EventSystem>();
     auto keyboardMovementSystem = gCoordinator.registerSystem<KeyboardMovementSystem>();
+    auto moveSystem = gCoordinator.registerSystem<MoveSystem>();
 
 
     // Handlers
     auto positionUpdateHandler = gCoordinator.registerSystem<PositionUpdateHandler>();
     auto keyboardHandler = gCoordinator.registerSystem<KeyboardHandler>();
-    auto movementHandler = gCoordinator.registerSystem<MovementHandler>();
+    auto foodHandler = gCoordinator.registerSystem<FoodHandler>();
+    auto collisionHandler = gCoordinator.registerSystem<CollisionHandler>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
@@ -114,11 +121,10 @@ int main(int argc, char *argv[]) {
     kinematicSignature.set(gCoordinator.getComponentType<CKinematic>());
     gCoordinator.setSystemSignature<KinematicSystem>(kinematicSignature);
 
-    Signature movementHandlerSignature;
-    movementHandlerSignature.set(gCoordinator.getComponentType<Transform>());
-    movementHandlerSignature.set(gCoordinator.getComponentType<CKinematic>());
-    movementHandlerSignature.set(gCoordinator.getComponentType<Snake>());
-    gCoordinator.setSystemSignature<MovementHandler>(movementHandlerSignature);
+    Signature moveSig;
+    moveSig.set(gCoordinator.getComponentType<Transform>());
+    moveSig.set(gCoordinator.getComponentType<Snake>());
+    gCoordinator.setSystemSignature<MoveSystem>(moveSig);
 
 
     Signature cameraSignature;
@@ -164,14 +170,22 @@ int main(int argc, char *argv[]) {
         }
     });
 
+    const int length = 20;
+    const int rows = screen_height / length;
+    const int cols = screen_width / length;
+
+    const auto startPos = SnakeQuantizer::dequantize(rows / 2, cols / 2, length);
+
     Entity player = gCoordinator.createEntity();
-    gCoordinator.addComponent(player, Transform{screen_width / 2.f, screen_height / 2.f, 20, 20, 0, 1});
-    gCoordinator.addComponent(player, Color{shade_color::Red});
+    gCoordinator.addComponent(player, Transform{startPos[0], startPos[1], length, length, 0, 1});
+    gCoordinator.addComponent(player, Color{shade_color::Black});
     gCoordinator.addComponent(player, CKinematic{SDL_FPoint{150, 0}});
     gCoordinator.addComponent(player, Collision{true, false, CollisionLayer::PLAYER});
     gCoordinator.addComponent(player, Destroy{});
-    gCoordinator.addComponent(player, Snake{1});
+    gCoordinator.addComponent(player, Snake{length});
 
+    Event startEvent{eventTypeToString(GameEvents::EventType::GameStart), GameEvents::GameStartData{length}};
+    eventCoordinator.emit(std::make_shared<Event>(startEvent));
 
     std::thread t3([&collisionSystem, &destroySystem] {
         auto current_time = gameTimeline.getElapsedTime();
@@ -180,7 +194,7 @@ int main(int argc, char *argv[]) {
             destroySystem->update();
 
             auto elapsed_time = gameTimeline.getElapsedTime();
-            auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - current_time); // Ensure float division
+            auto time_to_sleep = engine_constants::FRAME_RATE - (elapsed_time - current_time); // Ensure float division
             if (time_to_sleep > 0) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(time_to_sleep * 1000)));
             }
@@ -189,21 +203,22 @@ int main(int argc, char *argv[]) {
 
     while (GameManager::getInstance()->gameRunning) {
         doInput();
-        prepareScene();
+        prepareScene(shade_color::White);
 
         auto current_time = gameTimeline.getElapsedTime();
         auto dt = (current_time - last_time) / 1000.f; // Ensure this is in seconds
 
         last_time = current_time;
 
-        dt = std::max(dt, engine_constants::FRAME_RATE); // Cap the maximum dt to 60fps
+        dt = std::max(dt, 1 / 20.f); // Cap the maximum dt to 60fps
 
-        kinematicSystem->update(dt);
+        // kinematicSystem->update(dt);
 
-        cameraSystem->update(player);
+        cameraSystem->update(INVALID_ENTITY);
         renderSystem->update(INVALID_ENTITY);
         eventSystem->update();
         keyboardMovementSystem->update();
+        moveSystem->update(dt);
 
         auto elapsed_time = gameTimeline.getElapsedTime();
         auto time_to_sleep = engine_constants::FRAME_RATE - (elapsed_time - current_time); // Ensure float division

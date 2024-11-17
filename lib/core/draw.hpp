@@ -6,6 +6,6 @@
 extern App* app;
 
 // Prepare scene to be rendered to window
-void prepareScene(void);
+void prepareScene(SDL_Color backgroundColor);
 // Render scene to window
 void presentScene(void);

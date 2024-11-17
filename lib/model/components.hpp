@@ -158,7 +158,9 @@ enum CollisionLayer {
     BRICK,
     LAUNCHER,
     POWERUP,
-    BALL
+    BALL,
+    FOOD,
+    SNAKE
 };
 
 struct Collision {

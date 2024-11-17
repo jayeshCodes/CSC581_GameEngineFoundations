@@ -11,6 +11,7 @@ extern Coordinator gCoordinator;
 class CameraSystem : public System {
 public:
     void update(Entity mainChar) {
+        if(mainChar == INVALID_ENTITY) return;
         auto &playerTransform = gCoordinator.getComponent<Transform>(mainChar);
         for (auto &entity: entities) {
             auto &[x, y, zoom, rotation, viewport_width, viewport_height] = gCoordinator.getComponent<Camera>(entity);

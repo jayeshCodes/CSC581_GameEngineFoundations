@@ -292,7 +292,7 @@ int main(int argc, char *argv[]) {
 
     while (GameManager::getInstance()->gameRunning) {
         doInput();
-        prepareScene();
+        prepareScene(shade_color::Cyan);
 
         auto current_time = gameTimeline.getElapsedTime();
         auto dt = (current_time - last_time) / 1000.f; // Ensure this is in seconds
