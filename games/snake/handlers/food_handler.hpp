@@ -23,8 +23,8 @@ class FoodHandler : public System {
     std::vector<float> generateRandomSpawnPoint(int length) {
         int max_rows = screen_height / length;
         int max_cols = screen_width / length;
-        int rRow = Random::generateRandomInt(0, max_rows - 1);
-        int rCol = Random::generateRandomInt(0, max_cols - 1);
+        int rRow = Random::generateRandomInt(1, max_rows - 2);
+        int rCol = Random::generateRandomInt(1, max_cols - 2);
         return SnakeQuantizer::dequantize(rRow, rCol, length);
     }
 

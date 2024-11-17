@@ -16,7 +16,8 @@ namespace GameEvents {
         Down,
         FoodEaten,
         GameStart,
-        GameEnd
+        GameEnd,
+        OutOfBounds,
     };
 
     inline std::string eventTypeToString(EventType type) {

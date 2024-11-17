@@ -27,3 +27,11 @@ struct Food {
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Food, length)
+
+struct Text {
+    std::string text;
+    SDL_Texture* font;
+    SDL_Rect rect;
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Text, text)

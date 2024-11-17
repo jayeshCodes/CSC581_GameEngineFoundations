@@ -14,6 +14,8 @@
 
 extern Coordinator gCoordinator;
 extern EventCoordinator eventCoordinator;
+extern int screen_width;
+extern int screen_height;
 
 enum Direction {
     UP,
@@ -27,9 +29,11 @@ class MoveSystem : public System {
     Direction currentDirection = Direction::RIGHT;
     float updateTime = 0.75f;
     float currentTime = 0.0f;
+    bool gameOver = false;
 
     EventHandler gameStartHandler = [this](const std::shared_ptr<Event> (&event)) {
         if (event->type == GameEvents::eventTypeToString(GameEvents::GameStart)) {
+            snakeParts.clear();
             snakeParts.emplace_back(*entities.begin());
         }
     };
@@ -110,6 +114,7 @@ public:
     }
 
     void update(float dt) {
+        if(gameOver) return;
         currentTime += dt;
 
         while (currentTime >= updateTime) {

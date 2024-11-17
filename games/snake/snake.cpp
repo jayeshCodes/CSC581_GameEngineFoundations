@@ -1,6 +1,7 @@
 #include <csignal>
 #include <memory>
 #include <thread>
+#include <SDL2/SDL_ttf.h>
 
 
 #include "../../main.hpp"
@@ -30,6 +31,9 @@
 #include "systems/move.hpp"
 #include "systems/receiver.hpp"
 #include "handlers/collision_handler.hpp"
+#include "handlers/game_state_handler.hpp"
+#include "systems/oob_detector.hpp"
+#include "systems/text_renderer.hpp"
 
 void catch_signals() {
     std::signal(SIGINT, [](int signal) {
@@ -56,6 +60,7 @@ int main(int argc, char *argv[]) {
     screen_width = 640;
 
     initSDL(screen_width, screen_height);
+    TTF_Init();
     GameManager::getInstance()->gameRunning = true;
     catch_signals();
 
@@ -91,6 +96,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Snake>();
     gCoordinator.registerComponent<Map>();
     gCoordinator.registerComponent<Food>();
+    gCoordinator.registerComponent<Text>();
 
     // Systems
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
@@ -103,6 +109,9 @@ int main(int argc, char *argv[]) {
     auto eventSystem = gCoordinator.registerSystem<EventSystem>();
     auto keyboardMovementSystem = gCoordinator.registerSystem<KeyboardMovementSystem>();
     auto moveSystem = gCoordinator.registerSystem<MoveSystem>();
+    auto oobSystem = gCoordinator.registerSystem<OOBDetectorSystem>();
+    auto textRenderer = gCoordinator.registerSystem<TextRenderer>();
+    auto gameStartHandler = gCoordinator.registerSystem<GameStateHandler>();
 
 
     // Handlers
@@ -126,6 +135,15 @@ int main(int argc, char *argv[]) {
     moveSig.set(gCoordinator.getComponentType<Snake>());
     gCoordinator.setSystemSignature<MoveSystem>(moveSig);
 
+    Signature oobSystemSig;
+    oobSystemSig.set(gCoordinator.getComponentType<Snake>());
+    oobSystemSig.set(gCoordinator.getComponentType<Transform>());
+    gCoordinator.setSystemSignature<OOBDetectorSystem>(oobSystemSig);
+
+    Signature textSignature;
+    textSignature.set(gCoordinator.getComponentType<Transform>());
+    textSignature.set(gCoordinator.getComponentType<Text>());
+    gCoordinator.setSystemSignature<TextRenderer>(textSignature);
 
     Signature cameraSignature;
     cameraSignature.set(gCoordinator.getComponentType<Camera>());
@@ -219,6 +237,8 @@ int main(int argc, char *argv[]) {
         eventSystem->update();
         keyboardMovementSystem->update();
         moveSystem->update(dt);
+        oobSystem->update(screen_width, screen_height);
+        textRenderer->update();
 
         auto elapsed_time = gameTimeline.getElapsedTime();
         auto time_to_sleep = engine_constants::FRAME_RATE - (elapsed_time - current_time); // Ensure float division
@@ -234,6 +254,8 @@ int main(int argc, char *argv[]) {
     t2.join();
     t3.join();
     cleanupSDL();
+    client_socket.close();
+    reply_socket.close();
     std::cout << "Closing " << ENGINE_NAME << " Engine" << std::endl;
     return 0;
 }
