@@ -261,7 +261,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(BubbleProjectile, velocity, isMoving)
 // Component for the bubble grid manager (co-authored by github copilot)
 struct BubbleGridManager {
     static constexpr int GRID_ROWS = 12; // Number of rows in the grid
-    static constexpr int GRID_COLS = 8; // Number of columns in the grid
+    static constexpr int GRID_COLS = 16; // Number of columns in the grid
     static constexpr float BUBBLE_SPACING = 32.f; // Spacing between bubbles
     static constexpr float START_X = 100.f; // X-coordinate of the top-left corner of the grid
     static constexpr float START_Y = 50.f; // Y-coordinate of the top-left corner of the grid

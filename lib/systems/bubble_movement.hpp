@@ -34,11 +34,6 @@ public:
                 transform.x += projectile.velocity.x * dt;
                 transform.y += projectile.velocity.y * dt;
 
-                // Boundary collision detection
-                if (transform.x < 0 || transform.x + transform.w > SCREEN_WIDTH) {
-                    projectile.velocity.x *= -1;
-                }
-
                 // Check if bubble should snap to grid
                 if (transform.y <= GRID_OFFSET_Y) {
                     std::cout << "\n=== Bubble Hit Grid Line ===" << std::endl;

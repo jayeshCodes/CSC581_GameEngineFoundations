@@ -85,21 +85,24 @@ void collision_update(Timeline &timeline, CollisionSystem *collisionSystem) {
     int64_t lastTime = collisionTimeline.getElapsedTime();
 
     while (GameManager::getInstance()->gameRunning) {
-        int64_t currentTime = collisionTimeline.getElapsedTime();
-        float dT = (currentTime - lastTime) / 1000.f;
-        lastTime = currentTime;
+        try {
+            int64_t currentTime = collisionTimeline.getElapsedTime();
+            float dT = (currentTime - lastTime) / 1000.f;
+            lastTime = currentTime;
 
-        collisionSystem->update();
+            std::cout << "\n=== Starting Collision Update ===" << std::endl;
+            collisionSystem->update();
+            std::cout << "=== Collision Update Complete ===" << std::endl;
 
-        auto elapsed_time = collisionTimeline.getElapsedTime();
-        auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - currentTime); // Ensure float division
-        if (time_to_sleep > 0) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(time_to_sleep * 1000)));
+            // Add a small sleep to reduce CPU usage and give other threads a chance
+            std::this_thread::sleep_for(std::chrono::milliseconds(16)); // ~60 fps
+        } catch (const std::exception &e) {
+            std::cout << "Error in collision thread: " << e.what() << std::endl;
         }
     }
-
     std::cout << "Kill collision thread" << std::endl;
 }
+
 
 int main(int argc, char *argv[]) {
     std::cout << ENGINE_NAME << " v" << ENGINE_VERSION << " initializing" << std::endl;
@@ -248,6 +251,40 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(shooter, CKinematic{{0, 0}, 0, {0, 0}, 0}); // Add with initial values
     gCoordinator.addComponent(shooter, Destroy{});
 
+    const float GRID_SIZE = 32.0f;
+    const float GRID_COLS = 12;
+    const float GRID_OFFSET_X = (SCREEN_WIDTH - (GRID_COLS * GRID_SIZE)) / 2.0f;
+    const float BOUNDARY_WIDTH = 10.0f; // Width of invisible boundary
+    const float BOUNDARY_HEIGHT = SCREEN_HEIGHT; // Full height boundary
+
+    // Create left boundary
+    Entity leftBoundary = gCoordinator.createEntity();
+    gCoordinator.addComponent(leftBoundary, Transform{
+                                  GRID_OFFSET_X - BOUNDARY_WIDTH, // Position just left of grid
+                                  0, // Top of screen
+                                  BOUNDARY_HEIGHT, // Height
+                                  BOUNDARY_WIDTH, // Width
+                                  0 // No rotation
+                              });
+    gCoordinator.addComponent(leftBoundary, Color{shade_color::White});
+    gCoordinator.addComponent(leftBoundary, RigidBody{-1.0f}); // Immovable object
+    gCoordinator.addComponent(leftBoundary, Collision{true, false, CollisionLayer::OTHER});
+    gCoordinator.addComponent(leftBoundary, CKinematic{}); // Required for collision system
+
+    // Create right boundary
+    Entity rightBoundary = gCoordinator.createEntity();
+    gCoordinator.addComponent(rightBoundary, Transform{
+                                  GRID_OFFSET_X + (GRID_COLS * GRID_SIZE), // Position just right of grid
+                                  0, // Top of screen
+                                  BOUNDARY_HEIGHT, // Height
+                                  BOUNDARY_WIDTH, // Width
+                                  0 // No rotation
+                              });
+    gCoordinator.addComponent(rightBoundary, Color{shade_color::White}); // Invisible boundary
+    gCoordinator.addComponent(rightBoundary, RigidBody{-1.0f}); // Immovable object
+    gCoordinator.addComponent(rightBoundary, Collision{true, false, CollisionLayer::OTHER});
+    gCoordinator.addComponent(rightBoundary, CKinematic{}); // Required for collision system
+
 
     Entity mainCamera = gCoordinator.createEntity();
     gCoordinator.addComponent(mainCamera, Camera{0, 0, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT});
@@ -275,9 +312,9 @@ int main(int argc, char *argv[]) {
     });
 
     // Collision thread
-    // std::thread collision_thread([&]() {
-    //     collision_update(gameTimeline, collisionSystem.get());
-    // });
+    std::thread collision_thread([&collisionSystem]() {
+        collision_update(gameTimeline, collisionSystem.get());
+    });
 
     while (GameManager::getInstance()->gameRunning) {
         doInput();
@@ -290,14 +327,28 @@ int main(int argc, char *argv[]) {
 
         dt = std::max(dt, engine_constants::FRAME_RATE); // Cap the maximum dt to 60fps
 
-        kinematicSystem->update(dt);
-        destroySystem->update();
-        cameraSystem->update(shooter);
-        renderSystem->update(mainCamera);
-        eventSystem->update();
-        replayHandler->update();
-        bubbleShooterSystem->update(dt);
-        bubbleMovementSystem->update(dt);
+        try {
+            std::cout << "Starting frame update" << std::endl;
+
+            // Debug entity count
+            std::cout << "Entities to render: " << renderSystem->entities.size() << std::endl;
+
+            kinematicSystem->update(dt);
+            // collisionSystem->update();
+            bubbleMovementSystem->update(  dt);
+            destroySystem->update();
+            cameraSystem->update(shooter);
+
+            // Debug render
+            std::cout << "About to render frame" << std::endl;
+            renderSystem->update(mainCamera);
+
+            eventSystem->update();
+            replayHandler->update();
+            bubbleShooterSystem->update(dt);
+        } catch (const std::exception& e) {
+            std::cerr << "Error in game loop: " << e.what() << std::endl;
+        }
 
 
         auto elapsed_time = gameTimeline.getElapsedTime();
@@ -308,7 +359,7 @@ int main(int argc, char *argv[]) {
 
         presentScene();
     }
-    // collision_thread.join();
+    collision_thread.join();
     /**
      * This is the cleanup code. The order is very important here since otherwise the program will crash.
      */

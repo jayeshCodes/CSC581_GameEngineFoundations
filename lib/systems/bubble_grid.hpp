@@ -31,7 +31,7 @@ struct GridPosition {
 class BubbleGridSystem : public System {
 private:
     static constexpr int ROWS = 12;
-    static constexpr int COLS = 8;
+    static constexpr int COLS = 12;
     static constexpr float GRID_SIZE = 32.f;
     static constexpr float GRID_OFFSET_X = (SCREEN_WIDTH - (COLS * GRID_SIZE)) / 2.0f; // Center the grid
     static constexpr float GRID_OFFSET_Y = 32.0f;
