@@ -50,6 +50,7 @@ void catch_signals() {
     });
 }
 
+inline int length = 20;
 
 int main(int argc, char *argv[]) {
     std::cout << ENGINE_NAME << " v" << ENGINE_VERSION << " initializing" << std::endl;
@@ -187,20 +188,6 @@ int main(int argc, char *argv[]) {
             clientSystem->update(client_socket, strategy.get());
         }
     });
-
-    const int length = 20;
-    const int rows = screen_height / length;
-    const int cols = screen_width / length;
-
-    const auto startPos = SnakeQuantizer::dequantize(rows / 2, cols / 2, length);
-
-    Entity player = gCoordinator.createEntity();
-    gCoordinator.addComponent(player, Transform{startPos[0], startPos[1], length, length, 0, 1});
-    gCoordinator.addComponent(player, Color{shade_color::Black});
-    gCoordinator.addComponent(player, CKinematic{SDL_FPoint{150, 0}});
-    gCoordinator.addComponent(player, Collision{true, false, CollisionLayer::PLAYER});
-    gCoordinator.addComponent(player, Destroy{});
-    gCoordinator.addComponent(player, Snake{length});
 
     Event startEvent{eventTypeToString(GameEvents::EventType::GameStart), GameEvents::GameStartData{length}};
     eventCoordinator.emit(std::make_shared<Event>(startEvent));

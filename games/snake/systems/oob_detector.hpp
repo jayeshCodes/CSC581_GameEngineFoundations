@@ -18,6 +18,7 @@ class OOBDetectorSystem : public System {
 public:
     void update(float screen_width, float screen_height) {
         for(auto &entity: entities) {
+            if(!gCoordinator.hasComponent<Transform>(entity)) return;
             auto &transform = gCoordinator.getComponent<Transform>(entity);
             if(transform.x < 0) {
                 Event outOfBoundsEvent{eventTypeToString(GameEvents::GameEnd), {}};

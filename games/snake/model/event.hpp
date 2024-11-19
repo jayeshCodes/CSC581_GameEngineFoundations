@@ -38,6 +38,8 @@ namespace GameEvents {
                 return "GameStart";
             case GameEnd:
                 return "GameEnd";
+            case OutOfBounds:
+                return "OutOfBounds";
             default: return "Unknown";
         }
     }

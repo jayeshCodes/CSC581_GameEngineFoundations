@@ -11,7 +11,7 @@
 #include "../../../lib/ECS/system.hpp"
 #include "../../../lib/EMS/event_coordinator.hpp"
 #include "../../../lib/helpers/colors.hpp"
-#include "../helpers/quantizer.hpp"
+#include "../helpers/text_helper.hpp"
 #include "../model/event.hpp"
 #include "../model/components.hpp"
 
@@ -26,21 +26,36 @@ class GameStateHandler : public System {
     SDL_Rect gameOverTextRect{};
     SDL_Texture *line1Texture = nullptr;
     SDL_Rect line1Rect{};
+    SDL_Texture *scoreTexture = nullptr;
+    SDL_Rect scoreRect{};
+
+    Entity scoreText = INVALID_ENTITY;
+    Entity gameOverText = INVALID_ENTITY;
+    Entity line1 = INVALID_ENTITY;
 
     TTF_Font *font = nullptr;
+    int score = 0;
 
-    static void get_text_and_rect(SDL_Renderer *renderer, int x, int y, const char *text,
-                                  TTF_Font *font, SDL_Texture **texture, SDL_Rect *rect, SDL_Color color) {
-        SDL_Surface *surface = TTF_RenderText_Solid(font, text, color);
-        *texture = SDL_CreateTextureFromSurface(renderer, surface);
-        int text_width = surface->w;
-        int text_height = surface->h;
-        SDL_FreeSurface(surface);
-        rect->x = x;
-        rect->y = y;
-        rect->w = text_width;
-        rect->h = text_height;
-    }
+    EventHandler gameStartHandler = [this](const std::shared_ptr<Event> (&event)) {
+        if (event->type == GameEvents::eventTypeToString(GameEvents::GameStart)) {
+            score = 0;
+            TextHelper::get_text_and_rect(app->renderer, 10, 10, "0", font, &scoreTexture, &scoreRect,
+                                          shade_color::Black);
+            scoreText = gCoordinator.createEntity();
+            gCoordinator.addComponent(scoreText, Transform{});
+            gCoordinator.addComponent(scoreText, Text{"0", scoreTexture, scoreRect});
+        }
+    };
+
+    EventHandler foodEatenHandler = [this](const std::shared_ptr<Event> (&event)) {
+        if (event->type == GameEvents::eventTypeToString(GameEvents::FoodEaten)) {
+            score += 1;
+            TextHelper::get_text_and_rect(app->renderer, 10, 10, std::to_string(score).c_str(), font, &scoreTexture,
+                                          &scoreRect, shade_color::Black);
+            gCoordinator.removeComponent<Text>(scoreText);
+            gCoordinator.addComponent(scoreText, Text{std::to_string(score), scoreTexture, scoreRect});
+        }
+    };
 
     EventHandler gameEndHandler = [this](const std::shared_ptr<Event> (&event)) {
         if (event->type == GameEvents::eventTypeToString(GameEvents::GameEnd)) {
@@ -53,19 +68,23 @@ class GameStateHandler : public System {
                                       });
             gCoordinator.addComponent(endScreen, Color{shade_color::Black});
 
-            get_text_and_rect(app->renderer, screen_width / 2 - 100, screen_height / 2 - 100, "Game Over", font,
-                              &gameOverTextTexture, &gameOverTextRect, shade_color::White);
-            get_text_and_rect(app->renderer, screen_width / 2 - 140, screen_height / 2 - 50, "Press R to restart", font,
-                              &line1Texture, &line1Rect, shade_color::White);
+            TextHelper::get_text_and_rect(app->renderer, screen_width / 2 - 100, screen_height / 2 - 100, "Game Over",
+                                          font,
+                                          &gameOverTextTexture, &gameOverTextRect, shade_color::White);
+            std::string sText = "Score: " + std::to_string(score);
+            TextHelper::get_text_and_rect(app->renderer, screen_width / 2 - 90, screen_height / 2 - 50,
+                                          sText.c_str(), font,
+                                          &line1Texture, &line1Rect, shade_color::White);
 
+            gCoordinator.addComponent(scoreText, Destroy{0, true, true});
 
-            Entity gameOverText = gCoordinator.createEntity();
+            gameOverText = gCoordinator.createEntity();
             gCoordinator.addComponent(gameOverText, Transform{});
             gCoordinator.addComponent(gameOverText, Text{"Game Over", gameOverTextTexture, gameOverTextRect});
 
-            Entity line1 = gCoordinator.createEntity();
+            line1 = gCoordinator.createEntity();
             gCoordinator.addComponent(line1, Transform{});
-            gCoordinator.addComponent(line1, Text{"Press R to restart", line1Texture, line1Rect});
+            gCoordinator.addComponent(line1, Text{"Press Enter/Return to restart", line1Texture, line1Rect});
         }
     };
 
@@ -73,10 +92,15 @@ public:
     GameStateHandler() {
         font = TTF_OpenFont("../games/snake/fonts/NotoSans-Black.ttf", 30);
         eventCoordinator.subscribe(gameEndHandler, GameEvents::eventTypeToString(GameEvents::GameEnd));
+        eventCoordinator.subscribe(gameStartHandler, GameEvents::eventTypeToString(GameEvents::GameStart));
+        eventCoordinator.subscribe(foodEatenHandler, GameEvents::eventTypeToString(GameEvents::FoodEaten));
     }
 
     ~GameStateHandler() {
         eventCoordinator.unsubscribe(gameEndHandler, GameEvents::eventTypeToString(GameEvents::GameEnd));
+        eventCoordinator.unsubscribe(gameStartHandler, GameEvents::eventTypeToString(GameEvents::GameStart));
+        eventCoordinator.unsubscribe(foodEatenHandler, GameEvents::eventTypeToString(GameEvents::FoodEaten));
+
         TTF_CloseFont(font);
         SDL_DestroyTexture(gameOverTextTexture);
         SDL_DestroyTexture(line1Texture);

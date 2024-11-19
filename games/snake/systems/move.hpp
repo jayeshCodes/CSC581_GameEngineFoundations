@@ -16,6 +16,7 @@ extern Coordinator gCoordinator;
 extern EventCoordinator eventCoordinator;
 extern int screen_width;
 extern int screen_height;
+extern int length;
 
 enum Direction {
     UP,
@@ -33,6 +34,19 @@ class MoveSystem : public System {
 
     EventHandler gameStartHandler = [this](const std::shared_ptr<Event> (&event)) {
         if (event->type == GameEvents::eventTypeToString(GameEvents::GameStart)) {
+            for(auto entity: entities) {
+                gCoordinator.addComponent<Destroy>(entity, Destroy{0, true, true});
+            }
+            const int rows = screen_height / length;
+            const int cols = screen_width / length;
+            const auto startPos = SnakeQuantizer::dequantize(rows / 2, cols / 2, length);
+            Entity player = gCoordinator.createEntity();
+            gCoordinator.addComponent(player, Transform{startPos[0], startPos[1], static_cast<float>(length), static_cast<float>(length), 0, 1});
+            gCoordinator.addComponent(player, Color{shade_color::Black});
+            gCoordinator.addComponent(player, CKinematic{SDL_FPoint{150, 0}});
+            gCoordinator.addComponent(player, Collision{true, false, CollisionLayer::PLAYER});
+            gCoordinator.addComponent(player, Destroy{});
+            gCoordinator.addComponent(player, Snake{length});
             snakeParts.clear();
             snakeParts.emplace_back(*entities.begin());
         }

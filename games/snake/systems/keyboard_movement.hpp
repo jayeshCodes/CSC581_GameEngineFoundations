@@ -24,6 +24,7 @@ public:
         prevKeyState[SDL_SCANCODE_A] = false;
         prevKeyState[SDL_SCANCODE_W] = false;
         prevKeyState[SDL_SCANCODE_S] = false;
+        prevKeyState[SDL_SCANCODE_RETURN] = false;
     }
 
     void update() {
