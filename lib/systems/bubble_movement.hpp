@@ -93,17 +93,30 @@ public:
                     continue;
                 }
 
-                // Check top boundary separately
+                // Before grid snapping check
+                std::cout << "Bubble position before snap - x: " << transform.x << ", y: " << transform.y << std::endl;
+
                 if (transform.y <= GRID_OFFSET_Y) {
+                    std::cout << "Bubble reached grid height, preparing to snap" << std::endl;
                     transform.y = GRID_OFFSET_Y;
+
+                    // Calculate grid snap position
+                    float relativeX = transform.x - GRID_OFFSET_X;
+                    float gridX = std::round(relativeX / GRID_SIZE) * GRID_SIZE + GRID_OFFSET_X;
+
+                    std::cout << "Grid snap calculation:" << std::endl;
+                    std::cout << "  Relative X: " << relativeX << std::endl;
+                    std::cout << "  Calculated Grid X: " << gridX << std::endl;
+
+                    transform.x = gridX;
+
+                    std::cout << "Final snapped position - x: " << transform.x << ", y: " << transform.y << std::endl;
+
                     projectile.isMoving = false;
                     projectile.velocity = {0, 0};
 
-                    // Snap to grid
-                    float relativeX = transform.x - GRID_OFFSET_X;
-                    transform.x = std::round(relativeX / GRID_SIZE) * GRID_SIZE + GRID_OFFSET_X;
-
                     if (auto gridSystem = gCoordinator.getSystem<BubbleGridSystem>()) {
+                        std::cout << "Adding bubble to grid system" << std::endl;
                         gridSystem->addBubble(entity);
                     }
                 }

@@ -31,7 +31,8 @@ enum EventType {
     GameOver,
     BubbleCreated,
     GridDropped,
-    GridDropCompleted
+    GridDropCompleted,
+    CheckFloatingBubbles
 };
 
 inline std::string eventTypeToString(EventType type) {

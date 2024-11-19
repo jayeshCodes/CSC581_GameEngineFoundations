@@ -9,9 +9,9 @@
 #include "../model/components.hpp"
 #include "../ECS/coordinator.hpp"
 #include "../EMS/event_coordinator.hpp"
-#include <cmath>
-
+#include <SDL2/SDL.h>
 #include "../helpers/colors.hpp"
+#include <cmath>
 
 extern Coordinator gCoordinator;
 extern EventCoordinator eventCoordinator;
@@ -19,8 +19,20 @@ extern EventCoordinator eventCoordinator;
 class BubbleShooterSystem : public System {
 private:
     SDL_Color nextBubbleColor;
+
+    // Utility to calculate angle in degrees between two points
+    float calculateAngle(float x1, float y1, float x2, float y2) {
+        float angle = std::atan2(y2 - y1, x2 - x1) * 180.f / M_PI; // Convert radians to degrees
+        if (angle < 0) {
+            angle += 360.f; // Normalize negative angles to positive
+        }
+        return angle;
+    }
+
 public:
-    BubbleShooterSystem() : nextBubbleColor(shade_color::getRandomBubbleColor()) {}
+    BubbleShooterSystem() : nextBubbleColor(shade_color::getRandomBubbleColor()) {
+    }
+
     void update(float dt) {
         for (auto const &entity: entities) {
             auto &shooter = gCoordinator.getComponent<BubbleShooter>(entity);
@@ -43,18 +55,21 @@ public:
             // Get keyboard state
             const Uint8 *keyboardState = SDL_GetKeyboardState(nullptr);
 
-            // Rotate shooter
-            if (keyboardState[SDL_SCANCODE_LEFT]) {
-                shooter.currentAngle -= shooter.rotationSpeed;
-                shooter.currentAngle = std::max(shooter.currentAngle, shooter.minAngle);
-            }
-            if (keyboardState[SDL_SCANCODE_RIGHT]) {
-                shooter.currentAngle += shooter.rotationSpeed;
-                shooter.currentAngle = std::min(shooter.currentAngle, shooter.maxAngle);
-            }
+            // Handle mouse input
+            int mouseX, mouseY;
+            Uint32 mouseState = SDL_GetMouseState(&mouseX, &mouseY);
 
-            // Shoot bubble
-            if (keyboardState[SDL_SCANCODE_SPACE] && shooter.canShoot) {
+            // Calculate angle based on mouse position (now correctly converted to degrees)
+            float angleToMouse = calculateAngle(transform.x, transform.y, mouseX, mouseY);
+            shooter.currentAngle = std::clamp(angleToMouse, shooter.minAngle, shooter.maxAngle);
+
+
+            // Shoot bubble with mouse left click or space bar
+            if ((mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) && shooter.canShoot) {
+                shootBubble(entity, shooter);
+                shooter.canShoot = false;
+            }
+            else if (keyboardState[SDL_SCANCODE_SPACE] && shooter.canShoot) {
                 shootBubble(entity, shooter);
                 shooter.canShoot = false;
             }
@@ -74,7 +89,7 @@ private:
 
         // Add components
         gCoordinator.addComponent(bubble, Transform{start_x, start_y, 32.f, 32.f, shooter.currentAngle});
-        gCoordinator.addComponent(bubble, Color{nextBubbleColor});  // Use stored color
+        gCoordinator.addComponent(bubble, Color{nextBubbleColor}); // Use stored color
         gCoordinator.addComponent(bubble, CKinematic{{0, 0}, 0, {0, 0}, 0});
         gCoordinator.addComponent(bubble, BubbleProjectile{
                                       SDL_FPoint{
