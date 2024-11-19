@@ -152,7 +152,7 @@ public:
 
                 drawDirectionArrow(centerX, centerY, shooter.currentAngle, arrowColor);
 
-            } else if (gCoordinator.hasComponent<BubbleProjectile>(entity)) {
+            } else if (gCoordinator.hasComponent<BubbleProjectile>(entity) || gCoordinator.hasComponent<Bubble>(entity)) {
                 // Draw bubbles as circles
                 int radius = transform.w / 2;
                 int centerX = tRect.x + radius;

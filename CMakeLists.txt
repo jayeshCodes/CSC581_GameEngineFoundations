@@ -62,13 +62,7 @@ set(SOURCES
         lib/systems/position.hpp
         lib/helpers/font_helper.cpp)
 
-add_executable(shade_engine ${SOURCES} main.cpp
-        lib/systems/bubble_shooter.hpp
-        lib/systems/bubble_movement.hpp
-        lib/systems/bubble_grid.hpp
-        lib/systems/score_display.hpp
-        lib/helpers/font_helper.hpp
-        lib/helpers/font_helper.cpp)
+add_executable(shade_engine ${SOURCES} main.cpp)
 add_executable(shade_engine_server ${SOURCES} server.cpp
         lib/helpers/font_helper.cpp)
 

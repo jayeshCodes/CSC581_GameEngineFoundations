@@ -15,68 +15,101 @@ extern Coordinator gCoordinator;
 class BubbleMovementSystem : public System {
 private:
     static constexpr float GRID_SIZE = 32.0f;
-    static constexpr float GRID_OFFSET_X = (SCREEN_WIDTH - (8 * GRID_SIZE)) / 2.0f;
+    static constexpr float GRID_COLS = 16;
+    static constexpr float GRID_OFFSET_X = (SCREEN_WIDTH - (GRID_COLS * GRID_SIZE)) / 2.0f;
     static constexpr float GRID_OFFSET_Y = 32.0f;
+
+    bool checkBoundaryCollision(Transform &transform, float &velocityX) {
+        // Left boundary
+        if (transform.x <= GRID_OFFSET_X) {
+            transform.x = GRID_OFFSET_X;
+            velocityX = std::abs(velocityX); // Bounce right
+            return true;
+        }
+        // Right boundary
+        if (transform.x + transform.w >= GRID_OFFSET_X + (GRID_COLS * GRID_SIZE)) {
+            transform.x = GRID_OFFSET_X + (GRID_COLS * GRID_SIZE) - transform.w;
+            velocityX = -std::abs(velocityX); // Bounce left
+            return true;
+        }
+        return false;
+    }
+
+    bool checkBubbleCollision(const Transform &transform) {
+        auto bubbles = gCoordinator.getEntitiesWithComponent<Bubble>();
+        float margin = GRID_SIZE * 0.8f; // Collision radius
+
+        for (auto entity: bubbles) {
+            auto &otherTransform = gCoordinator.getComponent<Transform>(entity);
+
+            // Calculate distance between centers
+            float dx = transform.x - otherTransform.x;
+            float dy = transform.y - otherTransform.y;
+            float distance = std::sqrt(dx * dx + dy * dy);
+
+            if (distance <= margin) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 public:
     void update(float dt) {
         for (auto const &entity: entities) {
             try {
+                if (!gCoordinator.hasComponent<BubbleProjectile>(entity)) continue;
+
                 auto &projectile = gCoordinator.getComponent<BubbleProjectile>(entity);
-                if (!projectile.isMoving) {
-                    continue;
-                }
+                if (!projectile.isMoving) continue;
 
                 auto &transform = gCoordinator.getComponent<Transform>(entity);
-                auto &kinematic = gCoordinator.getComponent<CKinematic>(entity);
 
-                // Apply velocity to position directly
+                // Store previous position
+                float prevX = transform.x;
+                float prevY = transform.y;
+
+                // Update position
                 transform.x += projectile.velocity.x * dt;
                 transform.y += projectile.velocity.y * dt;
 
-                // Check if bubble should snap to grid
-                if (transform.y <= GRID_OFFSET_Y) {
-                    std::cout << "\n=== Bubble Hit Grid Line ===" << std::endl;
-                    std::cout << "Original position: (" << transform.x << ", " << transform.y << ")" << std::endl;
+                // Check boundary collisions
+                if (checkBoundaryCollision(transform, projectile.velocity.x)) {
+                    transform.x = prevX; // Revert X movement
+                }
 
-                    // Ensure bubble doesn't go above grid
-                    transform.y = GRID_OFFSET_Y;
+                // Check bubble collisions
+                if (checkBubbleCollision(transform)) {
+                    // Revert to previous position
+                    transform.x = prevX;
+                    transform.y = prevY;
 
-                    snapToGrid(entity);
                     projectile.isMoving = false;
-                    kinematic.velocity = {0, 0};
+                    projectile.velocity = {0, 0};
+
+                    if (auto gridSystem = gCoordinator.getSystem<BubbleGridSystem>()) {
+                        gridSystem->addBubble(entity);
+                    }
+                    continue;
+                }
+
+                // Check top boundary separately
+                if (transform.y <= GRID_OFFSET_Y) {
+                    transform.y = GRID_OFFSET_Y;
+                    projectile.isMoving = false;
+                    projectile.velocity = {0, 0};
+
+                    // Snap to grid
+                    float relativeX = transform.x - GRID_OFFSET_X;
+                    transform.x = std::round(relativeX / GRID_SIZE) * GRID_SIZE + GRID_OFFSET_X;
+
+                    if (auto gridSystem = gCoordinator.getSystem<BubbleGridSystem>()) {
+                        gridSystem->addBubble(entity);
+                    }
                 }
             } catch (const std::exception &e) {
-                std::cout << "Error processing entity " << entity << ": " << e.what() << std::endl;
+                std::cerr << "Error processing entity " << entity << ": " << e.what() << std::endl;
             }
-        }
-    }
-
-private:
-    void snapToGrid(Entity entity) {
-        try {
-            auto& transform = gCoordinator.getComponent<Transform>(entity);
-
-            // Calculate nearest grid position relative to grid origin
-            float relativeX = transform.x - GRID_OFFSET_X;
-            float gridX = std::round(relativeX / GRID_SIZE) * GRID_SIZE + GRID_OFFSET_X;
-
-            // Record old position for debugging
-            float oldX = transform.x;
-            float oldY = transform.y;
-
-            // Update position
-            transform.x = gridX;
-            transform.y = GRID_OFFSET_Y;  // Always snap to first row
-
-            std::cout << "Snapped position from (" << oldX << ", " << oldY
-                     << ") to (" << transform.x << ", " << transform.y << ")" << std::endl;
-
-            if (auto gridSystem = gCoordinator.getSystem<BubbleGridSystem>()) {
-                gridSystem->addBubble(entity);
-            }
-        } catch (const std::exception& e) {
-            std::cout << "Error in snapToGrid: " << e.what() << std::endl;
         }
     }
 };

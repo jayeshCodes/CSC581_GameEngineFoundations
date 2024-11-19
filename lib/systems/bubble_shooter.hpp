@@ -83,8 +83,6 @@ private:
                                       },
                                       true
                                   });
-        gCoordinator.addComponent(bubble, RigidBody{1.0f, 0.0f, 0.0f, 1.0f});
-        gCoordinator.addComponent(bubble, Collision{true, false, CollisionLayer::BUBBLE});
         gCoordinator.addComponent(bubble, Destroy{});
         gCoordinator.addComponent(bubble, ClientEntity{});
 

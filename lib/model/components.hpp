@@ -279,6 +279,37 @@ struct Score {
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Score, value, multiplier, bubbleScore, comboBonus)
 
+struct GridMovement {
+    float dropInterval{15.0f};      // Time between drops in seconds
+    float currentTime{0.0f};        // Current time accumulator
+    float dropDistance{32.0f};      // Distance to drop each time
+    float warningTime{3.0f};        // Time to start warning before drop
+    bool isDropping{false};         // Whether grid is currently dropping
+    float dropSpeed{64.0f};         // Units per second during drop
+    float currentDropAmount{0.0f};  // How far we've dropped in current movement
+    bool showWarning{false};        // Whether to show warning
+    float lastWarningToggle{0.0f};  // Time since last warning toggle
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(GridMovement, dropInterval, currentTime, dropDistance, warningTime, isDropping, dropSpeed, currentDropAmount, showWarning, lastWarningToggle)
+
+struct GridGenerator {
+    int initialRows = 4;           // Number of rows to start with
+    int rowsPerDrop = 1;          // How many rows to add after each drop
+    float bubbleRadius = 16.0f;    // Radius of each bubble
+    float startX;                  // Starting X position of grid (calculated)
+    float startY = 32.0f;         // Starting Y position of grid
+    int maxColumns;               // Maximum columns in grid
+    std::vector<SDL_Color> availableColors;
+    bool needsNewRow = false;
+
+    // Calculated during initialization
+    float horizontalSpacing;      // Distance between bubble centers horizontally
+    float verticalSpacing;        // Distance between rows
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(GridGenerator, initialRows, rowsPerDrop, bubbleRadius, startX, startY, maxColumns, availableColors, needsNewRow, horizontalSpacing, verticalSpacing)
+
 using ALL_COMPONENTS = std::variant<Transform, Color, CKinematic, Camera, Gravity, KeyboardMovement, Server, Receiver,
     MovingPlatform, ServerEntity, ClientEntity, Destroy, Collision, Jump, Respawnable, RigidBody, Dash, Stomp,
-    Bubble, BubbleProjectile, BubbleShooter, BubbleGridManager, Score>;
+    Bubble, BubbleProjectile, BubbleShooter, BubbleGridManager, Score, GridMovement, GridGenerator>;

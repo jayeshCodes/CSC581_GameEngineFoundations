@@ -22,7 +22,6 @@ public:
     void update() {
         try {
             for (auto entity: entities) {
-                std::cout << "Processing score entity: " << entity << std::endl;
 
                 // Verify entity still exists
                 auto ids = gCoordinator.getEntityIds();
@@ -45,7 +44,6 @@ public:
                 }
 
                 const auto &score = gCoordinator.getComponent<Score>(entity);
-                std::cout << "Current score: " << score.value << ", multiplier: " << score.multiplier << std::endl;
 
                 // Draw score
                 try {

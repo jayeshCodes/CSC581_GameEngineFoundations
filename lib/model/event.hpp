@@ -27,7 +27,11 @@ enum EventType {
     StartReplaying,
     StopReplaying,
     EntityCreated,
-    EntityDestroyed
+    EntityDestroyed,
+    GameOver,
+    BubbleCreated,
+    GridDropped,
+    GridDropCompleted
 };
 
 inline std::string eventTypeToString(EventType type) {
@@ -142,6 +146,20 @@ struct EntityDestroyedData {
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(EntityDestroyedData, entity, id)
+
+struct GameOverData {
+    std::string message;
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(GameOverData, message)
+
+struct BubbleCreatedData {
+    Entity entity;
+    int row;
+    int col;
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(BubbleCreatedData, entity, row, col)
 
 
 #endif //EVENT_HPP

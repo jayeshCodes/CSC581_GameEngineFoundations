@@ -34,6 +34,8 @@ namespace Components {
     struct BubbleProjectile;
     struct BubbleGridManager;
     struct Score;
+    struct GridMovement;
+    struct GridGenerator;
 }
 
 // Giving an alias to the data type and defining the maximum number of entities

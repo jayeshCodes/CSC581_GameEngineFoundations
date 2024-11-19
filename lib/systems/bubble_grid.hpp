@@ -30,14 +30,81 @@ struct GridPosition {
 
 class BubbleGridSystem : public System {
 private:
-    static constexpr int ROWS = 12;
-    static constexpr int COLS = 12;
+    static constexpr int ROWS = 24;
+    static constexpr int COLS = 16;
     static constexpr float GRID_SIZE = 32.f;
     static constexpr float GRID_OFFSET_X = (SCREEN_WIDTH - (COLS * GRID_SIZE)) / 2.0f; // Center the grid
     static constexpr float GRID_OFFSET_Y = 32.0f;
 
 
     std::vector<std::vector<Entity> > grid;
+
+    bool isPositionOccupied(float x, float y) {
+        auto bubbles = gCoordinator.getEntitiesWithComponent<Bubble>();
+        for (auto entity: bubbles) {
+            auto &transform = gCoordinator.getComponent<Transform>(entity);
+            float distance = std::sqrt(
+                std::pow(transform.x - x, 2) +
+                std::pow(transform.y - y, 2)
+            );
+
+            // If distance is less than bubble diameter, position is occupied
+            if (distance < GRID_SIZE) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    SDL_FPoint findNearestEmptyPosition(float x, float y) {
+        // Check positions in expanding circles
+        for (float radius = GRID_SIZE; radius <= GRID_SIZE * 3; radius += GRID_SIZE / 2) {
+            for (float angle = 0; angle < 2 * M_PI; angle += M_PI / 4) {
+                float newX = x + radius * std::cos(angle);
+                float newY = y + radius * std::sin(angle);
+
+                // Ensure position is within grid bounds
+                if (newX >= GRID_OFFSET_X &&
+                    newX < GRID_OFFSET_X + (COLS * GRID_SIZE) &&
+                    newY >= GRID_OFFSET_Y &&
+                    newY < GRID_OFFSET_Y + (ROWS * GRID_SIZE)) {
+                    if (!isPositionOccupied(newX, newY)) {
+                        return {newX, newY};
+                    }
+                }
+            }
+        }
+        return {x, y}; // Return original if no empty position found
+    }
+
+    bool checkCollision(float x, float y, float &snapX, float &snapY) {
+        auto bubbles = gCoordinator.getEntitiesWithComponent<Bubble>();
+        float closestDistance = std::numeric_limits<float>::max();
+        bool collision = false;
+
+        for (auto entity: bubbles) {
+            auto &transform = gCoordinator.getComponent<Transform>(entity);
+            float distance = std::sqrt(
+                std::pow(transform.x - x, 2) +
+                std::pow(transform.y - y, 2)
+            );
+
+            if (distance <= GRID_SIZE * 1.1f) {
+                // Slightly larger than bubble size for better snapping
+                collision = true;
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+
+                    // Calculate snap position adjacent to colliding bubble
+                    float angle = std::atan2(y - transform.y, x - transform.x);
+                    snapX = transform.x + GRID_SIZE * std::cos(angle);
+                    snapY = transform.y + GRID_SIZE * std::sin(angle);
+                }
+            }
+        }
+
+        return collision;
+    }
 
     GridPosition worldToGrid(float x, float y) {
         // Adjust for grid offset
@@ -158,14 +225,14 @@ private:
         return matches;
     }
 
-    void removeBubbles(const std::vector<Entity>& bubbles) {
+    void removeBubbles(const std::vector<Entity> &bubbles) {
         try {
             // Update score before removing bubbles
             updateScore(bubbles);
 
             // Then remove the bubbles
-            for (Entity bubble : bubbles) {
-                auto& transform = gCoordinator.getComponent<Transform>(bubble);
+            for (Entity bubble: bubbles) {
+                auto &transform = gCoordinator.getComponent<Transform>(bubble);
                 GridPosition pos = worldToGrid(transform.x, transform.y);
                 grid[pos.row][pos.col] = INVALID_ENTITY;
                 gCoordinator.addComponent<Destroy>(bubble, Destroy{});
@@ -174,7 +241,7 @@ private:
 
             // Handle floating bubbles after removal
             handleFloatingBubbles();
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             std::cerr << "Error removing bubbles: " << e.what() << std::endl;
         }
     }
@@ -256,50 +323,63 @@ public:
         // std::cout << "Grid offset: (" << GRID_OFFSET_X << ", " << GRID_OFFSET_Y << ")" << std::endl;
     }
 
-    void addBubble(Entity entity) {
+    void initializeGridBubble(Entity entity, int row, int col) {
         try {
-            auto &transform = gCoordinator.getComponent<Transform>(entity);
+            auto& transform = gCoordinator.getComponent<Transform>(entity);
+            grid[row][col] = entity;
 
-            // Get initial grid position
-            GridPosition pos = worldToGrid(transform.x, transform.y);
-
-            // Check if position is occupied
-            if (grid[pos.row][pos.col] != INVALID_ENTITY) {
-                GridPosition newPos = findEmptyPosition(pos);
-                if (newPos.row >= 0) {
-                    // Valid position found
-                    pos = newPos;
-                    // Update transform to match grid position
-                    SDL_FPoint worldPos = gridToWorld(pos);
-                    transform.x = worldPos.x;
-                    transform.y = worldPos.y;
-                } else {
-                    std::cout << "No valid position found for bubble" << std::endl;
-                    return;
-                }
+            // Ensure bubble has Bubble component with correct grid position
+            if (!gCoordinator.hasComponent<Bubble>(entity)) {
+                gCoordinator.addComponent(entity, Bubble{true, row, col, GRID_SIZE/2});
             }
 
-            // Add to grid
-            grid[pos.row][pos.col] = entity;
-
-            // std::cout << "Placed bubble at grid position: (" << pos.row << ", " << pos.col << ")" << std::endl;
-
-            // Check for matches
-            auto matches = findMatchingGroup(entity);
-            if (matches.size() >= 3) {
-                removeBubbles(matches);
-                handleFloatingBubbles();
-            }
-        } catch (const std::exception &e) {
-            std::cout << "Error in addBubble: " << e.what() << std::endl;
+            std::cout << "Initialized grid bubble at (" << row << "," << col
+                      << ") with entity " << entity << std::endl;
+        } catch (const std::exception& e) {
+            std::cerr << "Error initializing grid bubble: " << e.what() << std::endl;
         }
     }
 
-    // Modify BubbleGridSystem to include scoring
-    void updateScore(const std::vector<Entity>& matches) {
+    void addBubble(Entity entity) {
         try {
-            std::cout << "Updating score for " << matches.size() << " matches" << std::endl;
+            auto &transform = gCoordinator.getComponent<Transform>(entity);
+            float snapX = transform.x;
+            float snapY = transform.y;
 
+            if (checkCollision(transform.x, transform.y, snapX, snapY)) {
+                // Snap to grid position nearest to collision point
+                transform.x = snapX;
+                transform.y = snapY;
+            } else if (transform.y <= GRID_OFFSET_Y) {
+                // Only snap to top if no collision occurred
+                transform.y = GRID_OFFSET_Y;
+                float relativeX = transform.x - GRID_OFFSET_X;
+                transform.x = std::round(relativeX / GRID_SIZE) * GRID_SIZE + GRID_OFFSET_X;
+            }
+
+            GridPosition pos = worldToGrid(transform.x, transform.y);
+            if (pos.row >= 0 && pos.row < ROWS && pos.col >= 0 && pos.col < COLS) {
+                grid[pos.row][pos.col] = entity;
+
+                if (!gCoordinator.hasComponent<Bubble>(entity)) {
+                    gCoordinator.addComponent(entity, Bubble{true, pos.row, pos.col});
+                }
+
+                auto matches = findMatchingGroup(entity);
+                if (matches.size() >= 3) {
+                    removeBubbles(matches);
+                    handleFloatingBubbles();
+                }
+            }
+        } catch (const std::exception &e) {
+            std::cerr << "Error in addBubble: " << e.what() << std::endl;
+        }
+    }
+
+
+    // Modify BubbleGridSystem to include scoring
+    void updateScore(const std::vector<Entity> &matches) {
+        try {
             auto scoreEntities = gCoordinator.getEntitiesWithComponent<Score>();
             if (scoreEntities.empty()) {
                 std::cerr << "No score entities found" << std::endl;
@@ -307,7 +387,7 @@ public:
             }
 
             Entity scoreEntity = scoreEntities[0];
-            auto& score = gCoordinator.getComponent<Score>(scoreEntity);
+            auto &score = gCoordinator.getComponent<Score>(scoreEntity);
 
             // Calculate score for this match
             int matchSize = static_cast<int>(matches.size());
@@ -327,18 +407,9 @@ public:
 
                 int newScore = static_cast<int>((baseScore + comboBonus) * matchMultiplier);
 
-                std::cout << "Score update:"
-                          << "\n  Match size: " << matchSize
-                          << "\n  Base score: " << baseScore
-                          << "\n  Combo bonus: " << comboBonus
-                          << "\n  Match multiplier: " << matchMultiplier
-                          << "\n  Total added: " << newScore
-                          << "\n  Previous score: " << score.value
-                          << "\n  New total: " << (score.value + newScore) << std::endl;
-
                 score.value += newScore;
             }
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             std::cerr << "Error updating score: " << e.what() << std::endl;
         }
     }
