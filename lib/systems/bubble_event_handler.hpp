@@ -12,6 +12,7 @@
 #include "../model/event.hpp"
 #include "../core/defs.hpp"
 #include "../game/GameManager.hpp"
+#include "bubble_grid.hpp"
 
 extern Coordinator gCoordinator;
 extern EventCoordinator eventCoordinator;
@@ -37,7 +38,12 @@ private:
 public:
     BubbleEventHandlerSystem() {
         eventCoordinator.subscribe(floatingBubbleshandler, eventTypeToString(EventType::CheckFloatingBubbles));
-        eventCoordinator.subscribe(gameOverHandler, eventTypeToString(EventType::GameOver));
+        // eventCoordinator.subscribe(gameOverHandler, eventTypeToString(EventType::GameOver));
+    }
+
+    ~BubbleEventHandlerSystem() {
+        eventCoordinator.unsubscribe(floatingBubbleshandler, eventTypeToString(EventType::CheckFloatingBubbles));
+        // eventCoordinator.unsubscribe(gameOverHandler, eventTypeToString(EventType::GameOver));
     }
 };
 

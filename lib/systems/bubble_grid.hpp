@@ -31,9 +31,9 @@ struct GridPosition {
 class BubbleGridSystem : public System {
 private:
     static constexpr int MAX_ROWS = 24;
-    static constexpr int COLS = 16;
-    static constexpr float GRID_SIZE = 32.f;
-    static constexpr float GRID_OFFSET_X = (SCREEN_WIDTH - (COLS * GRID_SIZE)) / 2.0f; // Center the grid
+    static constexpr int COLS = 15;
+    static constexpr float GRID_SIZE = 32.0f;
+    static constexpr float GRID_OFFSET_X = (SCREEN_WIDTH - (COLS * GRID_SIZE)) / 2.0f;
     static constexpr float GRID_OFFSET_Y = 32.0f;
 
 
@@ -44,6 +44,45 @@ private:
         currentMaxRow = std::max(currentMaxRow, newRow);
         if (currentMaxRow >= grid.size()) {
             grid.resize(currentMaxRow + 1, std::vector<Entity>(COLS, INVALID_ENTITY));
+        }
+    }
+
+    bool isValidGridPosition(int row, int col) const {
+        return row >= 0 && row < MAX_ROWS && col >= 0 && col < COLS &&
+               row < grid.size();
+    }
+
+    void ensureGridSize(int row) {
+        if (row >= grid.size()) {
+            grid.resize(row + 1, std::vector<Entity>(COLS, INVALID_ENTITY));
+        }
+    }
+
+    void updateGridCoordinates() {
+        auto bubbles = gCoordinator.getEntitiesWithComponent<Bubble>();
+        for (auto entity: bubbles) {
+            if (!gCoordinator.hasComponent<Transform>(entity)) continue;
+
+            auto &transform = gCoordinator.getComponent<Transform>(entity);
+            auto &bubble = gCoordinator.getComponent<Bubble>(entity);
+
+            // Update grid position based on world coordinates
+            GridPosition newPos = worldToGrid(transform.x, transform.y);
+            if (newPos.row >= 0 && newPos.row < MAX_ROWS &&
+                newPos.col >= 0 && newPos.col < COLS) {
+                // Update grid array
+                if (newPos.row >= grid.size()) {
+                    grid.resize(newPos.row + 1, std::vector<Entity>(COLS, INVALID_ENTITY));
+                }
+                // Remove from old position if exists
+                if (bubble.row < grid.size() && bubble.col < COLS) {
+                    grid[bubble.row][bubble.col] = INVALID_ENTITY;
+                }
+                // Update to new position
+                grid[newPos.row][newPos.col] = entity;
+                bubble.row = newPos.row;
+                bubble.col = newPos.col;
+            }
         }
     }
 
@@ -167,81 +206,79 @@ private:
     std::vector<GridPosition> getNeighbors(int row, int col) {
         std::vector<GridPosition> neighbors;
 
-        // Even rows
-        if (row % 2 == 0) {
-            neighbors.push_back({row - 1, col - 1}); // Top left
-            neighbors.push_back({row - 1, col}); // Top right
-            neighbors.push_back({row, col - 1}); // Left
-            neighbors.push_back({row, col + 1}); // Right
-            neighbors.push_back({row + 1, col - 1}); // Bottom left
-            neighbors.push_back({row + 1, col}); // Bottom right
-        }
-        // Odd rows
-        else {
-            neighbors.push_back({row - 1, col}); // Top left
-            neighbors.push_back({row - 1, col + 1}); // Top right
-            neighbors.push_back({row, col - 1}); // Left
-            neighbors.push_back({row, col + 1}); // Right
-            neighbors.push_back({row + 1, col}); // Bottom left
-            neighbors.push_back({row + 1, col + 1}); // Bottom right
-        }
+        // Horizontal neighbors
+        if (col > 0) neighbors.push_back({row, col - 1});
+        if (col < COLS - 1) neighbors.push_back({row, col + 1});
 
-        // Remove invalid neighbors
-        std::vector<GridPosition> validNeighbors;
-        for (auto &neighbor: neighbors) {
-            if (neighbor.row >= 0 && neighbor.row < MAX_ROWS && neighbor.col >= 0 && neighbor.col < COLS) {
-                validNeighbors.push_back(neighbor);
+        // Vertical neighbors based on row parity
+        bool isEvenRow = (row % 2 == 0);
+
+        // Upper neighbors
+        if (row > 0) {
+            if (isEvenRow) {
+                neighbors.push_back({row - 1, col});
+                if (col > 0) neighbors.push_back({row - 1, col - 1});
+            } else {
+                neighbors.push_back({row - 1, col});
+                if (col < COLS - 1) neighbors.push_back({row - 1, col + 1});
             }
         }
 
-        return validNeighbors;
+        // Lower neighbors
+        if (row < MAX_ROWS - 1) {
+            if (isEvenRow) {
+                neighbors.push_back({row + 1, col});
+                if (col > 0) neighbors.push_back({row + 1, col - 1});
+            } else {
+                neighbors.push_back({row + 1, col});
+                if (col < COLS - 1) neighbors.push_back({row + 1, col + 1});
+            }
+        }
+
+        return neighbors;
+    }
+
+    bool colorMatches(const SDL_Color &c1, const SDL_Color &c2) {
+        return c1.r == c2.r && c1.g == c2.g && c1.b == c2.b;
     }
 
     std::vector<Entity> findMatchingGroup(Entity bubble) {
         if (!gCoordinator.hasComponent<Color>(bubble) ||
-            !gCoordinator.hasComponent<Transform>(bubble)) {
+            !gCoordinator.hasComponent<Bubble>(bubble)) {
             return {};
         }
 
         auto &color = gCoordinator.getComponent<Color>(bubble);
-        auto &transform = gCoordinator.getComponent<Transform>(bubble);
-        GridPosition pos = worldToGrid(transform.x, transform.y);
-
-        if (pos.row >= grid.size() || pos.col >= COLS || grid[pos.row][pos.col] == INVALID_ENTITY) {
-            return {};
-        }
+        auto &bubbleComponent = gCoordinator.getComponent<Bubble>(bubble);
 
         std::vector<Entity> matches;
         std::set<GridPosition> visited;
         std::queue<GridPosition> toVisit;
 
-        toVisit.push(pos);
-        visited.insert(pos);
-        matches.push_back(bubble); // Add initial bubble
+        GridPosition startPos{bubbleComponent.row, bubbleComponent.col};
+        toVisit.push(startPos);
+        visited.insert(startPos);
+        matches.push_back(bubble);
 
         while (!toVisit.empty()) {
             GridPosition current = toVisit.front();
             toVisit.pop();
 
-            if (current.row >= grid.size() || current.col >= COLS) {
-                continue;
-            }
-
             auto neighbors = getNeighbors(current.row, current.col);
-            for (auto &neighbor: neighbors) {
+            for (const auto &neighbor: neighbors) {
                 if (neighbor.row >= grid.size() || neighbor.col >= COLS ||
                     visited.find(neighbor) != visited.end()) {
                     continue;
                 }
 
-                Entity neighborBubble = grid[neighbor.row][neighbor.col];
-                if (neighborBubble != INVALID_ENTITY &&
-                    gCoordinator.hasComponent<Color>(neighborBubble)) {
-                    auto &neighborColor = gCoordinator.getComponent<Color>(neighborBubble);
-                    if (neighborColor.color.r == color.color.r &&
-                        neighborColor.color.g == color.color.g &&
-                        neighborColor.color.b == color.color.b) {
-                        matches.push_back(neighborBubble);
+                Entity neighborEntity = grid[neighbor.row][neighbor.col];
+                if (neighborEntity != INVALID_ENTITY &&
+                    gCoordinator.hasComponent<Color>(neighborEntity)) {
+                    auto &neighborColor = gCoordinator.getComponent<Color>(neighborEntity);
+
+                    // Check if colors match
+                    if (colorMatches(color.color, neighborColor.color)) {
+                        matches.push_back(neighborEntity);
                         toVisit.push(neighbor);
                         visited.insert(neighbor);
                     }
@@ -254,14 +291,16 @@ private:
 
     void removeBubbles(const std::vector<Entity> &bubbles) {
         try {
+            // Update score immediately
             updateScore(bubbles);
+
             for (Entity bubble: bubbles) {
                 if (!gCoordinator.hasComponent<Transform>(bubble)) continue;
 
                 auto &transform = gCoordinator.getComponent<Transform>(bubble);
                 GridPosition pos = worldToGrid(transform.x, transform.y);
 
-                if (pos.row >= 0 && pos.row < grid.size() && pos.col >= 0 && pos.col < COLS) {
+                if (isValidGridPosition(pos.row, pos.col)) {
                     grid[pos.row][pos.col] = INVALID_ENTITY;
                     if (!gCoordinator.hasComponent<Destroy>(bubble)) {
                         gCoordinator.addComponent<Destroy>(bubble, Destroy{});
@@ -269,12 +308,6 @@ private:
                     gCoordinator.getComponent<Destroy>(bubble).destroy = true;
                 }
             }
-
-            // Don't handle floating bubbles immediately
-            // Schedule it for next frame
-            Event checkFloatingEvent{eventTypeToString(EventType::CheckFloatingBubbles), {}};
-            eventCoordinator.queueEvent(std::make_shared<Event>(checkFloatingEvent),
-                                        eventTimeline.getElapsedTime() + 100, Priority::LOW);
         } catch (const std::exception &e) {
             std::cerr << "Error removing bubbles: " << e.what() << std::endl;
         }
@@ -326,6 +359,49 @@ private:
         return {-1, -1}; // No empty position found
     }
 
+    void findConnectedBubbles(int row, int col, std::set<Entity> &anchored) {
+        if (!isValidGridPosition(row, col)) return;
+
+        Entity bubble = grid[row][col];
+        if (bubble == INVALID_ENTITY || anchored.find(bubble) != anchored.end()) {
+            return;
+        }
+
+        anchored.insert(bubble);
+
+        // Get valid neighbors
+        auto neighbors = getNeighbors(row, col);
+        for (const auto &neighbor: neighbors) {
+            if (isValidGridPosition(neighbor.row, neighbor.col)) {
+                findConnectedBubbles(neighbor.row, neighbor.col, anchored);
+            }
+        }
+    }
+
+    void processMatchesAndFloating(Entity entity) {
+        try {
+            auto matches = findMatchingGroup(entity);
+            if (matches.size() >= 3) {
+                // Immediately remove matched bubbles and update score
+                removeBubbles(matches);
+
+                // Queue floating bubble check with very small delay
+                Event checkFloatingEvent{
+                    eventTypeToString(EventType::CheckFloatingBubbles),
+                    {}
+                };
+                // eventCoordinator.queueEvent(
+                //     std::make_shared<Event>(checkFloatingEvent),
+                //     eventTimeline.getElapsedTime() + 50, // Reduced delay for more immediate feedback
+                //     Priority::HIGH // Higher priority for immediate processing
+                // );
+                eventCoordinator.emit(std::make_shared<Event>(checkFloatingEvent));
+            }
+        } catch (const std::exception &e) {
+            std::cerr << "Error in processMatchesAndFloating: " << e.what() << std::endl;
+        }
+    }
+
 public:
     BubbleGridSystem() : grid(1, std::vector<Entity>(COLS, INVALID_ENTITY)) {
         std::cout << "Grid initialized with dimensions: " << grid.size() << "x" << COLS << std::endl;
@@ -357,48 +433,35 @@ public:
 
     void addBubble(Entity entity) {
         try {
-            std::cout << "\nBubbleGridSystem::addBubble - Processing entity " << entity << std::endl;
-
             auto &transform = gCoordinator.getComponent<Transform>(entity);
-            std::cout << "Initial position - x: " << transform.x << ", y: " << transform.y << std::endl;
 
-            float snapX = transform.x;
-            float snapY = transform.y;
+            // Calculate exact grid position
+            float relativeX = transform.x - GRID_OFFSET_X;
+            float relativeY = transform.y - GRID_OFFSET_Y;
 
-            if (checkCollision(transform.x, transform.y, snapX, snapY)) {
-                std::cout << "Collision detected - Snapping to position x: " << snapX << ", y: " << snapY << std::endl;
-                transform.x = snapX;
-                transform.y = snapY;
-            } else if (transform.y <= GRID_OFFSET_Y) {
-                std::cout << "No collision - Snapping to top row" << std::endl;
-                transform.y = GRID_OFFSET_Y;
-                float relativeX = transform.x - GRID_OFFSET_X;
-                transform.x = std::round(relativeX / GRID_SIZE) * GRID_SIZE + GRID_OFFSET_X;
-                std::cout << "Top row snap position - x: " << transform.x << ", y: " << transform.y << std::endl;
+            int row = static_cast<int>(round(relativeY / GRID_SIZE));
+            int col = static_cast<int>(round(relativeX / GRID_SIZE));
+
+            // Adjust for odd rows
+            if (row % 2 == 1) {
+                relativeX -= GRID_SIZE / 2.0f;
+                col = static_cast<int>(round(relativeX / GRID_SIZE));
             }
 
-            GridPosition pos = worldToGrid(transform.x, transform.y);
-            std::cout << "Calculated grid position - row: " << pos.row << ", col: " << pos.col << std::endl;
-
-            if (pos.row >= 0 && pos.row < MAX_ROWS && pos.col >= 0 && pos.col < COLS) {
-                std::cout << "Position is within grid bounds - adding to grid" << std::endl;
-                grid[pos.row][pos.col] = entity;
+            if (row >= 0 && row < MAX_ROWS && col >= 0 && col < COLS) {
+                ensureGridSize(row);
+                grid[row][col] = entity;
 
                 if (!gCoordinator.hasComponent<Bubble>(entity)) {
-                    std::cout << "Adding Bubble component to entity" << std::endl;
-                    gCoordinator.addComponent(entity, Bubble{true, pos.row, pos.col});
+                    gCoordinator.addComponent(entity, Bubble{true, row, col});
+                } else {
+                    auto &bubble = gCoordinator.getComponent<Bubble>(entity);
+                    bubble.row = row;
+                    bubble.col = col;
                 }
 
-                auto matches = findMatchingGroup(entity);
-                std::cout << "Found " << matches.size() << " matching bubbles" << std::endl;
-
-                if (matches.size() >= 3) {
-                    std::cout << "Match of 3 or more found - removing bubbles" << std::endl;
-                    removeBubbles(matches);
-                    handleFloatingBubbles();
-                }
-            } else {
-                std::cout << "WARNING: Position out of grid bounds!" << std::endl;
+                // Immediately process matches and floating bubbles
+                processMatchesAndFloating(entity);
             }
         } catch (const std::exception &e) {
             std::cerr << "Error in addBubble: " << e.what() << std::endl;
@@ -443,52 +506,86 @@ public:
     }
 
     void handleFloatingBubbles() {
-        std::set<Entity> anchored;
-        std::vector<Entity> toRemove;
+        try {
+            std::set<Entity> anchored;
 
-        // First pass: find anchored bubbles
-        for (int col = 0; col < COLS; ++col) {
-            if (grid[0][col] != INVALID_ENTITY && gCoordinator.hasComponent<Transform>(grid[0][col])) {
-                anchored.insert(grid[0][col]);
-            }
-        }
-
-        // Second pass: find connected bubbles
-        bool changed;
-        do {
-            changed = false;
-            for (size_t row = 0; row < grid.size(); ++row) {
-                for (int col = 0; col < COLS; ++col) {
-                    Entity bubble = grid[row][col];
-                    if (bubble == INVALID_ENTITY || anchored.count(bubble) > 0) continue;
-
-                    auto neighbors = getNeighbors(row, col);
-                    for (const auto &neighbor: neighbors) {
-                        Entity neighborBubble = grid[neighbor.row][neighbor.col];
-                        if (neighborBubble != INVALID_ENTITY && anchored.count(neighborBubble) > 0) {
-                            anchored.insert(bubble);
-                            changed = true;
-                            break;
-                        }
-                    }
-                }
-            }
-        } while (changed);
-
-        // Final pass: remove unanchored bubbles
-        for (size_t row = 0; row < grid.size(); ++row) {
+            // First, find bubbles connected to the top row
             for (int col = 0; col < COLS; ++col) {
-                Entity bubble = grid[row][col];
-                if (bubble != INVALID_ENTITY && anchored.count(bubble) == 0 &&
-                    gCoordinator.hasComponent<Transform>(bubble)) {
-                    grid[row][col] = INVALID_ENTITY;
-                    if (!gCoordinator.hasComponent<Destroy>(bubble)) {
-                        gCoordinator.addComponent<Destroy>(bubble, Destroy{});
-                    }
-                    gCoordinator.getComponent<Destroy>(bubble).destroy = true;
+                if (isValidGridPosition(0, col) && grid[0][col] != INVALID_ENTITY) {
+                    findConnectedBubbles(0, col, anchored);
                 }
             }
+
+            // Remove unanchored bubbles
+            auto bubbles = gCoordinator.getEntitiesWithComponent<Bubble>();
+            for (auto entity: bubbles) {
+                if (!gCoordinator.hasComponent<Bubble>(entity)) continue;
+
+                auto &bubble = gCoordinator.getComponent<Bubble>(entity);
+                if (!isValidGridPosition(bubble.row, bubble.col)) continue;
+
+                if (anchored.find(entity) == anchored.end()) {
+                    // Remove from grid
+                    grid[bubble.row][bubble.col] = INVALID_ENTITY;
+
+                    // Mark for destruction
+                    if (!gCoordinator.hasComponent<Destroy>(entity)) {
+                        gCoordinator.addComponent<Destroy>(entity, Destroy{});
+                    }
+                    gCoordinator.getComponent<Destroy>(entity).destroy = true;
+                }
+            }
+        } catch (const std::exception &e) {
+            std::cerr << "Error in handleFloatingBubbles: " << e.what() << std::endl;
         }
+    }
+
+
+    void handleGridDrop() {
+        try {
+            // Update grid coordinates
+            updateGridCoordinates();
+
+            // Process all bubbles for matches after grid movement
+            auto bubbles = gCoordinator.getEntitiesWithComponent<Bubble>();
+            std::set<Entity> processedBubbles;
+
+            for (auto entity: bubbles) {
+                if (!gCoordinator.hasComponent<Bubble>(entity) ||
+                    processedBubbles.find(entity) != processedBubbles.end()) {
+                    continue;
+                }
+
+                auto matches = findMatchingGroup(entity);
+                if (matches.size() >= 3) {
+                    for (auto match: matches) {
+                        processedBubbles.insert(match);
+                    }
+                    removeBubbles(matches);
+                }
+            }
+
+            // Check for floating bubbles after all matches are processed
+            Event checkFloatingEvent{
+                eventTypeToString(EventType::CheckFloatingBubbles),
+                {}
+            };
+            eventCoordinator.queueEvent(
+                std::make_shared<Event>(checkFloatingEvent),
+                eventTimeline.getElapsedTime() + 50,
+                Priority::HIGH
+            );
+        } catch (const std::exception &e) {
+            std::cerr << "Error in handleGridDrop: " << e.what() << std::endl;
+        }
+    }
+
+
+    Entity getGridEntity(int row, int col) const {
+        if (!isValidGridPosition(row, col)) {
+            return INVALID_ENTITY;
+        }
+        return grid[row][col];
     }
 };
 

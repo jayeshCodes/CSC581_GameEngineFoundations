@@ -32,7 +32,9 @@ enum EventType {
     BubbleCreated,
     GridDropped,
     GridDropCompleted,
-    CheckFloatingBubbles
+    CheckFloatingBubbles,
+    ResetShooter,
+    DisableShooter
 };
 
 inline std::string eventTypeToString(EventType type) {
@@ -69,6 +71,18 @@ inline std::string eventTypeToString(EventType type) {
             return "EntityCreated";
         case EntityDestroyed:
             return "EntityDestroyed";
+        case GameOver:
+            return "GameOver";
+        case DisableShooter:
+            return "DisableShooter";
+        case ResetShooter:
+            return "ResetShooter";
+        case BubbleCreated:
+            return "BubbleCreated";
+        case GridDropped:
+            return "GridDropped";
+        case GridDropCompleted:
+            return "GridDropCompleted";
         default: return "Unknown";
     }
 }
@@ -161,6 +175,18 @@ struct BubbleCreatedData {
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(BubbleCreatedData, entity, row, col)
+
+struct DisableShooterData {
+    int64_t timestamp;
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(DisableShooterData, timestamp)
+
+struct ResetShooterData {
+    int64_t timestamp;
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ResetShooterData, timestamp)
 
 
 #endif //EVENT_HPP

@@ -240,6 +240,11 @@ struct BubbleShooter {
     bool canShoot = true; // Whether the canon can shoot a bubble
     float reloadTime = 0.5f; // Time it takes to reload the canon
     float currentReloadTime = 0.f; // Time since the canon last shot a bubble
+    bool isDisabled = false; // Whether the shooter is disabled
+    int64_t lastDisableTime = 0; // Time since the shooter was disabled
+    bool isShooting = false;        // Track if currently in shooting animation
+    int64_t lastShootTime = 0; // Time since the last shot
+    static constexpr int64_t SHOOT_COOLDOWN = 500; // Minimum time between shots in ms
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(BubbleShooter, rotationSpeed, minAngle, maxAngle, currentAngle, shootForce, canShoot,

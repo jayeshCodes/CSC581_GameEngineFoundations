@@ -19,6 +19,17 @@ extern EventCoordinator eventCoordinator;
 class BubbleShooterSystem : public System {
 private:
     SDL_Color nextBubbleColor;
+    bool wasDisabled = false; // Track if shooter was previously disabled
+    std::mutex shootMutex; // Protect shooting state
+
+    bool canShootNow(const BubbleShooter &shooter) {
+        if (shooter.isDisabled || !shooter.canShoot || shooter.isShooting) {
+            return false;
+        }
+
+        auto currentTime = eventTimeline.getElapsedTime();
+        return (currentTime - shooter.lastShootTime) >= BubbleShooter::SHOOT_COOLDOWN;
+    }
 
     // Utility to calculate angle in degrees between two points
     float calculateAngle(float x1, float y1, float x2, float y2) {
@@ -29,54 +40,6 @@ private:
         return angle;
     }
 
-public:
-    BubbleShooterSystem() : nextBubbleColor(shade_color::getRandomBubbleColor()) {
-    }
-
-    void update(float dt) {
-        for (auto const &entity: entities) {
-            auto &shooter = gCoordinator.getComponent<BubbleShooter>(entity);
-            auto &transform = gCoordinator.getComponent<Transform>(entity);
-            auto &color = gCoordinator.getComponent<Color>(entity);
-
-            color.color = nextBubbleColor;
-
-            // Update reload timer
-            if (!shooter.canShoot) {
-                shooter.currentReloadTime += dt;
-                if (shooter.currentReloadTime >= shooter.reloadTime) {
-                    shooter.canShoot = true;
-                    shooter.currentReloadTime = 0.f;
-                    // Generate next color when reloaded
-                    nextBubbleColor = shade_color::getRandomBubbleColor();
-                }
-            }
-
-            // Get keyboard state
-            const Uint8 *keyboardState = SDL_GetKeyboardState(nullptr);
-
-            // Handle mouse input
-            int mouseX, mouseY;
-            Uint32 mouseState = SDL_GetMouseState(&mouseX, &mouseY);
-
-            // Calculate angle based on mouse position (now correctly converted to degrees)
-            float angleToMouse = calculateAngle(transform.x, transform.y, mouseX, mouseY);
-            shooter.currentAngle = std::clamp(angleToMouse, shooter.minAngle, shooter.maxAngle);
-
-
-            // Shoot bubble with mouse left click or space bar
-            if ((mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) && shooter.canShoot) {
-                shootBubble(entity, shooter);
-                shooter.canShoot = false;
-            }
-            else if (keyboardState[SDL_SCANCODE_SPACE] && shooter.canShoot) {
-                shootBubble(entity, shooter);
-                shooter.canShoot = false;
-            }
-        }
-    }
-
-private:
     void shootBubble(Entity shooterEntity, BubbleShooter &shooter) {
         auto &shooterTransform = gCoordinator.getComponent<Transform>(shooterEntity);
 
@@ -102,6 +65,65 @@ private:
         gCoordinator.addComponent(bubble, ClientEntity{});
 
         nextBubbleColor = shade_color::getRandomBubbleColor();
+    }
+
+public:
+    BubbleShooterSystem() : nextBubbleColor(shade_color::getRandomBubbleColor()) {
+    }
+
+    void update(float dt) {
+        for (auto const &entity: entities) {
+            if (!gCoordinator.hasComponent<BubbleShooter>(entity)) {
+                continue;
+            }
+
+            auto &shooter = gCoordinator.getComponent<BubbleShooter>(entity);
+            auto &transform = gCoordinator.getComponent<Transform>(entity);
+            auto &color = gCoordinator.getComponent<Color>(entity);
+
+            if (shooter.isDisabled) {
+                continue;
+            }
+
+            // Update shooter's color to match next bubble
+            color.color = nextBubbleColor;
+
+            // Update reload timer if needed
+            if (!shooter.canShoot) {
+                shooter.currentReloadTime += dt;
+                if (shooter.currentReloadTime >= shooter.reloadTime) {
+                    shooter.canShoot = true;
+                    shooter.currentReloadTime = 0.f;
+                }
+            }
+
+            // Get input states
+            const Uint8 *keyboardState = SDL_GetKeyboardState(nullptr);
+            int mouseX, mouseY;
+            Uint32 mouseState = SDL_GetMouseState(&mouseX, &mouseY);
+
+            // Update angle
+            float angleToMouse = calculateAngle(transform.x, transform.y, mouseX, mouseY);
+            shooter.currentAngle = std::clamp(angleToMouse, shooter.minAngle, shooter.maxAngle);
+
+            // Handle shooting with thread safety and cooldown
+            if (canShootNow(shooter)) {
+                bool shouldShoot = (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) ||
+                                   keyboardState[SDL_SCANCODE_SPACE];
+
+                if (shouldShoot) {
+                    std::lock_guard<std::mutex> lock(shootMutex);
+                    // Double-check conditions after acquiring lock
+                    if (canShootNow(shooter)) {
+                        shooter.isShooting = true;
+                        shooter.lastShootTime = eventTimeline.getElapsedTime();
+                        shootBubble(entity, shooter);
+                        shooter.canShoot = false;
+                        shooter.isShooting = false;
+                    }
+                }
+            }
+        }
     }
 };
 

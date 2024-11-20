@@ -5,15 +5,50 @@
 #include "../ECS/system.hpp"
 #include "../model/components.hpp"
 #include "../core/structs.hpp"
+#include "../helpers/colors.hpp"
 
 extern Coordinator gCoordinator;
 extern App *app;
 
 class RenderSystem : public System {
 private:
-    // Helper function to draw a filled circle using SDL
-    void drawFilledCircle(int centerX, int centerY, int radius, SDL_Color color) const {
+    // Helper function to draw a circle outline using SDL
+    void drawCircleOutline(int centerX, int centerY, int radius, SDL_Color color) const {
         SDL_SetRenderDrawColor(app->renderer, color.r, color.g, color.b, color.a);
+
+        int x = radius - 1;
+        int y = 0;
+        int dx = 1;
+        int dy = 1;
+        int err = dx - (radius << 1);
+
+        while (x >= y) {
+            SDL_RenderDrawPoint(app->renderer, centerX + x, centerY + y);
+            SDL_RenderDrawPoint(app->renderer, centerX + y, centerY + x);
+            SDL_RenderDrawPoint(app->renderer, centerX - y, centerY + x);
+            SDL_RenderDrawPoint(app->renderer, centerX - x, centerY + y);
+            SDL_RenderDrawPoint(app->renderer, centerX - x, centerY - y);
+            SDL_RenderDrawPoint(app->renderer, centerX - y, centerY - x);
+            SDL_RenderDrawPoint(app->renderer, centerX + y, centerY - x);
+            SDL_RenderDrawPoint(app->renderer, centerX + x, centerY - y);
+
+            if (err <= 0) {
+                y++;
+                err += dy;
+                dy += 2;
+            }
+            if (err > 0) {
+                x--;
+                dx += 2;
+                err += dx - (radius << 1);
+            }
+        }
+    }
+
+    // Helper function to draw a filled circle with outline using SDL
+    void drawFilledCircle(int centerX, int centerY, int radius, SDL_Color fillColor) const {
+        // Draw filled circle
+        SDL_SetRenderDrawColor(app->renderer, fillColor.r, fillColor.g, fillColor.b, fillColor.a);
 
         for (int y = -radius; y <= radius; y++) {
             for (int x = -radius; x <= radius; x++) {
@@ -22,10 +57,21 @@ private:
                 }
             }
         }
+
+        // Create darker outline color
+        SDL_Color outlineColor = {
+            static_cast<Uint8>(fillColor.r * 0.7),
+            static_cast<Uint8>(fillColor.g * 0.7),
+            static_cast<Uint8>(fillColor.b * 0.7),
+            fillColor.a
+        };
+
+        // Draw outline
+        drawCircleOutline(centerX, centerY, radius, outlineColor);
     }
 
     // Alternative method using SDL2_gfx if available
-    void drawFilledCircleGFX(int centerX, int centerY, int radius, SDL_Color color) const {
+    void drawFilledCircleGFX(int centerX, int centerY, int radius, SDL_Color fillColor) const {
         const int diameter = (radius * 2);
         float x = radius - 0.5f;
         float y = 0.5f;
@@ -33,10 +79,10 @@ private:
         float ty = 1;
         float error = tx - diameter;
 
-        SDL_SetRenderDrawColor(app->renderer, color.r, color.g, color.b, color.a);
+        // Draw filled circle
+        SDL_SetRenderDrawColor(app->renderer, fillColor.r, fillColor.g, fillColor.b, fillColor.a);
 
         while (x >= y) {
-            // Each of the following renders a line from left to right
             SDL_RenderDrawLine(app->renderer, centerX - x, centerY - y, centerX + x, centerY - y);
             SDL_RenderDrawLine(app->renderer, centerX - x, centerY + y, centerX + x, centerY + y);
             SDL_RenderDrawLine(app->renderer, centerX - y, centerY - x, centerX + y, centerY - x);
@@ -53,6 +99,17 @@ private:
                 error += (tx - diameter);
             }
         }
+
+        // Create darker outline color
+        SDL_Color outlineColor = {
+            static_cast<Uint8>(fillColor.r * 0.7),
+            static_cast<Uint8>(fillColor.g * 0.7),
+            static_cast<Uint8>(fillColor.b * 0.7),
+            fillColor.a
+        };
+
+        // Draw outline
+        drawCircleOutline(centerX, centerY, radius, outlineColor);
     }
 
     void drawDirectionArrow(float x, float y, float angle, SDL_Color color) const {
@@ -120,9 +177,6 @@ public:
             const auto &transform = gCoordinator.getComponent<Transform>(entity);
             const auto &color = gCoordinator.getComponent<Color>(entity);
 
-            // Set the color for rendering the entity
-            SDL_SetRenderDrawColor(app->renderer, color.color.r, color.color.g, color.color.b, color.color.a);
-
             // Convert world coordinates to screen coordinates
             SDL_FRect tRect = {
                 transform.x - cameraComponent.x,
@@ -132,7 +186,8 @@ public:
             };
 
             if (gCoordinator.hasComponent<BubbleShooter>(entity)) {
-                // Draw shooter as circle
+                const auto &shooter = gCoordinator.getComponent<BubbleShooter>(entity);
+                // Draw shooter as circle with outline
                 int radius = transform.w / 2;
                 int centerX = tRect.x + radius;
                 int centerY = tRect.y + radius;
@@ -140,9 +195,6 @@ public:
                 drawFilledCircle(centerX, centerY, radius, color.color);
 
                 // Draw direction arrow
-                auto &shooter = gCoordinator.getComponent<BubbleShooter>(entity);
-
-                // Create contrasting color for arrow
                 SDL_Color arrowColor = {
                     static_cast<Uint8>(255 - color.color.r),
                     static_cast<Uint8>(255 - color.color.g),
@@ -153,12 +205,13 @@ public:
                 drawDirectionArrow(centerX, centerY, shooter.currentAngle, arrowColor);
 
             } else if (gCoordinator.hasComponent<BubbleProjectile>(entity) || gCoordinator.hasComponent<Bubble>(entity)) {
-                // Draw bubbles as circles
+                // Draw bubbles as circles with outlines
                 int radius = transform.w / 2;
                 int centerX = tRect.x + radius;
                 int centerY = tRect.y + radius;
 
                 drawFilledCircle(centerX, centerY, radius, color.color);
+                drawCircleOutline(centerX, centerY, radius, shade_color::Black);
             } else {
                 // Draw other entities as rectangles
                 SDL_SetRenderDrawColor(app->renderer, color.color.r, color.color.g, color.color.b, color.color.a);

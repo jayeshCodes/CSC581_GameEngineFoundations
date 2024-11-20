@@ -63,7 +63,10 @@ set(SOURCES
         lib/helpers/font_helper.cpp)
 
 add_executable(shade_engine ${SOURCES} main.cpp
-        lib/systems/bubble_event_handler.hpp)
+        lib/systems/bubble_event_handler.hpp
+        lib/systems/shooter_reset_handler.hpp
+        lib/systems/shooter_disable_handler.hpp
+        lib/systems/shooter_verification.hpp)
 add_executable(shade_engine_server ${SOURCES} server.cpp
         lib/helpers/font_helper.cpp)
 

@@ -10,4 +10,11 @@ namespace engine_constants {
     constexpr int SERVER_CONNECT_PORT = 5555;
 }
 
+namespace bubble_constants {
+    constexpr float GRID_SIZE = 32.0f;
+    constexpr float GRID_COLS = 16;
+    constexpr float GRID_OFFSET_X = (SCREEN_WIDTH - (GRID_COLS * GRID_SIZE)) / 2.0f;
+    constexpr float GRID_OFFSET_Y = 32.0f;
+}
+
 #endif //CONSTANTS_HPP

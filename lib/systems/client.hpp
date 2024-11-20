@@ -20,6 +20,7 @@ extern Coordinator gCoordinator;
 class ClientSystem : public System {
     std::map<Entity, Transform> previous;
     bool isReplaying = false;
+    std::mutex updateMutex;
 
     EventHandler startReplayHandler = [this](const std::shared_ptr<Event> &event) {
         if (event->type == eventTypeToString(EventType::StartReplaying)) {
@@ -45,27 +46,61 @@ public:
     }
 
     void update(zmq::socket_t &client_socket, Send_Strategy *send_strategy) {
-        if(isReplaying) return;
-        for (auto entity: entities) {
-            auto &client_entity = gCoordinator.getComponent<ClientEntity>(entity);
-            if (!client_entity.synced) {
-                return;
-            }
-            auto &transform = gCoordinator.getComponent<Transform>(entity);
-            auto &clientEntity = gCoordinator.getComponent<ClientEntity>(entity);
-            if (previous[entity].equal(transform) && clientEntity.noOfTimes == 0) {
-                continue;
-            }
-            clientEntity.noOfTimes--;
-            clientEntity.noOfTimes = std::max(0, clientEntity.noOfTimes);
-            auto message = send_strategy->get_message(entity, Message::UPDATE);
-            previous[entity] = transform;
+        if (isReplaying) return;
 
-            Event positionChangedEvent{
-                eventTypeToString(EventType::PositionChanged),
-                PositionChangedData{entity, send_strategy->get_message(entity, Message::UPDATE)}
-            };
-            eventCoordinator.emitServer(client_socket, std::make_shared<Event>(positionChangedEvent));
+        std::lock_guard<std::mutex> lock(updateMutex);
+
+        // Create a safe copy of entities to iterate over
+        std::vector<Entity> currentEntities(entities.begin(), entities.end());
+
+        for (auto entity: currentEntities) {
+            try {
+                // Verify entity still exists and has required components
+                if (!gCoordinator.hasComponent<ClientEntity>(entity) ||
+                    !gCoordinator.hasComponent<Transform>(entity)) {
+                    // Clean up our tracking for this entity
+                    previous.erase(entity);
+                    continue;
+                }
+
+                auto &client_entity = gCoordinator.getComponent<ClientEntity>(entity);
+                if (!client_entity.synced) {
+                    continue;
+                }
+
+                auto &transform = gCoordinator.getComponent<Transform>(entity);
+
+                // Check if we need to send an update
+                if (previous.find(entity) == previous.end() ||
+                    !previous[entity].equal(transform) ||
+                    client_entity.noOfTimes > 0) {
+                    auto message = send_strategy->get_message(entity, Message::UPDATE);
+                    previous[entity] = transform;
+
+                    if (client_entity.noOfTimes > 0) {
+                        client_entity.noOfTimes--;
+                    }
+
+                    Event positionChangedEvent{
+                        eventTypeToString(EventType::PositionChanged),
+                        PositionChangedData{entity, message}
+                    };
+                    eventCoordinator.emitServer(client_socket, std::make_shared<Event>(positionChangedEvent));
+                }
+            } catch (const std::exception &e) {
+                std::cerr << "Error processing entity " << entity << ": " << e.what() << std::endl;
+                // Clean up tracking for this entity on error
+                previous.erase(entity);
+            }
+        }
+
+        // Clean up previous positions for entities that no longer exist
+        for (auto it = previous.begin(); it != previous.end();) {
+            if (entities.find(it->first) == entities.end()) {
+                it = previous.erase(it);
+            } else {
+                ++it;
+            }
         }
     }
 };

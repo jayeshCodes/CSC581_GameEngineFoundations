@@ -17,6 +17,7 @@ extern EventCoordinator eventCoordinator;
 
 class BubbleGridMovementSystem : public System {
     static constexpr float WARNING_FLASH_INTERVAL = 0.5f;
+    static constexpr float SHOOTER_RESET_DELAY = 0.5f; // Delay before re-enabling shooter
 
 public:
     void update(float dt) {
@@ -40,6 +41,12 @@ public:
                     movement.isDropping = true;
                     movement.currentDropAmount = 0.0f;
                     movement.currentTime = 0.0f;
+                    // Disable shooter
+                    Event disableShooterEvent{
+                        eventTypeToString(EventType::DisableShooter),
+                        DisableShooterData{eventTimeline.getElapsedTime()}
+                    };
+                    eventCoordinator.emit(std::make_shared<Event>(disableShooterEvent));
                 }
             } else {
                 // Handle dropping
@@ -57,6 +64,22 @@ public:
                 if (movement.currentDropAmount >= movement.dropDistance) {
                     movement.isDropping = false;
                     movement.showWarning = false;
+                    // Queue reset event with delay
+                    int64_t resetTime = eventTimeline.getElapsedTime() +
+                                        static_cast<int64_t>(SHOOTER_RESET_DELAY * 1000);
+                    Event resetShooterEvent{
+                        eventTypeToString(EventType::ResetShooter),
+                        ResetShooterData{resetTime}
+                    };
+                    eventCoordinator.queueEvent(
+                        std::make_shared<Event>(resetShooterEvent),
+                        resetTime,
+                        Priority::HIGH
+                    );
+
+                    if (auto gridSystem = gCoordinator.getSystem<BubbleGridSystem>()) {
+                        gridSystem->handleGridDrop();
+                    }
 
                     // Generate new row at the top
                     auto generators = gCoordinator.getEntitiesWithComponent<GridGenerator>();
