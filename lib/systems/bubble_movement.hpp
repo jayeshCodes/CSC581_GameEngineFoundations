@@ -18,19 +18,21 @@ private:
     static constexpr float GRID_COLS = 15;
     static constexpr float GRID_OFFSET_X = (SCREEN_WIDTH - (GRID_COLS * GRID_SIZE)) / 2.0f;
     static constexpr float GRID_OFFSET_Y = 32.0f;
-    static constexpr float SNAP_THRESHOLD = GRID_SIZE * 0.8f; // Threshold for snapping
-    static constexpr float COLLISION_THRESHOLD = GRID_SIZE * 0.85f; // Threshold for bubble collision
+    static constexpr float SNAP_THRESHOLD = GRID_SIZE * 0.8f;
+    static constexpr float BOUNDARY_WIDTH = 10.0f;
+    static constexpr float LEFT_BOUNDARY = GRID_OFFSET_X - BOUNDARY_WIDTH - 17.f;
+    static constexpr float RIGHT_BOUNDARY = GRID_OFFSET_X + (GRID_COLS * GRID_SIZE) - 10.f;
+    static constexpr float COLLISION_THRESHOLD = 32.0f;
+
 
     bool checkBoundaryCollision(Transform &transform, float &velocityX) {
-        // Left boundary
-        if (transform.x <= GRID_OFFSET_X) {
-            transform.x = GRID_OFFSET_X;
+        if (transform.x <= LEFT_BOUNDARY + BOUNDARY_WIDTH) {
+            transform.x = LEFT_BOUNDARY + BOUNDARY_WIDTH;
             velocityX = std::abs(velocityX); // Bounce right
             return true;
         }
-        // Right boundary
-        if (transform.x + transform.w >= GRID_OFFSET_X + (GRID_COLS * GRID_SIZE)) {
-            transform.x = GRID_OFFSET_X + (GRID_COLS * GRID_SIZE) - transform.w;
+        if (transform.x + transform.w >= RIGHT_BOUNDARY) {
+            transform.x = RIGHT_BOUNDARY - transform.w;
             velocityX = -std::abs(velocityX); // Bounce left
             return true;
         }
@@ -77,6 +79,7 @@ private:
             float distance = std::sqrt(dx * dx + dy * dy);
 
             if (distance < COLLISION_THRESHOLD) {
+                std::cout << "Collision detected! Distance: " << distance << std::endl;
                 collision = true;
                 if (distance < closestDistance) {
                     closestDistance = distance;
@@ -146,42 +149,36 @@ public:
             if (!projectile.isMoving) continue;
 
             auto &transform = gCoordinator.getComponent<Transform>(entity);
-
-            // Update position
             transform.x += projectile.velocity.x * dt;
             transform.y += projectile.velocity.y * dt;
 
-            // Handle boundary collisions
-            if (transform.x <= GRID_OFFSET_X ) {
-                transform.x = GRID_OFFSET_X;
-                projectile.velocity.x = std::abs(projectile.velocity.x);
-            } else if (transform.x >= GRID_OFFSET_X + (GRID_COLS * GRID_SIZE) - GRID_SIZE) {
-                transform.x = GRID_OFFSET_X + (GRID_COLS * GRID_SIZE) - GRID_SIZE;
-                projectile.velocity.x = -std::abs(projectile.velocity.x);
-            }
+            checkBoundaryCollision(transform, projectile.velocity.x);
 
             SDL_FPoint snapPos;
             bool shouldSnap = false;
 
-            // Check for top boundary
             if (transform.y <= GRID_OFFSET_Y) {
                 snapPos = calculateExactGridPosition(transform.x, GRID_OFFSET_Y);
                 shouldSnap = true;
-            }
-            // Check for bubble collisions
-            else if (checkBubbleCollision(transform, snapPos)) {
+            } else if (checkBubbleCollision(transform, snapPos)) {
                 shouldSnap = true;
             }
 
             if (shouldSnap) {
-                // Ensure the snap position is valid
-                if (snapPos.x >= GRID_OFFSET_X &&
-                    snapPos.x <= GRID_OFFSET_X + (GRID_COLS * GRID_SIZE) - GRID_SIZE) {
+                if (snapPos.x >= LEFT_BOUNDARY + BOUNDARY_WIDTH &&
+                    snapPos.x <= RIGHT_BOUNDARY - transform.w) {
                     transform.x = snapPos.x;
                     transform.y = snapPos.y;
-
                     projectile.isMoving = false;
                     projectile.velocity = {0, 0};
+
+                    // Add Bubble component before adding to grid
+                    if (!gCoordinator.hasComponent<Bubble>(entity)) {
+                        Bubble bubble;
+                        bubble.isActive = true;
+                        bubble.radius = transform.w / 2;
+                        gCoordinator.addComponent(entity, bubble);
+                    }
 
                     if (auto gridSystem = gCoordinator.getSystem<BubbleGridSystem>()) {
                         gridSystem->addBubble(entity);

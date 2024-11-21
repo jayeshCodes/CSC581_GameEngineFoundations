@@ -19,13 +19,13 @@ extern EventCoordinator eventCoordinator;
 
 class BubbleEventHandlerSystem : public System {
 private:
-    EventHandler floatingBubbleshandler = [this](const std::shared_ptr<Event> &event) {
-        if (event->type == eventTypeToString(EventType::CheckFloatingBubbles)) {
-            if (auto gridSystem = gCoordinator.getSystem<BubbleGridSystem>()) {
-                gridSystem->handleFloatingBubbles();
-            }
-        }
-    };
+    // EventHandler floatingBubbleshandler = [this](const std::shared_ptr<Event> &event) {
+    //     if (event->type == eventTypeToString(EventType::CheckFloatingBubbles)) {
+    //         if (auto gridSystem = gCoordinator.getSystem<BubbleGridSystem>()) {
+    //             gridSystem->handleFloatingBubbles();
+    //         }
+    //     }
+    // };
 
     EventHandler gameOverHandler = [this](const std::shared_ptr<Event>& event) {
       if (event->type == eventTypeToString(EventType::GameOver)) {
@@ -37,12 +37,12 @@ private:
 
 public:
     BubbleEventHandlerSystem() {
-        eventCoordinator.subscribe(floatingBubbleshandler, eventTypeToString(EventType::CheckFloatingBubbles));
+        // eventCoordinator.subscribe(floatingBubbleshandler, eventTypeToString(EventType::CheckFloatingBubbles));
         // eventCoordinator.subscribe(gameOverHandler, eventTypeToString(EventType::GameOver));
     }
 
     ~BubbleEventHandlerSystem() {
-        eventCoordinator.unsubscribe(floatingBubbleshandler, eventTypeToString(EventType::CheckFloatingBubbles));
+        // eventCoordinator.unsubscribe(floatingBubbleshandler, eventTypeToString(EventType::CheckFloatingBubbles));
         // eventCoordinator.unsubscribe(gameOverHandler, eventTypeToString(EventType::GameOver));
     }
 };

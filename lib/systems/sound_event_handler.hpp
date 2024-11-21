@@ -60,7 +60,7 @@ public:
     SoundEventHandler(std::shared_ptr<SoundSystem> ss) : soundSystem(ss) {
         // Load all sound effects
         soundSystem->loadSound("shoot", "assets/sounds/sfx/shoot.wav");
-        soundSystem->loadSound("pop", "assets/sounds/sfx/pop.wav");
+        soundSystem->loadSound("pop", "assets/sounds/sfx/shoot.wav");
         soundSystem->loadSound("match", "assets/sounds/sfx/pop.wav");
         soundSystem->loadSound("bounce", "assets/sounds/sfx/pop.wav");
         soundSystem->loadSound("level_complete", "assets/sounds/sfx/pop.wav");

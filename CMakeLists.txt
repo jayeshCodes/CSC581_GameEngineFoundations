@@ -68,7 +68,16 @@ add_executable(shade_engine ${SOURCES} main.cpp
         lib/systems/shooter_disable_handler.hpp
         lib/systems/shooter_verification.hpp
         lib/systems/sound.hpp
-        lib/systems/sound_event_handler.hpp)
+        lib/systems/sound_event_handler.hpp
+        lib/systems/pop_animation.hpp
+        lib/systems/grid_generator.hpp
+        lib/systems/bubble_grid.hpp
+        lib/systems/bubble_match_handler.hpp
+        lib/systems/pause_handler.hpp
+        lib/systems/instruction_render.hpp
+        lib/systems/bubble_shooter.hpp
+        lib/systems/game_over_handler.hpp
+        lib/systems/reset_handler.hpp)
 add_executable(shade_engine_server ${SOURCES} server.cpp
         lib/helpers/font_helper.cpp)
 

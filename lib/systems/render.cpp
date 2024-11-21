@@ -112,14 +112,21 @@ private:
         drawCircleOutline(centerX, centerY, radius, outlineColor);
     }
 
-    void drawDirectionArrow(float x, float y, float angle, SDL_Color color) const {
+    void drawDirectionArrow(float x, float y, float angle, SDL_Color color, const SDL_FPoint &mousePos) const {
         // Convert angle to radians
         float radians = angle * M_PI / 180.0f;
 
-        // Arrow properties
-        const float arrowLength = 200.0f;
-        const float arrowHeadLength = 20.0f;
-        const float arrowHeadWidth = 15.0f;
+        // Calculate distance to mouse
+        float dx = mousePos.x - x;
+        float dy = mousePos.y - y;
+        float distance = std::sqrt(dx * dx + dy * dy);
+
+        // Set a minimum and maximum arrow length
+        float minArrowLength = 50.0f;
+        float maxArrowLength = 300.0f;
+
+        // Scale the arrow length based on the distance to the mouse
+        float arrowLength = std::clamp(distance, minArrowLength, maxArrowLength);
 
         // Calculate end point
         float endX = x + cos(radians) * arrowLength;
@@ -129,10 +136,10 @@ private:
         float headAngle1 = radians + M_PI * 0.8f; // 144 degrees
         float headAngle2 = radians - M_PI * 0.8f; // -144 degrees
 
-        float head1X = endX + cos(headAngle1) * arrowHeadLength;
-        float head1Y = endY + sin(headAngle1) * arrowHeadLength;
-        float head2X = endX + cos(headAngle2) * arrowHeadLength;
-        float head2Y = endY + sin(headAngle2) * arrowHeadLength;
+        float head1X = endX + cos(headAngle1) * (arrowLength * 0.1f);
+        float head1Y = endY + sin(headAngle1) * (arrowLength * 0.1f);
+        float head2X = endX + cos(headAngle2) * (arrowLength * 0.1f);
+        float head2Y = endY + sin(headAngle2) * (arrowLength * 0.1f);
 
         // Draw arrow line
         SDL_SetRenderDrawColor(app->renderer, color.r, color.g, color.b, color.a);
@@ -168,55 +175,70 @@ public:
     void update(const Entity camera) const {
         // Update camera based on the player's position
         Camera cameraComponent{0, 0, 0, 0, 0, 0};
-        if (camera != INVALID_ENTITY) {
+        if (camera != INVALID_ENTITY && gCoordinator.hasComponent<Camera>(camera)) {
             cameraComponent = gCoordinator.getComponent<Camera>(camera);
         }
 
+        // Create a safe copy of entities to iterate over
+        std::vector<Entity> currentEntities(entities.begin(), entities.end());
+
         // Loop through all entities to render them
         for (const Entity entity: entities) {
-            const auto &transform = gCoordinator.getComponent<Transform>(entity);
-            const auto &color = gCoordinator.getComponent<Color>(entity);
+            try {
+                if (!gCoordinator.hasComponent<Transform>(entity) ||
+                    !gCoordinator.hasComponent<Color>(entity)) {
+                    continue;
+                }
+                const auto &transform = gCoordinator.getComponent<Transform>(entity);
+                const auto &color = gCoordinator.getComponent<Color>(entity);
 
-            // Convert world coordinates to screen coordinates
-            SDL_FRect tRect = {
-                transform.x - cameraComponent.x,
-                transform.y,
-                transform.w,
-                transform.h
-            };
-
-            if (gCoordinator.hasComponent<BubbleShooter>(entity)) {
-                const auto &shooter = gCoordinator.getComponent<BubbleShooter>(entity);
-                // Draw shooter as circle with outline
-                int radius = transform.w / 2;
-                int centerX = tRect.x + radius;
-                int centerY = tRect.y + radius;
-
-                drawFilledCircleGFX(centerX, centerY, radius, color.color);
-
-                // Draw direction arrow
-                SDL_Color arrowColor = {
-                    static_cast<Uint8>(255 - color.color.r),
-                    static_cast<Uint8>(255 - color.color.g),
-                    static_cast<Uint8>(255 - color.color.b),
-                    255
+                // Convert world coordinates to screen coordinates
+                SDL_FRect tRect = {
+                    transform.x - cameraComponent.x,
+                    transform.y,
+                    transform.w,
+                    transform.h
                 };
 
-                drawDirectionArrow(centerX, centerY, shooter.currentAngle, arrowColor);
+                if (gCoordinator.hasComponent<BubbleShooter>(entity)) {
+                    const auto &shooter = gCoordinator.getComponent<BubbleShooter>(entity);
+                    // Draw shooter as circle with outline
+                    int radius = transform.w / 2;
+                    int centerX = tRect.x + radius;
+                    int centerY = tRect.y + radius;
 
-            } else if (gCoordinator.hasComponent<BubbleProjectile>(entity) || gCoordinator.hasComponent<Bubble>(entity)) {
-                // Draw bubbles as circles with outlines
-                int radius = transform.w / 2;
-                int centerX = tRect.x + radius;
-                int centerY = tRect.y + radius;
+                    drawFilledCircleGFX(centerX, centerY, radius, color.color);
 
-                drawFilledCircle(centerX, centerY, radius, color.color);
-                drawCircleOutline(centerX, centerY, radius, shade_color::Black);
-            } else {
-                // Draw other entities as rectangles
-                SDL_SetRenderDrawColor(app->renderer, color.color.r, color.color.g, color.color.b, color.color.a);
-                SDL_RenderDrawRectF(app->renderer, &tRect);
-                SDL_RenderFillRectF(app->renderer, &tRect);
+                    // Draw direction arrow
+                    SDL_Color arrowColor = {
+                        static_cast<Uint8>(255 - color.color.r),
+                        static_cast<Uint8>(255 - color.color.g),
+                        static_cast<Uint8>(255 - color.color.b),
+                        255
+                    };
+                    int mouseX, mouseY;
+                    Uint32 mouseState = SDL_GetMouseState(&mouseX, &mouseY);
+                    SDL_FPoint mousePos = {static_cast<float>(mouseX), static_cast<float>(mouseY)};
+
+                    drawDirectionArrow(centerX, centerY, shooter.currentAngle, arrowColor, mousePos);
+                } else if (gCoordinator.hasComponent<BubbleProjectile>(entity) || gCoordinator.hasComponent<
+                               Bubble>(entity)) {
+                    // Draw bubbles as circles with outlines
+                    int radius = transform.w / 2;
+                    int centerX = tRect.x + radius;
+                    int centerY = tRect.y + radius;
+
+                    drawFilledCircle(centerX, centerY, radius, color.color);
+                    drawCircleOutline(centerX, centerY, radius, shade_color::Black);
+                } else {
+                    // Draw other entities as rectangles
+                    SDL_SetRenderDrawColor(app->renderer, color.color.r, color.color.g, color.color.b, color.color.a);
+                    SDL_RenderDrawRectF(app->renderer, &tRect);
+                    SDL_RenderFillRectF(app->renderer, &tRect);
+                }
+            } catch (const std::exception &e) {
+                std::cerr << "Error rendering entity: " << e.what() << std::endl;
+                continue;
             }
         }
     }

@@ -367,6 +367,23 @@ inline void from_json(const nlohmann::json& j, Music& m) {
     j.at("shouldLoop").get_to(m.shouldLoop);
 }
 
+// PopAnimation component to track animation state
+struct PopAnimation {
+    float duration = 0.3f;      // Total animation duration in seconds
+    float currentTime = 0.0f;   // Current animation time
+    float initialScale = 1.0f;  // Starting scale
+    float finalScale = 1.5f;    // Scale before disappearing
+    bool isAnimating = false;   // Whether animation is active
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(PopAnimation, duration, currentTime, initialScale, finalScale, isAnimating)
+
+struct Button {
+    float x, y;
+    std::string label;
+    std::function<void()> onClick;
+};
+
 using ALL_COMPONENTS = std::variant<Transform, Color, CKinematic, Camera, Gravity, KeyboardMovement, Server, Receiver,
     MovingPlatform, ServerEntity, ClientEntity, Destroy, Collision, Jump, Respawnable, RigidBody, Dash, Stomp,
-    Bubble, BubbleProjectile, BubbleShooter, BubbleGridManager, Score, GridMovement, GridGenerator, Sound, Music>;
+    Bubble, BubbleProjectile, BubbleShooter, BubbleGridManager, Score, GridMovement, GridGenerator, Sound, Music, PopAnimation>;

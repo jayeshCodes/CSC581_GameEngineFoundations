@@ -1,7 +1,7 @@
 #pragma once
 
-#define ENGINE_NAME "Shade"
-#define ENGINE_VERSION "0.3"
+#define ENGINE_NAME "Bubble Pop"
+#define ENGINE_VERSION ""
 
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 720

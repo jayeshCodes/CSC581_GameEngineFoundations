@@ -12,51 +12,44 @@ class KinematicSystem : public System {
 public:
     void update(float dt) {
         std::lock_guard<std::mutex> lock(update_mutex);
-        for(const auto entity: entities) {
-            auto& transform = gCoordinator.getComponent<Transform>(entity);
-            auto& kinematic = gCoordinator.getComponent<CKinematic>(entity);
 
-            kinematic.rotation += kinematic.angular_acceleration * dt;
+        // Create a safe copy of entities to iterate over
+        std::vector<Entity> currentEntities(entities.begin(), entities.end());
 
-            kinematic.velocity.x += kinematic.acceleration.x * dt;
-            kinematic.velocity.y += kinematic.acceleration.y * dt;
+        for(const auto entity: currentEntities) {
+            try {
+                // Skip if entity no longer exists or doesn't have required components
+                if (!gCoordinator.hasComponent<Transform>(entity) ||
+                    !gCoordinator.hasComponent<CKinematic>(entity)) {
+                    continue;
+                    }
 
-            transform.x += kinematic.velocity.x * dt;
-            transform.y += kinematic.velocity.y * dt;
+                // Get references to components
+                auto& transform = gCoordinator.getComponent<Transform>(entity);
+                auto& kinematic = gCoordinator.getComponent<CKinematic>(entity);
 
-            transform.orientation += kinematic.rotation * dt;
+                // Update rotation
+                kinematic.rotation += kinematic.angular_acceleration * dt;
 
-            // Uncomment this if running test bench because otherwise objects will mysteriously disapped xD
+                // Update velocities
+                kinematic.velocity.x += kinematic.acceleration.x * dt;
+                kinematic.velocity.y += kinematic.acceleration.y * dt;
 
-            // if(transform.y > SCREEN_HEIGHT) {
-            //     transform.y = 0;
-            // } else if(transform.y < 0) {
-            //     transform.y = SCREEN_HEIGHT;
-            // }
-            //
-            // if(transform.x > SCREEN_WIDTH) {
-            //     transform.x = 0;
-            // } else if(transform.x < 0) {
-            //     transform.x = SCREEN_WIDTH;
-            // }
+                // Update positions
+                float new_x = transform.x + kinematic.velocity.x * dt;
+                float new_y = transform.y + kinematic.velocity.y * dt;
 
-            // We dont do this anymore because we have collision in the system and we want the player to die
+                // Apply the position updates
+                transform.x = new_x;
+                transform.y = new_y;
 
-            // if (transform.y < 0) {
-            //     transform.y = 0;
-            //     kinematic.velocity.y = 0; // Stop vertical movement if at the top
-            // } else if (transform.y + transform.h > SCREEN_HEIGHT) {
-            //     // `rect.h` is the height of the object
-            //     transform.y = SCREEN_HEIGHT - transform.h;
-            //     kinematic.velocity.y = 0; // Stop vertical movement if at the bottom
-            // }
-            // if (transform.x < 0) {
-            //     transform.x = 0;
-            //     kinematic.velocity.x = 0;
-            // } else if (transform.x + transform.w > SCREEN_WIDTH) {
-            //     transform.x = SCREEN_WIDTH - transform.w;
-            //     kinematic.velocity.x = 0;
-            // }
+                // Update orientation
+                transform.orientation += kinematic.rotation * dt;
+
+            } catch (const std::exception& e) {
+                std::cerr << "Error updating entity " << entity << " in KinematicSystem: " << e.what() << std::endl;
+                continue;
+            }
         }
     }
 };

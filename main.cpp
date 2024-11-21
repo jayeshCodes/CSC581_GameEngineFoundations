@@ -34,7 +34,14 @@
 #include "lib/systems/position_update_handler.hpp"
 #include "lib/systems/score_display.hpp"
 #include "lib/systems/bubble_grid_movement.hpp"
+#include "lib/systems/bubble_match_handler.hpp"
+#include "lib/systems/game_over_handler.hpp"
 #include "lib/systems/grid_generator.hpp"
+#include "lib/systems/instruction_render.hpp"
+#include "lib/systems/keyboard.hpp"
+#include "lib/systems/pause_handler.hpp"
+#include "lib/systems/pop_animation.hpp"
+#include "lib/systems/reset_handler.hpp"
 #include "lib/systems/shooter_disable_handler.hpp"
 #include "lib/systems/shooter_reset_handler.hpp"
 #include "lib/systems/shooter_verification.hpp"
@@ -93,10 +100,12 @@ void gameSystemsUpdate(
     std::shared_ptr<BubbleMovementSystem> bubbleMovementSystem,
     std::shared_ptr<DestroySystem> destroySystem,
     std::shared_ptr<EventSystem> eventSystem,
-    std::shared_ptr<ShooterVerificationSystem> shooterVerificationSystem,
     std::shared_ptr<BubbleShooterSystem> bubbleShooterSystem,
     std::shared_ptr<BubbleGridGeneratorSystem> gridGeneratorSystem,
-    std::shared_ptr<BubbleGridMovementSystem> gridMovementSystem
+    std::shared_ptr<BubbleGridMovementSystem> gridMovementSystem,
+    std::shared_ptr<PopAnimationSystem> popAnimationSystem,
+    std::shared_ptr<KeyboardMovementSystem> keyboardMovementSystem,
+    std::shared_ptr<PauseHandlerSystem> pauseHandlerSystem
 ) {
     Timeline systemTimeline(&gameTimeline, 1);
     auto last_time = systemTimeline.getElapsedTime();
@@ -108,23 +117,29 @@ void gameSystemsUpdate(
         last_time = current_time;
         dt = std::max(dt, engine_constants::FRAME_RATE);
 
-        try {
-            // Game logic systems
-            kinematicSystem->update(dt);
-            bubbleMovementSystem->update(dt);
-            destroySystem->update();
+        if (!gameTimeline.isPaused()) {
+            try {
+                // Event and state systems
+                eventSystem->update();
 
-            // Event and state systems
-            eventSystem->update();
-            shooterVerificationSystem->update();
-            bubbleShooterSystem->update(dt);
+                // Game logic systems
+                kinematicSystem->update(dt);
+                bubbleMovementSystem->update(dt);
 
-            // grid systems
-            gridGeneratorSystem->update();
-            gridMovementSystem->update(dt);
-        } catch (const std::exception &e) {
-            std::cerr << "Error in game systems thread: " << e.what() << std::endl;
+                // Animation systems
+                popAnimationSystem->update(dt);
+
+                // shooterVerificationSystem->update();
+                bubbleShooterSystem->update(dt);
+
+                // grid systems
+                gridGeneratorSystem->update();
+                gridMovementSystem->update(dt);
+            } catch (const std::exception &e) {
+                std::cerr << "Error in game systems thread: " << e.what() << std::endl;
+            }
         }
+        keyboardMovementSystem->update();
 
         // Maintain consistent update rate
         auto elapsed_time = systemTimeline.getElapsedTime();
@@ -185,6 +200,10 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Score>();
     gCoordinator.registerComponent<GridMovement>();
     gCoordinator.registerComponent<GridGenerator>();
+    gCoordinator.registerComponent<Sound>();
+    gCoordinator.registerComponent<Music>();
+    gCoordinator.registerComponent<PopAnimation>();
+    gCoordinator.registerComponent<KeyboardMovement>();
 
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
@@ -208,6 +227,14 @@ int main(int argc, char *argv[]) {
     auto shooterHandlerSystem = gCoordinator.registerSystem<ShooterHandlerSystem>();
     auto shooterDisableHandlerSystem = gCoordinator.registerSystem<ShooterDisableHandler>();
     auto shooterVerificationSystem = gCoordinator.registerSystem<ShooterVerificationSystem>();
+    auto popAnimationSystem = gCoordinator.registerSystem<PopAnimationSystem>();
+    auto bubbleMatchHandlerSystem = gCoordinator.registerSystem<BubbleMatchHandler>();
+    auto keyboardMovementSystem = gCoordinator.registerSystem<KeyboardMovementSystem>();
+    auto keyboardHandlerSystem = gCoordinator.registerSystem<KeyboardSystem>();
+    auto pauseHandlerSystem = gCoordinator.registerSystem<PauseHandlerSystem>();
+    auto instructionDisplaySystem = gCoordinator.registerSystem<InstructionDisplaySystem>();
+    auto gameOverHandlerSystem = gCoordinator.registerSystem<GameOverHandlerSystem>();
+    auto resetHandlerSystem = gCoordinator.registerSystem<ResetHandlerSystem>();
 
     auto soundSystem = std::make_shared<SoundSystem>();
     auto soundEventHandler = std::make_shared<SoundEventHandler>(soundSystem);
@@ -284,6 +311,20 @@ int main(int argc, char *argv[]) {
     verificationSignature.set(gCoordinator.getComponentType<BubbleShooter>());
     gCoordinator.setSystemSignature<ShooterVerificationSystem>(verificationSignature);
 
+    Signature popAnimationSignature;
+    popAnimationSignature.set(gCoordinator.getComponentType<PopAnimation>());
+    popAnimationSignature.set(gCoordinator.getComponentType<Transform>());
+    popAnimationSignature.set(gCoordinator.getComponentType<Color>());
+    gCoordinator.setSystemSignature<PopAnimationSystem>(popAnimationSignature);
+
+    Signature matchHandlerSignature;
+    matchHandlerSignature.set(gCoordinator.getComponentType<Bubble>());
+    gCoordinator.setSystemSignature<BubbleMatchHandler>(matchHandlerSignature);
+
+    Signature keyboardMovementSignature;
+    keyboardMovementSignature.set(gCoordinator.getComponentType<KeyboardMovement>());
+    gCoordinator.setSystemSignature<KeyboardMovementSystem>(keyboardMovementSignature);
+
     zmq::socket_t reply_socket(context, ZMQ_DEALER);
     std::string id = identity + "R";
     reply_socket.set(zmq::sockopt::routing_id, id);
@@ -296,8 +337,9 @@ int main(int argc, char *argv[]) {
     // });
 
     // init sounds
-    soundSystem->loadSound("shoot", "assets/sounds/shoot.wav");
-    soundSystem->loadSound("pop", "assets/sounds/pop.wav");
+    soundSystem->loadSound("shoot", "assets/sounds/sfx/shoot.wav");
+    soundSystem->loadSound("pop", "assets/sounds/sfx/pop.wav");
+    soundSystem->loadSound("match", "assets/sounds/sfx/pop.wav");
 
     Entity gridGenerator = gCoordinator.createEntity();
     gCoordinator.addComponent(gridGenerator, GridGenerator{
@@ -331,8 +373,26 @@ int main(int argc, char *argv[]) {
                                   0.0f // lastWarningToggle
                               });
 
+    const float GRID_SIZE = 32.0f;
+    const float GRID_COLS = 15;
+    const float GRID_OFFSET_X = (SCREEN_WIDTH - (GRID_COLS * GRID_SIZE)) / 2.0f;
+    const float BOUNDARY_WIDTH = 10.0f; // Width of invisible boundary
+    const float BOUNDARY_HEIGHT = SCREEN_HEIGHT; // Full height boundary
+    // Calculate the effective play area width
+    const float PLAY_AREA_LEFT = GRID_OFFSET_X - BOUNDARY_WIDTH - 17.f; // Left boundary x position
+    const float PLAY_AREA_RIGHT = GRID_OFFSET_X + (GRID_COLS * GRID_SIZE) - 10.f; // Right boundary x position
+    const float PLAY_AREA_WIDTH = PLAY_AREA_RIGHT - PLAY_AREA_LEFT;
+
+
     Entity shooter = gCoordinator.createEntity();
-    gCoordinator.addComponent(shooter, Transform{SCREEN_WIDTH / 2.f, SCREEN_HEIGHT - 50.f, 32.f, 32.f, 0});
+    const float SHOOTER_CENTER_X = PLAY_AREA_LEFT + (PLAY_AREA_WIDTH / 2.f);
+    gCoordinator.addComponent(shooter, Transform{
+                                  SHOOTER_CENTER_X, // x position (centered between boundaries)
+                                  SCREEN_HEIGHT - 50.f,
+                                  32.f,
+                                  32.f,
+                                  0
+                              });
     gCoordinator.addComponent(shooter, BubbleShooter{
                                   2.0f, // rotationSpeed
                                   200.0f, // minAngle (pointing up-left)
@@ -348,12 +408,8 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(shooter, ClientEntity{});
     gCoordinator.addComponent(shooter, CKinematic{{0, 0}, 0, {0, 0}, 0}); // Add with initial values
     gCoordinator.addComponent(shooter, Destroy{});
+    gCoordinator.addComponent(shooter, KeyboardMovement{});
 
-    const float GRID_SIZE = 32.0f;
-    const float GRID_COLS = 15;
-    const float GRID_OFFSET_X = (SCREEN_WIDTH - (GRID_COLS * GRID_SIZE)) / 2.0f;
-    const float BOUNDARY_WIDTH = 10.0f; // Width of invisible boundary
-    const float BOUNDARY_HEIGHT = SCREEN_HEIGHT; // Full height boundary
 
     // Create left boundary
     Entity leftBoundary = gCoordinator.createEntity();
@@ -379,27 +435,25 @@ int main(int argc, char *argv[]) {
 
     Entity topBoundary = gCoordinator.createEntity();
     gCoordinator.addComponent(topBoundary, Transform{
-                                GRID_OFFSET_X - BOUNDARY_WIDTH - 17.f, // Position just left of grid
-                                10.f, // Top of screen
-                                BOUNDARY_WIDTH, // Height
-                                GRID_COLS * GRID_SIZE + 2 * BOUNDARY_WIDTH, // Width
-                                0 // No rotation
-                            });
+                                  GRID_OFFSET_X - BOUNDARY_WIDTH - 17.f, // Position just left of grid
+                                  10.f, // Top of screen
+                                  BOUNDARY_WIDTH, // Height
+                                  GRID_COLS * GRID_SIZE + 2 * BOUNDARY_WIDTH, // Width
+                                  0 // No rotation
+                              });
     gCoordinator.addComponent(topBoundary, Color{shade_color::White});
 
     Entity bottomBoundary = gCoordinator.createEntity();
     gCoordinator.addComponent(bottomBoundary, Transform{
-                                   GRID_OFFSET_X - BOUNDARY_WIDTH - 17.f, // Position just left of grid
-                                   SCREEN_HEIGHT - 10.f, // Bottom of screen
-                                   BOUNDARY_WIDTH, // Height
-                                   GRID_COLS * GRID_SIZE + 2 * BOUNDARY_WIDTH + 7.f, // Width
-                                   0 // No rotation
-                               });
+                                  GRID_OFFSET_X - BOUNDARY_WIDTH - 17.f, // Position just left of grid
+                                  SCREEN_HEIGHT - 10.f, // Bottom of screen
+                                  BOUNDARY_WIDTH, // Height
+                                  GRID_COLS * GRID_SIZE + 2 * BOUNDARY_WIDTH + 7.f, // Width
+                                  0 // No rotation
+                              });
     gCoordinator.addComponent(bottomBoundary, Color{shade_color::White});
 
     gridGeneratorSystem->initializeGrid(gridGenerator);
-    // TODO
-    // Fix grid initialization
 
     Entity scoreEntity = gCoordinator.createEntity();
 
@@ -455,10 +509,12 @@ int main(int argc, char *argv[]) {
                                   bubbleMovementSystem,
                                   destroySystem,
                                   eventSystem,
-                                  shooterVerificationSystem,
                                   bubbleShooterSystem,
                                   gridGeneratorSystem,
-                                  gridMovementSystem
+                                  gridMovementSystem,
+                                  popAnimationSystem,
+                                  keyboardMovementSystem,
+                                  pauseHandlerSystem
     );
 
 
@@ -475,10 +531,15 @@ int main(int argc, char *argv[]) {
 
         try {
             // Keep only render-related systems in main thread
-            // TODO : Add a sound system
+
+            // Destroy system
+            destroySystem->update();
             cameraSystem->update(shooter);
             renderSystem->update(mainCamera);
             scoreDisplaySystem->update();
+            pauseHandlerSystem->update();
+            instructionDisplaySystem->update();
+            gameOverHandlerSystem->update();
         } catch (const std::exception &e) {
             std::cerr << "Error in render loop: " << e.what() << std::endl;
         }
@@ -498,6 +559,7 @@ int main(int argc, char *argv[]) {
     send_delete_signal(client_socket, shooter, strategy.get());
     // t1.join();
     // t2.join();
+
     gameSystemsThread.join(); // Wait for game systems thread to finish
     cleanupSDL();
     std::cout << "Closing " << ENGINE_NAME << " Engine" << std::endl;

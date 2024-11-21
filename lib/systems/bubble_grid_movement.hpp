@@ -18,8 +18,50 @@ extern EventCoordinator eventCoordinator;
 class BubbleGridMovementSystem : public System {
     static constexpr float WARNING_FLASH_INTERVAL = 0.5f;
     static constexpr float SHOOTER_RESET_DELAY = 0.5f; // Delay before re-enabling shooter
+    static constexpr int MAX_ROWS = 24;
+    static constexpr int COLS = 15;
+    static constexpr float GRID_SIZE = 32.0f;
+    static constexpr float GRID_OFFSET_X = (SCREEN_WIDTH - (COLS * GRID_SIZE)) / 2.0f;
+    static constexpr float GRID_OFFSET_Y = 32.0f;
+    static constexpr float OVERLAP_THRESHOLD = GRID_SIZE * 0.8f;
 
 public:
+    void updateBubbleGridPositions() {
+        if (auto gridSystem = gCoordinator.getSystem<BubbleGridSystem>()) {
+            gridSystem->resetGrid(); // Clear existing grid first
+
+            auto bubbles = gCoordinator.getEntitiesWithComponent<Bubble>();
+            for (auto bubbleEntity : bubbles) {
+                auto& transform = gCoordinator.getComponent<Transform>(bubbleEntity);
+                auto& bubble = gCoordinator.getComponent<Bubble>(bubbleEntity);
+
+                // Calculate new position
+                int row = static_cast<int>(round((transform.y - GRID_OFFSET_Y) / GRID_SIZE));
+                int col = static_cast<int>(round((transform.x - GRID_OFFSET_X) / GRID_SIZE));
+                if (row % 2 == 1) {
+                    col = static_cast<int>(round((transform.x - GRID_OFFSET_X - GRID_SIZE / 2) / GRID_SIZE));
+                }
+
+                bubble.row = row;
+                bubble.col = col;
+
+                // Update grid with new position
+                gridSystem->updateGridPosition(bubbleEntity, row, col);
+            }
+
+            // Check all bubbles for matches after grid is rebuilt
+            for (auto bubbleEntity : bubbles) {
+                auto matches = gridSystem->findMatchingBubbles(bubbleEntity);
+                if (matches.size() >= 3) {
+                    Event matchEvent{eventTypeToString(EventType::BubbleMatch), BubbleMatchData{matches}};
+                    eventCoordinator.emit(std::make_shared<Event>(matchEvent));
+                }
+            }
+        }
+    }
+
+
+
     void update(float dt) {
         for (auto entity: entities) {
             auto &movement = gCoordinator.getComponent<GridMovement>(entity);
@@ -64,6 +106,7 @@ public:
                 if (movement.currentDropAmount >= movement.dropDistance) {
                     movement.isDropping = false;
                     movement.showWarning = false;
+                    updateBubbleGridPositions();
                     // Queue reset event with delay
                     int64_t resetTime = eventTimeline.getElapsedTime() +
                                         static_cast<int64_t>(SHOOTER_RESET_DELAY * 1000);
@@ -78,7 +121,7 @@ public:
                     );
 
                     if (auto gridSystem = gCoordinator.getSystem<BubbleGridSystem>()) {
-                        gridSystem->handleGridDrop();
+                        // gridSystem->handleGridDrop();
                     }
 
                     // Generate new row at the top

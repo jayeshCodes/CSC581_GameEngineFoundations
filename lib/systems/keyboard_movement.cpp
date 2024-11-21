@@ -41,6 +41,8 @@ public:
         prevKeyState[SDL_SCANCODE_8] = false;
         prevKeyState[SDL_SCANCODE_9] = false;
         prevKeyState[SDL_SCANCODE_0] = false;
+        prevKeyState[SDL_SCANCODE_R] = false;
+        prevKeyState[SDL_SCANCODE_P] = false;
     }
 
     void update() {
@@ -90,7 +92,10 @@ public:
                 if (isPressed && !wasPressed) {
                     // Key just pressed
                     keyPressTime[key] = now;
+                    std::cout << "Key pressed: " << key << std::endl;
                     Event individualEvent{eventTypeToString(EventType::EntityInput), EntityInputData{entity, key}};
+                    std::cout << "Individual event: " << individualEvent.type << std::endl;
+                    std::cout << "Individual event data: " << individualEvent.data << std::endl;
                     eventCoordinator.emit(std::make_shared<Event>(individualEvent));
                 } else if (!isPressed && wasPressed) {
                     // Key just released

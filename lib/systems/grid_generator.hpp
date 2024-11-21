@@ -255,38 +255,52 @@ private:
         }
     }
 
-    void generateNewTopRow(const GridGenerator &generator) {
-        // Shift color state down
-        for (auto &row: colorState.colorGrid) {
-            row.clear();
-        }
-        colorState.colorGrid.insert(colorState.colorGrid.begin(), std::vector<SDL_Color>());
-        if (colorState.colorGrid.size() > ROWS) {
-            colorState.colorGrid.pop_back();
+    void generateNewTopRow(const GridGenerator& generator) {
+        // Find current top row
+        int topRow = INT_MAX;
+        auto bubbles = gCoordinator.getEntitiesWithComponent<Bubble>();
+
+        for (auto entity : bubbles) {
+            auto& bubble = gCoordinator.getComponent<Bubble>(entity);
+            topRow = std::min(topRow, bubble.row);
         }
 
-        generateRow(generator, 0);
+        // Generate new row at topRow - 1
+        generateRow(generator, topRow - 1);
     }
 
     void shiftRowsDown() {
+        // Track existing rows to prevent infinite loops
+        std::set<int> existingRows;
         auto bubbles = gCoordinator.getEntitiesWithComponent<Bubble>();
-        for (auto entity: bubbles) {
+
+        // First pass: collect row information
+        for (auto entity : bubbles) {
+            auto& bubble = gCoordinator.getComponent<Bubble>(entity);
+            existingRows.insert(bubble.row);
+        }
+
+        // Early exit if no bubbles
+        if (existingRows.empty()) return;
+
+        // Second pass: update positions with safety checks
+        for (auto entity : bubbles) {
             if (!gCoordinator.hasComponent<Transform>(entity) ||
                 !gCoordinator.hasComponent<Bubble>(entity)) {
                 continue;
-            }
+                }
 
-            auto &bubble = gCoordinator.getComponent<Bubble>(entity);
-            auto &transform = gCoordinator.getComponent<Transform>(entity);
+            auto& bubble = gCoordinator.getComponent<Bubble>(entity);
+            auto& transform = gCoordinator.getComponent<Transform>(entity);
 
-            // Verify new position is within bounds
-            float newY = transform.y + bubble_constants::GRID_SIZE;
-            if (newY < SCREEN_HEIGHT - bubble_constants::GRID_SIZE) {
-                transform.y = newY;
+            // Safe update with boundary check
+            if (transform.y + bubble_constants::GRID_SIZE < SCREEN_HEIGHT - bubble_constants::GRID_SIZE) {
+                transform.y += bubble_constants::GRID_SIZE;
                 bubble.row++;
             }
         }
     }
+
 
 public:
     void initializeGrid(Entity generatorEntity) {

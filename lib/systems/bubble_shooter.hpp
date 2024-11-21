@@ -19,6 +19,7 @@ extern EventCoordinator eventCoordinator;
 class BubbleShooterSystem : public System {
 private:
     SDL_Color nextBubbleColor;
+    Entity nextBubbleEntity = INVALID_ENTITY; // Add this to track the next bubble entity
     bool wasDisabled = false; // Track if shooter was previously disabled
     std::mutex shootMutex; // Protect shooting state
 
@@ -38,6 +39,26 @@ private:
             angle += 360.f; // Normalize negative angles to positive
         }
         return angle;
+    }
+
+    void createNextBubbleDisplay(const Transform& shooterTransform) {
+        // Remove previous next bubble if it exists
+        if (nextBubbleEntity != INVALID_ENTITY && gCoordinator.hasComponent<Destroy>(nextBubbleEntity)) {
+            gCoordinator.getComponent<Destroy>(nextBubbleEntity).destroy = true;
+        }
+
+        // Create new next bubble display
+        nextBubbleEntity = gCoordinator.createEntity();
+        gCoordinator.addComponent(nextBubbleEntity, Transform{
+            shooterTransform.x - 500.f, // Position slightly to the left of shooter
+            shooterTransform.y, // Position slightly below shooter
+            24.f, // Make it slightly smaller than regular bubbles
+            24.f,
+            0
+        });
+        gCoordinator.addComponent(nextBubbleEntity, Color{nextBubbleColor});
+        gCoordinator.addComponent(nextBubbleEntity, BubbleProjectile{.isMoving = false});
+        gCoordinator.addComponent(nextBubbleEntity, Destroy{}); // So it can be cleaned up later
     }
 
     void shootBubble(Entity shooterEntity, BubbleShooter &shooter) {
@@ -68,6 +89,7 @@ private:
         eventCoordinator.emit(std::make_shared<Event>(shootEvent));
 
         nextBubbleColor = shade_color::getRandomBubbleColor();
+
     }
 
 public:
