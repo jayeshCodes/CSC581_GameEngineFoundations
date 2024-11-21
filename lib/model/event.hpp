@@ -30,6 +30,8 @@ enum EventType {
     EntityDestroyed,
     GameOver,
     BubbleCreated,
+    BubbleShot,
+    BubbleCollision,
     GridDropped,
     GridDropCompleted,
     CheckFloatingBubbles,
@@ -83,6 +85,12 @@ inline std::string eventTypeToString(EventType type) {
             return "GridDropped";
         case GridDropCompleted:
             return "GridDropCompleted";
+        case BubbleShot:
+            return "BubbleShot";
+        case CheckFloatingBubbles:
+            return "CheckFloatingBubbles";
+        case BubbleCollision:
+            return "BubbleCollision";
         default: return "Unknown";
     }
 }

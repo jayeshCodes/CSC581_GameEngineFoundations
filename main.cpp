@@ -38,6 +38,8 @@
 #include "lib/systems/shooter_disable_handler.hpp"
 #include "lib/systems/shooter_reset_handler.hpp"
 #include "lib/systems/shooter_verification.hpp"
+#include "lib/systems/sound.hpp"
+#include "lib/systems/sound_event_handler.hpp"
 
 class ReceiverSystem;
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
@@ -207,6 +209,9 @@ int main(int argc, char *argv[]) {
     auto shooterDisableHandlerSystem = gCoordinator.registerSystem<ShooterDisableHandler>();
     auto shooterVerificationSystem = gCoordinator.registerSystem<ShooterVerificationSystem>();
 
+    auto soundSystem = std::make_shared<SoundSystem>();
+    auto soundEventHandler = std::make_shared<SoundEventHandler>(soundSystem);
+
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
@@ -289,6 +294,10 @@ int main(int argc, char *argv[]) {
     //         receiverSystem->update(reply_socket, strategy.get());
     //     }
     // });
+
+    // init sounds
+    soundSystem->loadSound("shoot", "assets/sounds/shoot.wav");
+    soundSystem->loadSound("pop", "assets/sounds/pop.wav");
 
     Entity gridGenerator = gCoordinator.createEntity();
     gCoordinator.addComponent(gridGenerator, GridGenerator{

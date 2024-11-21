@@ -64,6 +64,9 @@ private:
         gCoordinator.addComponent(bubble, Destroy{});
         gCoordinator.addComponent(bubble, ClientEntity{});
 
+        Event shootEvent{eventTypeToString(EventType::BubbleShot), {}};
+        eventCoordinator.emit(std::make_shared<Event>(shootEvent));
+
         nextBubbleColor = shade_color::getRandomBubbleColor();
     }
 

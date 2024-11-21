@@ -66,7 +66,9 @@ add_executable(shade_engine ${SOURCES} main.cpp
         lib/systems/bubble_event_handler.hpp
         lib/systems/shooter_reset_handler.hpp
         lib/systems/shooter_disable_handler.hpp
-        lib/systems/shooter_verification.hpp)
+        lib/systems/shooter_verification.hpp
+        lib/systems/sound.hpp
+        lib/systems/sound_event_handler.hpp)
 add_executable(shade_engine_server ${SOURCES} server.cpp
         lib/helpers/font_helper.cpp)
 
@@ -74,11 +76,13 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets DESTINATION ${CMAKE_CURRENT_BINARY_
 
 find_package(SDL2 REQUIRED)
 find_package(SDL2_ttf REQUIRED)
+find_package(SDL2_mixer REQUIRED)
 find_package(cppzmq REQUIRED)
 find_package(nlohmann_json 3.2.0 REQUIRED)
 
 # Combine all libraries for shade_engine in a single command
 target_link_libraries(shade_engine PRIVATE
+        SDL2_mixer::SDL2_mixer
         SDL2_ttf::SDL2_ttf
         SDL2::SDL2
         cppzmq

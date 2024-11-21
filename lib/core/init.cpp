@@ -47,7 +47,7 @@ void initSDL() {
 
     // Load the default font
     auto* fontHelper = FontHelper::getInstance();
-    if (!fontHelper->loadFont("game_font", "assets/fonts/Arial.ttf", 24)) {
+    if (!fontHelper->loadFont("game_font", "assets/fonts/PressStart2P-Regular.ttf", 24)) {
         std::cout << "Failed to load font" << std::endl;
         // Don't exit here as the game can still run without font
     }

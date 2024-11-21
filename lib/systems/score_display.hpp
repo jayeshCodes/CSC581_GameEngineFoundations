@@ -54,7 +54,7 @@ public:
                     auto *fontHelper = FontHelper::getInstance();
                     if (fontHelper) {
                         fontHelper->renderText(scoreText, "game_font", textColor, SCORE_X, SCORE_Y);
-                        fontHelper->renderText(multiplierText, "game_font", textColor, SCORE_X + 150, SCORE_Y);
+                        fontHelper->renderText(multiplierText, "game_font", textColor, SCORE_X, SCORE_Y + 30);
                     }
                 } catch (const std::exception &e) {
                     std::cerr << "Error rendering score: " << e.what() << std::endl;

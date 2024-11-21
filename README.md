@@ -18,6 +18,24 @@ and grew from the same template. Current capabilities include:
 8. Asynchronous networking capabilities using ZMQ for client server and peer to peer between 3 clients.
 9. A fully functional Event System where you can raise an event immediately or later or send it to the server.
 
+# Game Audio Assets
+
+## Sound Effects (assets/sounds/sfx/)
+- bubble_shoot.wav: Played when shooting a bubble
+- bubble_pop.wav: Played when a bubble is destroyed
+- bubble_match.wav: Played when matching 3+ bubbles
+- bubble_bounce.wav: Played when a bubble bounces off walls
+- level_complete.wav: Played when completing a level
+- game_over.wav: Played when game ends
+
+## Music (assets/sounds/music/)
+- menu_theme.mp3: Background music for menu
+- game_theme.mp3: Background music during gameplay
+
+## Audio Format Requirements
+- Sound effects: WAV format, 44.1kHz, 16-bit
+- Music: MP3 format, 44.1kHz, 192-320kbps
+
 # Instructions to build the code
 
 ## Since we used CLion CMake is required to build the project

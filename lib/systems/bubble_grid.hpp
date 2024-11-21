@@ -562,6 +562,9 @@ public:
                         processedBubbles.insert(match);
                     }
                     removeBubbles(matches);
+                    // Add sound event
+                    Event matchEvent{eventTypeToString(EventType::CheckFloatingBubbles), {}};
+                    eventCoordinator.emit(std::make_shared<Event>(matchEvent));
                 }
             }
 

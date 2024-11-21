@@ -242,7 +242,7 @@ struct BubbleShooter {
     float currentReloadTime = 0.f; // Time since the canon last shot a bubble
     bool isDisabled = false; // Whether the shooter is disabled
     int64_t lastDisableTime = 0; // Time since the shooter was disabled
-    bool isShooting = false;        // Track if currently in shooting animation
+    bool isShooting = false; // Track if currently in shooting animation
     int64_t lastShootTime = 0; // Time since the last shot
     static constexpr int64_t SHOOT_COOLDOWN = 500; // Minimum time between shots in ms
 };
@@ -278,43 +278,95 @@ struct Score {
     int comboBonus = 50; // Bonus for popping multiple bubbles in a row (more than 3)
 
     Score() = default;
+
     Score(int value, int multiplier, int bubbleScore, int comboBonus) : value(value), multiplier(multiplier),
-                                                                       bubbleScore(bubbleScore), comboBonus(comboBonus) {}
+                                                                        bubbleScore(bubbleScore),
+                                                                        comboBonus(comboBonus) {
+    }
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Score, value, multiplier, bubbleScore, comboBonus)
 
 struct GridMovement {
-    float dropInterval{15.0f};      // Time between drops in seconds
-    float currentTime{0.0f};        // Current time accumulator
-    float dropDistance{32.0f};      // Distance to drop each time
-    float warningTime{3.0f};        // Time to start warning before drop
-    bool isDropping{false};         // Whether grid is currently dropping
-    float dropSpeed{64.0f};         // Units per second during drop
-    float currentDropAmount{0.0f};  // How far we've dropped in current movement
-    bool showWarning{false};        // Whether to show warning
-    float lastWarningToggle{0.0f};  // Time since last warning toggle
+    float dropInterval{15.0f}; // Time between drops in seconds
+    float currentTime{0.0f}; // Current time accumulator
+    float dropDistance{32.0f}; // Distance to drop each time
+    float warningTime{3.0f}; // Time to start warning before drop
+    bool isDropping{false}; // Whether grid is currently dropping
+    float dropSpeed{64.0f}; // Units per second during drop
+    float currentDropAmount{0.0f}; // How far we've dropped in current movement
+    bool showWarning{false}; // Whether to show warning
+    float lastWarningToggle{0.0f}; // Time since last warning toggle
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(GridMovement, dropInterval, currentTime, dropDistance, warningTime, isDropping, dropSpeed, currentDropAmount, showWarning, lastWarningToggle)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(GridMovement, dropInterval, currentTime, dropDistance, warningTime, isDropping,
+                                   dropSpeed, currentDropAmount, showWarning, lastWarningToggle)
 
 struct GridGenerator {
-    int initialRows = 4;           // Number of rows to start with
-    int rowsPerDrop = 1;          // How many rows to add after each drop
-    float bubbleRadius = 16.0f;    // Radius of each bubble
-    float startX;                  // Starting X position of grid (calculated)
-    float startY = 32.0f;         // Starting Y position of grid
-    int maxColumns;               // Maximum columns in grid
+    int initialRows = 4; // Number of rows to start with
+    int rowsPerDrop = 1; // How many rows to add after each drop
+    float bubbleRadius = 16.0f; // Radius of each bubble
+    float startX; // Starting X position of grid (calculated)
+    float startY = 32.0f; // Starting Y position of grid
+    int maxColumns; // Maximum columns in grid
     std::vector<SDL_Color> availableColors;
     bool needsNewRow = false;
 
     // Calculated during initialization
-    float horizontalSpacing;      // Distance between bubble centers horizontally
-    float verticalSpacing;        // Distance between rows
+    float horizontalSpacing; // Distance between bubble centers horizontally
+    float verticalSpacing; // Distance between rows
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(GridGenerator, initialRows, rowsPerDrop, bubbleRadius, startX, startY, maxColumns, availableColors, needsNewRow, horizontalSpacing, verticalSpacing)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(GridGenerator, initialRows, rowsPerDrop, bubbleRadius, startX, startY, maxColumns,
+                                   availableColors, needsNewRow, horizontalSpacing, verticalSpacing)
+
+// Sound component to attach to entities that can play sounds
+struct Sound {
+    std::string currentSound;
+    float volume = 1.0f;
+    bool isLooping = false;
+    bool isPlaying = false;
+};
+
+inline void to_json(nlohmann::json& j, const Sound& s) {
+    j = nlohmann::json{
+            {"currentSound", s.currentSound},
+            {"volume", s.volume},
+            {"isLooping", s.isLooping},
+            {"isPlaying", s.isPlaying}
+    };
+}
+
+inline void from_json(const nlohmann::json& j, Sound& s) {
+    j.at("currentSound").get_to(s.currentSound);
+    j.at("volume").get_to(s.volume);
+    j.at("isLooping").get_to(s.isLooping);
+    j.at("isPlaying").get_to(s.isPlaying);
+}
+
+struct Music {
+    std::string currentTrack;
+    float volume = 1.0f;
+    bool isPlaying = false;
+    bool shouldLoop = true;
+};
+
+inline void to_json(nlohmann::json& j, const Music& m) {
+    j = nlohmann::json{
+            {"currentTrack", m.currentTrack},
+            {"volume", m.volume},
+            {"isPlaying", m.isPlaying},
+            {"shouldLoop", m.shouldLoop}
+    };
+}
+
+inline void from_json(const nlohmann::json& j, Music& m) {
+    j.at("currentTrack").get_to(m.currentTrack);
+    j.at("volume").get_to(m.volume);
+    j.at("isPlaying").get_to(m.isPlaying);
+    j.at("shouldLoop").get_to(m.shouldLoop);
+}
 
 using ALL_COMPONENTS = std::variant<Transform, Color, CKinematic, Camera, Gravity, KeyboardMovement, Server, Receiver,
     MovingPlatform, ServerEntity, ClientEntity, Destroy, Collision, Jump, Respawnable, RigidBody, Dash, Stomp,
-    Bubble, BubbleProjectile, BubbleShooter, BubbleGridManager, Score, GridMovement, GridGenerator>;
+    Bubble, BubbleProjectile, BubbleShooter, BubbleGridManager, Score, GridMovement, GridGenerator, Sound, Music>;
