@@ -82,6 +82,7 @@ public:
             auto &color = gCoordinator.getComponent<Color>(entity);
 
             if (shooter.isDisabled) {
+                color.color = shade_color::Gray;
                 continue;
             }
 

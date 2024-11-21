@@ -350,25 +350,43 @@ int main(int argc, char *argv[]) {
     Entity leftBoundary = gCoordinator.createEntity();
     gCoordinator.addComponent(leftBoundary, Transform{
                                   GRID_OFFSET_X - BOUNDARY_WIDTH - 17.f, // Position just left of grid
-                                  0, // Top of screen
-                                  BOUNDARY_HEIGHT, // Height
+                                  10.f, // Top of screen
+                                  BOUNDARY_HEIGHT - 20.f, // Height
                                   BOUNDARY_WIDTH, // Width
                                   0 // No rotation
                               });
     gCoordinator.addComponent(leftBoundary, Color{shade_color::White});
-    gCoordinator.addComponent(leftBoundary, CKinematic{}); // Required for collision system
 
     // Create right boundary
     Entity rightBoundary = gCoordinator.createEntity();
     gCoordinator.addComponent(rightBoundary, Transform{
                                   GRID_OFFSET_X + (GRID_COLS * GRID_SIZE) - 10.f, // Position just right of grid
-                                  0, // Top of screen
-                                  BOUNDARY_HEIGHT, // Height
+                                  10.f, // Top of screen
+                                  BOUNDARY_HEIGHT - 20.f, // Height
                                   BOUNDARY_WIDTH, // Width
                                   0 // No rotation
                               });
     gCoordinator.addComponent(rightBoundary, Color{shade_color::White}); // Invisible boundary
-    gCoordinator.addComponent(rightBoundary, CKinematic{}); // Required for collision system
+
+    Entity topBoundary = gCoordinator.createEntity();
+    gCoordinator.addComponent(topBoundary, Transform{
+                                GRID_OFFSET_X - BOUNDARY_WIDTH - 17.f, // Position just left of grid
+                                10.f, // Top of screen
+                                BOUNDARY_WIDTH, // Height
+                                GRID_COLS * GRID_SIZE + 2 * BOUNDARY_WIDTH, // Width
+                                0 // No rotation
+                            });
+    gCoordinator.addComponent(topBoundary, Color{shade_color::White});
+
+    Entity bottomBoundary = gCoordinator.createEntity();
+    gCoordinator.addComponent(bottomBoundary, Transform{
+                                   GRID_OFFSET_X - BOUNDARY_WIDTH - 17.f, // Position just left of grid
+                                   SCREEN_HEIGHT - 10.f, // Bottom of screen
+                                   BOUNDARY_WIDTH, // Height
+                                   GRID_COLS * GRID_SIZE + 2 * BOUNDARY_WIDTH + 7.f, // Width
+                                   0 // No rotation
+                               });
+    gCoordinator.addComponent(bottomBoundary, Color{shade_color::White});
 
     gridGeneratorSystem->initializeGrid(gridGenerator);
     // TODO

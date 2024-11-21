@@ -192,7 +192,7 @@ public:
                 int centerX = tRect.x + radius;
                 int centerY = tRect.y + radius;
 
-                drawFilledCircle(centerX, centerY, radius, color.color);
+                drawFilledCircleGFX(centerX, centerY, radius, color.color);
 
                 // Draw direction arrow
                 SDL_Color arrowColor = {
