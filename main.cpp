@@ -123,15 +123,17 @@ void physicsUpdate(Timeline &gameTimeline,
         dt = std::min(dt, FIXED_TIMESTEP); // Prevent large time steps
 
         // Update physics systems
-        keyboardMovementSystem->update();
-        kinematicSystem->update(dt);
-        jumpSystem->update(dt);
-        gravitySystem->update(dt);
-        collisionSystem->update();
-        deathSystem->update();
-        dashSystem->update(dt);
-        shooterSystem->update(dt);
-        projectileHandlerSystem->update(dt);
+        if (!gameTimeline.isPaused()) {
+            keyboardMovementSystem->update();
+            kinematicSystem->update(dt);
+            jumpSystem->update(dt);
+            gravitySystem->update(dt);
+            collisionSystem->update();
+            deathSystem->update();
+            dashSystem->update(dt);
+            shooterSystem->update(dt);
+            projectileHandlerSystem->update(dt);
+        }
 
         // Sleep to maintain consistent update rate
         std::this_thread::sleep_for(std::chrono::microseconds(8333)); // ~120 Hz

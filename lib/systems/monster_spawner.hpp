@@ -15,7 +15,7 @@ extern Coordinator gCoordinator;
 
 class MonsterSpawnerSystem : public System {
 private:
-    const float SPAWN_INTERVAL_Y = 500.0f;
+    const float SPAWN_INTERVAL_Y = 1000.0f;
     const float SPAWN_OFFSET_X = 100.0f;
     const int MAX_MONSTERS = 2;
     const float DESPAWN_OFFSET = 100.0f;      // Distance below camera view to despawn

@@ -97,6 +97,14 @@ private:
                         eventCoordinator.emit(std::make_shared<Event>(replayReplayEvent));
                     }
                     break;
+                case SDL_SCANCODE_P:
+                    if (!isKeyRelease) {
+                        if (!gameTimeline.isPaused()) {
+                            gameTimeline.pause();
+                        } else {
+                            gameTimeline.start();
+                        }
+                    }
             }
         }
     };
