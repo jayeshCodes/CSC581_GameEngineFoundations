@@ -61,15 +61,29 @@ set(SOURCES
         lib/systems/dash.hpp
         lib/systems/combo_event_handler.hpp
         lib/systems/replay_handler.hpp
-        lib/systems/position.hpp)
+        lib/systems/position.hpp
+        lib/helpers/texture_manager.hpp)
 
 
 add_executable(shade_engine ${SOURCES} main.cpp)
 add_executable(shade_engine_server ${SOURCES} server.cpp)
 
+add_custom_command(TARGET shade_engine POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/assets
+        $<TARGET_FILE_DIR:shade_engine>/assets
+)
+
+add_custom_command(TARGET shade_engine_server POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/assets
+        $<TARGET_FILE_DIR:shade_engine_server>/assets
+)
+
 find_package(SDL2 REQUIRED)
+find_package(SDL2_image REQUIRED)
 find_package(cppzmq REQUIRED)
 find_package(nlohmann_json 3.2.0 REQUIRED)
 
-target_link_libraries(shade_engine cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
-target_link_libraries(shade_engine_server cppzmq SDL2::SDL2 nlohmann_json::nlohmann_json)
+target_link_libraries(shade_engine cppzmq SDL2::SDL2 SDL2_image::SDL2_image nlohmann_json::nlohmann_json)
+target_link_libraries(shade_engine_server cppzmq SDL2::SDL2 SDL2_image::SDL2_image nlohmann_json::nlohmann_json)

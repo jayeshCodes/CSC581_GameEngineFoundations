@@ -13,37 +13,70 @@ class RenderSystem : public System {
 public:
     // Update method to handle rendering and camera control
     void update(const Entity camera) const {
-        // Update camera based on the player's position
-        Camera cameraComponent{0,0,0,0, 0, 0};
-        if(camera != INVALID_ENTITY) {
+        Camera cameraComponent{0, 0, 0, 0, 0, 0};
+        if (camera != INVALID_ENTITY) {
             cameraComponent = gCoordinator.getComponent<Camera>(camera);
         }
 
         // Loop through all entities to render them
         for (const Entity entity: entities) {
             const auto &transform = gCoordinator.getComponent<Transform>(entity);
-            const auto &color = gCoordinator.getComponent<Color>(entity);
 
-            // Set the color for rendering the entity
-            SDL_SetRenderDrawColor(app->renderer, color.color.r, color.color.g, color.color.b, color.color.a);
+            // Calculate screen position
+            float screenX = transform.x;
+            float screenY = transform.y - cameraComponent.y;
 
-            // Convert world coordinates to screen coordinates
-            SDL_FRect tRect = {
-                transform.x - cameraComponent.x,
-                transform.y,
-                transform.w,
-                transform.h
-            };
+            // If entity has a sprite, render it
+            if (gCoordinator.hasComponent<Sprite>(entity)) {
+                const auto &sprite = gCoordinator.getComponent<Sprite>(entity);
+                if (!sprite.texture) continue; // Skip if texture not loaded
 
-            // Draw and fill the rectangle
-            SDL_RenderDrawRectF(app->renderer, &tRect);
-            SDL_RenderFillRectF(app->renderer, &tRect);
+                // Calculate destination rectangle
+                SDL_FRect dstRect = {
+                    screenX,
+                    screenY,
+                    transform.w * sprite.scale,
+                    transform.h * sprite.scale
+                };
+
+                // Calculate flip flags
+                SDL_RendererFlip flip = SDL_FLIP_NONE;
+                if (sprite.flipX) flip = (SDL_RendererFlip) (flip | SDL_FLIP_HORIZONTAL);
+                if (sprite.flipY) flip = (SDL_RendererFlip) (flip | SDL_FLIP_VERTICAL);
+
+                // Render the sprite
+                SDL_RenderCopyExF(
+                    app->renderer,
+                    sprite.texture,
+                    &sprite.srcRect,
+                    &dstRect,
+                    transform.orientation,
+                    &sprite.origin,
+                    flip
+                );
+            }
+            // If entity has a color, render colored rectangle
+            else if (gCoordinator.hasComponent<Color>(entity)) {
+                const auto &color = gCoordinator.getComponent<Color>(entity);
+                SDL_SetRenderDrawColor(app->renderer, color.color.r, color.color.g, color.color.b, color.color.a);
+
+                SDL_FRect tRect = {
+                    screenX,
+                    screenY,
+                    transform.w,
+                    transform.h
+                };
+
+                SDL_RenderDrawRectF(app->renderer, &tRect);
+                SDL_RenderFillRectF(app->renderer, &tRect);
+            }
         }
     }
 
 private:
     // Convert world coordinates to screen coordinates
-    static void worldToScreen(float worldX, float worldY, float &screenX, float &screenY, const Camera &camera, float cameraX) {
+    static void worldToScreen(float worldX, float worldY, float &screenX, float &screenY, const Camera &camera,
+                              float cameraX) {
         // Translate X based on camera position, keep Y constant
         float translatedX = worldX - cameraX;
         float translatedY = worldY - camera.y - 100.f;

@@ -14,13 +14,19 @@ public:
         auto &playerTransform = gCoordinator.getComponent<Transform>(mainChar);
         for (auto &entity: entities) {
             auto &[x, y, zoom, rotation, viewport_width, viewport_height] = gCoordinator.getComponent<Camera>(entity);
-            if (playerTransform.x >= x + viewport_width) {
-                x += viewport_width;
-            } else if (playerTransform.x < x) {
-                x -= viewport_width;
-                if (x < 0) {
-                    x = 0;
-                }
+
+            // Add some deadzone at the bottom of the screen
+            // Only scroll up when player goes above middle of the screen
+            float screenMiddleY = viewport_height / 2;
+
+            if (playerTransform.y < y + screenMiddleY) {
+                // Player is above middle of screen, move camera up
+                y = playerTransform.y - screenMiddleY;
+            }
+
+            // Optional: Prevent camera from going below 0
+            if (y > 0) {
+                y = 0;
             }
         }
     }

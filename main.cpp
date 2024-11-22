@@ -36,6 +36,14 @@
 #include "lib/systems/position_update_handler.hpp"
 #include "lib/systems/replay_handler.hpp"
 #include "lib/systems/vertical_boost_handler.hpp"
+#ifdef _WIN32
+#include <direct.h>
+#define GetCurrentDir _getcwd
+#else
+#include <unistd.h>
+#define GetCurrentDir getcwd
+#endif
+#include <limits.h>  // for PATH_MAX
 
 class ReceiverSystem;
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
@@ -91,6 +99,7 @@ int main(int argc, char *argv[]) {
     std::cout << std::endl;
     initSDL();
     GameManager::getInstance()->gameRunning = true;
+    TextureManager::getInstance()->init(app->renderer);
     catch_signals();
 
     std::unique_ptr<Send_Strategy> strategy = nullptr;
@@ -135,6 +144,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Dash>();
     gCoordinator.registerComponent<Stomp>();
     gCoordinator.registerComponent<VerticalBoost>();
+    gCoordinator.registerComponent<Sprite>();
 
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
@@ -162,7 +172,8 @@ int main(int argc, char *argv[]) {
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
-    renderSignature.set(gCoordinator.getComponentType<Color>());
+    renderSignature.set(gCoordinator.getComponentType<Color>(), false);
+    renderSignature.set(gCoordinator.getComponentType<Sprite>(), false);
     gCoordinator.setSystemSignature<RenderSystem>(renderSignature);
 
     Signature kinematicSignature;
@@ -247,10 +258,20 @@ int main(int argc, char *argv[]) {
 
     Entity mainCamera = gCoordinator.createEntity();
     gCoordinator.addComponent(mainCamera, Camera{0, 0, 1.f, 0.f, SCREEN_WIDTH, SCREEN_HEIGHT});
+    char cwd[PATH_MAX];
+    if (getcwd(cwd, sizeof(cwd)) != nullptr) {
+        std::cout << "Current working directory: " << cwd << std::endl;
+    }
+
+    // moodle sprite
+    Sprite sprite;
+    sprite.texture = TextureManager::getInstance()->loadTexture("assets/images/moodle.png");
+    sprite.srcRect = {0, 0, 32, 32};
+    sprite.scale = 100.0f;
 
     auto mainChar = gCoordinator.createEntity();
     gCoordinator.addComponent(mainChar, Transform{0.f, SCREEN_HEIGHT - 200.f, 32, 32, 0});
-    gCoordinator.addComponent(mainChar, Color{shade_color::generateRandomSolidColor()});
+    gCoordinator.addComponent(mainChar, sprite);
     gCoordinator.addComponent(mainChar, CKinematic{});
     gCoordinator.addComponent(mainChar, KeyboardMovement{150.f});
     gCoordinator.addComponent(mainChar, ClientEntity{0, false});

@@ -1,6 +1,7 @@
 #pragma once
 #include "structs.hpp"
 #include "defs.hpp"
+#include "../helpers/texture_manager.hpp"
 #include <SDL.h>
 #include <iostream>
 
