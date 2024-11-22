@@ -65,7 +65,9 @@ set(SOURCES
         lib/helpers/texture_manager.hpp)
 
 
-add_executable(shade_engine ${SOURCES} main.cpp)
+add_executable(shade_engine ${SOURCES} main.cpp
+        lib/helpers/font_helper.cpp
+        lib/helpers/font_helper.hpp)
 add_executable(shade_engine_server ${SOURCES} server.cpp)
 
 add_custom_command(TARGET shade_engine POST_BUILD
@@ -82,8 +84,9 @@ add_custom_command(TARGET shade_engine_server POST_BUILD
 
 find_package(SDL2 REQUIRED)
 find_package(SDL2_image REQUIRED)
+find_package(SDL2_ttf REQUIRED)
 find_package(cppzmq REQUIRED)
 find_package(nlohmann_json 3.2.0 REQUIRED)
 
-target_link_libraries(shade_engine cppzmq SDL2::SDL2 SDL2_image::SDL2_image nlohmann_json::nlohmann_json)
-target_link_libraries(shade_engine_server cppzmq SDL2::SDL2 SDL2_image::SDL2_image nlohmann_json::nlohmann_json)
+target_link_libraries(shade_engine cppzmq SDL2::SDL2 SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf nlohmann_json::nlohmann_json)
+target_link_libraries(shade_engine_server cppzmq SDL2::SDL2 SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf nlohmann_json::nlohmann_json)
