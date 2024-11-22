@@ -22,73 +22,82 @@ private:
             auto entity = data.entity;
             auto &kinematic = gCoordinator.getComponent<CKinematic>(entity);
             auto &keyboard = gCoordinator.getComponent<KeyboardMovement>(entity);
-            auto &jump = gCoordinator.getComponent<Jump>(entity);
-            auto &dash = gCoordinator.getComponent<Dash>(entity);
-            auto &stomp = gCoordinator.getComponent<Stomp>(entity);
 
-            switch (data.key) {
-                // handle keypress events
-                case SDL_SCANCODE_LEFT: // Affordance for left arrow key
-                case SDL_SCANCODE_A: {
-                    kinematic.velocity.x = -keyboard.speed;
-                    keyboard.movingLeft = true;
-                    break;
-                }
-                case SDL_SCANCODE_RIGHT: // Affordance for right arrow key
-                case SDL_SCANCODE_D: {
-                    kinematic.velocity.x = keyboard.speed;
-                    keyboard.movingRight = true;
-                    break;
-                }
-                case SDL_SCANCODE_SPACE: {
-                    if (jump.canJump && !jump.isJumping) {
-                        kinematic.velocity.y = -jump.initialJumpVelocity;
-                        jump.isJumping = true;
-                        jump.canJump = false;
-                        jump.jumpTime = 0.f;
+            // Check if this is a key release event
+            bool isKeyRelease = (data.key & 0x8000) != 0;
+            SDL_Scancode key = static_cast<SDL_Scancode>(data.key & ~0x8000);
+
+            Sprite *sprite = gCoordinator.hasComponent<Sprite>(entity)
+                                 ? &gCoordinator.getComponent<Sprite>(entity)
+                                 : nullptr;
+            Dash *dash = gCoordinator.hasComponent<Dash>(entity) ? &gCoordinator.getComponent<Dash>(entity) : nullptr;
+            Jump *jump = gCoordinator.hasComponent<Jump>(entity) ? &gCoordinator.getComponent<Jump>(entity) : nullptr;
+            Stomp *stomp = gCoordinator.hasComponent<Stomp>(entity)
+                               ? &gCoordinator.getComponent<Stomp>(entity)
+                               : nullptr;
+
+            switch (key) {
+                case SDL_SCANCODE_LEFT:
+                case SDL_SCANCODE_A:
+                    if (isKeyRelease) {
+                        keyboard.movingLeft = false;
+                        keyboard.wasLeftReleased = true;
+                        if (!dash || !dash->isDashing) {
+                            kinematic.velocity.x = keyboard.movingRight ? keyboard.speed : 0;
+                        }
+                    } else {
+                        if (sprite) sprite->flipX = false;
+                        kinematic.velocity.x = -keyboard.speed;
+                        keyboard.movingLeft = true;
                     }
                     break;
-                }
-                case SDL_SCANCODE_8: {
-                    Event startReplayEvent{eventTypeToString(EventType::StartRecording), {}};
-                    eventCoordinator.emit(std::make_shared<Event>(startReplayEvent));
-                    break;
-                }
-                case SDL_SCANCODE_9: {
-                    Event stopReplayEvent{eventTypeToString(EventType::StopRecording), {}};
-                    eventCoordinator.emit(std::make_shared<Event>(stopReplayEvent));
-                    break;
-                }
-                case SDL_SCANCODE_0: {
-                    Event replayReplayEvent{eventTypeToString(EventType::StartReplaying), {}};
-                    eventCoordinator.emit(std::make_shared<Event>(replayReplayEvent));
-                    break;
-                }
-                // handle key release events
-                case SDL_SCANCODE_LEFT | 0x8000: // Affordance for left arrow key
-                case SDL_SCANCODE_A | 0x8000: {
-                    keyboard.movingLeft = false;
-                    keyboard.wasLeftReleased = true;
-                    if (!dash.isDashing) {
-                        kinematic.velocity.x = 0;
+
+                case SDL_SCANCODE_RIGHT:
+                case SDL_SCANCODE_D:
+                    if (isKeyRelease) {
+                        keyboard.movingRight = false;
+                        keyboard.wasRightReleased = true;
+                        if (!dash || !dash->isDashing) {
+                            kinematic.velocity.x = keyboard.movingLeft ? -keyboard.speed : 0;
+                        }
+                    } else {
+                        if (sprite) sprite->flipX = true;
+                        kinematic.velocity.x = keyboard.speed;
+                        keyboard.movingRight = true;
                     }
                     break;
-                }
-                case SDL_SCANCODE_RIGHT | 0x8000: // Affordance for right arrow key
-                case SDL_SCANCODE_D | 0x8000: {
-                    keyboard.movingRight = false;
-                    keyboard.wasRightReleased = true;
-                    if (!dash.isDashing) {
-                        kinematic.velocity.x = 0;
+
+                case SDL_SCANCODE_SPACE:
+                    if (isKeyRelease) {
+                        keyboard.wasSpaceReleased = true;
+                    } else if (jump && jump->canJump && !jump->isJumping) {
+                        jump->isJumping = true;
+                        jump->canJump = false;
+                        jump->jumpTime = 0.f;
                     }
                     break;
-                }
-                case SDL_SCANCODE_SPACE | 0x8000: {
-                    keyboard.wasSpaceReleased = true;
+
+                case SDL_SCANCODE_8:
+                    if (!isKeyRelease) {
+                        Event startReplayEvent{eventTypeToString(EventType::StartRecording), {}};
+                        eventCoordinator.emit(std::make_shared<Event>(startReplayEvent));
+                    }
                     break;
-                }
+
+                case SDL_SCANCODE_9:
+                    if (!isKeyRelease) {
+                        Event stopReplayEvent{eventTypeToString(EventType::StopRecording), {}};
+                        eventCoordinator.emit(std::make_shared<Event>(stopReplayEvent));
+                    }
+                    break;
+
+                case SDL_SCANCODE_0:
+                    if (!isKeyRelease) {
+                        Event replayReplayEvent{eventTypeToString(EventType::StartReplaying), {}};
+                        eventCoordinator.emit(std::make_shared<Event>(replayReplayEvent));
+                    }
+                    break;
             }
-
         }
     };
 
@@ -98,7 +107,6 @@ public:
     }
 
     ~KeyboardSystem() {
-        // unsubscribe keyboard events when the system is destroyed
         eventCoordinator.unsubscribe(keyboardHandler, eventTypeToString(EventType::EntityInput));
     }
 };

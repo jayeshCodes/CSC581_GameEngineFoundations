@@ -13,6 +13,7 @@ extern App *app;
 
 inline Timeline anchorTimeline(nullptr, 1000);
 inline Timeline gameTimeline(&anchorTimeline, 1);
+inline Timeline monsterTimeline(&anchorTimeline, 0.5);
 inline Timeline eventTimeline(&anchorTimeline, 1);
 inline std::string mainCharID;
 

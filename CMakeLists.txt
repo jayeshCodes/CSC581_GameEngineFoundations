@@ -62,12 +62,19 @@ set(SOURCES
         lib/systems/combo_event_handler.hpp
         lib/systems/replay_handler.hpp
         lib/systems/position.hpp
-        lib/helpers/texture_manager.hpp)
+        lib/helpers/texture_manager.hpp
+        lib/systems/platform_spawner.hpp
+        lib/systems/shoot.hpp
+        lib/systems/projectile_handler.hpp
+        lib/systems/monster_spawner.hpp)
 
 
 add_executable(shade_engine ${SOURCES} main.cpp
         lib/helpers/font_helper.cpp
-        lib/helpers/font_helper.hpp)
+        lib/helpers/font_helper.hpp
+        lib/systems/title_text.hpp
+        lib/systems/score.hpp
+        lib/systems/score_display.hpp)
 add_executable(shade_engine_server ${SOURCES} server.cpp)
 
 add_custom_command(TARGET shade_engine POST_BUILD

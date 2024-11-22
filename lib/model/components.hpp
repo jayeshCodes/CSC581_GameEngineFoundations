@@ -217,7 +217,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Stomp, isStomping, stompSpeed, stompDuration,
                                    cooldownTimeRemaining)
 
 struct VerticalBoost {
-    float velocity = -100.f;
+    float velocity = -800.f;
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(VerticalBoost, velocity)
@@ -267,6 +267,52 @@ inline void from_json(const nlohmann::json &j, Sprite &s) {
     s.origin.y = j["origin"]["y"];
 }
 
+struct IntroScreen {
+    bool isActive = true;
+    float fadeAlpha = 255; // for fade effects
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(IntroScreen, isActive, fadeAlpha)
+
+struct PlatformSpawner {
+    float nextSpawnY; // The y-coordinate of the next platform to spawn
+    float baseSpawnInterval; // The base time interval between platform spawns
+    float spawnVariation; // The variation in the spawn interval
+    float lastSpawnTime; // The time at which the last platform was spawned
+    float minX; // The minimum x-coordinate of the platform
+    float maxX; // The maximum x-coordinate of the platform
+    std::string texturePath; // The path to the texture of the platform
+    SDL_Texture *texture; // The texture of the platform
+    int platformWidth; // The width of the platform
+    int platformHeight; // The height of the platform
+    float lastCameraY; // The y-coordinate of the last camera position
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(PlatformSpawner, nextSpawnY, baseSpawnInterval, spawnVariation, lastSpawnTime, minX,
+                                   maxX, texturePath, platformWidth, platformHeight, lastCameraY)
+
+struct Shooter {
+    bool isActive; // Whether the shooter is active
+    float fireRate; // Rate of fire
+    float lastFireTime; // Time of last fire
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Shooter, isActive, fireRate, lastFireTime)
+
+struct Projectile {
+    float speed; // Speed of the projectile
+    float damage; // Damage dealt by the projectile
+    float distanceTravelled; // Distance travelled by the projectile
+    bool isDestroyed; // Whether the projectile is destroyed
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Projectile, speed, damage, distanceTravelled, isDestroyed)
+
+struct Score {
+    float score = 0;
+    float highestY = 0; // track score based on the highest y coordinate reached in the game world
+};
+
 using ALL_COMPONENTS = std::variant<Transform, Color, CKinematic, Camera, Gravity, KeyboardMovement, Server, Receiver,
     MovingPlatform, ServerEntity, ClientEntity, Destroy, Collision, Jump, Respawnable, RigidBody, Dash, Stomp,
-    VerticalBoost, Sprite>;
+    VerticalBoost, Sprite, IntroScreen, PlatformSpawner, Shooter, Projectile>;

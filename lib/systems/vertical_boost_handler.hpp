@@ -21,11 +21,27 @@ class VerticalBoostHandler : public System {
 
             if (gCoordinator.getEntityKey(otherEntity) != mainCharID) return;
 
-            if (gCoordinator.hasComponent<CKinematic>(otherEntity) && gCoordinator.hasComponent<VerticalBoost>(
-                    triggerEntity)) {
-                auto &kinematic = gCoordinator.getComponent<CKinematic>(otherEntity);
-                auto &[velocity] = gCoordinator.getComponent<VerticalBoost>(triggerEntity);
-                kinematic.velocity.y = velocity;
+            // Get transforms for both entities
+            auto &triggerTransform = gCoordinator.getComponent<Transform>(triggerEntity);
+            auto &playerTransform = gCoordinator.getComponent<Transform>(otherEntity);
+            auto &playerKinematic = gCoordinator.getComponent<CKinematic>(otherEntity);
+
+            // Check if player is above the trigger and moving downward
+            bool isAboveTrigger = (playerTransform.y + playerTransform.h) <= (triggerTransform.y + 5.0f);
+            // Small tolerance
+            bool isMovingDown = playerKinematic.velocity.y > 0;
+
+            if (isAboveTrigger && isMovingDown) {
+                if (gCoordinator.hasComponent<CKinematic>(otherEntity) &&
+                    gCoordinator.hasComponent<VerticalBoost>(triggerEntity)) {
+                    auto &kinematic = gCoordinator.getComponent<CKinematic>(otherEntity);
+                    auto &[velocity] = gCoordinator.getComponent<VerticalBoost>(triggerEntity);
+
+                    // Apply vertical boost
+                    kinematic.velocity.y = velocity;
+
+                    // Optional: Add visual/audio feedback here
+                }
             }
         }
     };

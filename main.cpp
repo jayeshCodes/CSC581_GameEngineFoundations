@@ -45,6 +45,14 @@
 #endif
 #include <limits.h>  // for PATH_MAX
 
+#include "lib/systems/monster_spawner.hpp"
+#include "lib/systems/platform_spawner.hpp"
+#include "lib/systems/projectile_handler.hpp"
+#include "lib/systems/score.hpp"
+#include "lib/systems/score_display.hpp"
+#include "lib/systems/shoot.hpp"
+#include "lib/systems/title_text.hpp"
+
 class ReceiverSystem;
 // Since no anchor this will be global time. The TimeLine class counts in microseconds and hence tic_interval of 1000 ensures this class counts in milliseconds
 
@@ -92,6 +100,44 @@ void send_delete_signal(zmq::socket_t &client_socket, Entity entity, Send_Strate
     }
 }
 
+std::atomic<bool> physicsRunning{true};
+
+void physicsUpdate(Timeline &gameTimeline,
+                   std::shared_ptr<KinematicSystem> kinematicSystem,
+                   std::shared_ptr<JumpSystem> jumpSystem,
+                   std::shared_ptr<GravitySystem> gravitySystem,
+                   std::shared_ptr<CollisionSystem> collisionSystem,
+                   std::shared_ptr<DeathSystem> deathSystem,
+                   std::shared_ptr<DashSystem> dashSystem,
+                   std::shared_ptr<ShooterSystem> shooterSystem,
+                   std::shared_ptr<KeyboardMovementSystem> keyboardMovementSystem,
+                   std::shared_ptr<ProjectileHandlerSystem> projectileHandlerSystem) {
+    const float FIXED_TIMESTEP = 1.0f / 120.0f; // 120 Hz physics updates
+    int64_t lastTime = gameTimeline.getElapsedTime();
+
+    while (physicsRunning && GameManager::getInstance()->gameRunning) {
+        int64_t currentTime = gameTimeline.getElapsedTime();
+        float dt = (currentTime - lastTime) / 1000.0f;
+        lastTime = currentTime;
+
+        dt = std::min(dt, FIXED_TIMESTEP); // Prevent large time steps
+
+        // Update physics systems
+        keyboardMovementSystem->update();
+        kinematicSystem->update(dt);
+        jumpSystem->update(dt);
+        gravitySystem->update(dt);
+        collisionSystem->update();
+        deathSystem->update();
+        dashSystem->update(dt);
+        shooterSystem->update(dt);
+        projectileHandlerSystem->update(dt);
+
+        // Sleep to maintain consistent update rate
+        std::this_thread::sleep_for(std::chrono::microseconds(8333)); // ~120 Hz
+    }
+}
+
 
 int main(int argc, char *argv[]) {
     std::cout << ENGINE_NAME << " v" << ENGINE_VERSION << " initializing" << std::endl;
@@ -122,6 +168,7 @@ int main(int argc, char *argv[]) {
 
     anchorTimeline.start();
     gameTimeline.start();
+    // monsterTimeline.start();
 
     std::vector<std::string> component_names{MAX_COMPONENTS};
     std::vector<std::string> entity_names{MAX_ENTITIES};
@@ -145,6 +192,11 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Stomp>();
     gCoordinator.registerComponent<VerticalBoost>();
     gCoordinator.registerComponent<Sprite>();
+    gCoordinator.registerComponent<IntroScreen>();
+    gCoordinator.registerComponent<PlatformSpawner>();
+    gCoordinator.registerComponent<Shooter>();
+    gCoordinator.registerComponent<Projectile>();
+    gCoordinator.registerComponent<Score>();
 
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
@@ -169,6 +221,13 @@ int main(int argc, char *argv[]) {
     auto dashSystem = gCoordinator.registerSystem<DashSystem>();
     auto comboEventHandler = gCoordinator.registerSystem<ComboEventHandler>();
     auto replayHandler = gCoordinator.registerSystem<ReplayHandler>();
+    auto introScreenSystem = gCoordinator.registerSystem<IntroScreenSystem>();
+    auto platformSpawnerSystem = gCoordinator.registerSystem<PlatformSpawnerSystem>();
+    auto shooterSystem = gCoordinator.registerSystem<ShooterSystem>();
+    auto projectileHandlerSystem = gCoordinator.registerSystem<ProjectileHandlerSystem>();
+    auto scoreSystem = gCoordinator.registerSystem<ScoreSystem>();
+    auto scoreDisplaySystem = gCoordinator.registerSystem<ScoreDisplaySystem>();
+    auto monsterSpawnerSystem = gCoordinator.registerSystem<MonsterSpawnerSystem>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
@@ -194,8 +253,8 @@ int main(int argc, char *argv[]) {
     keyboardMovementSignature.set(gCoordinator.getComponentType<Transform>());
     keyboardMovementSignature.set(gCoordinator.getComponentType<CKinematic>());
     keyboardMovementSignature.set(gCoordinator.getComponentType<KeyboardMovement>());
-    keyboardMovementSignature.set(gCoordinator.getComponentType<Jump>());
-    keyboardMovementSignature.set(gCoordinator.getComponentType<Dash>());
+    keyboardMovementSignature.set(gCoordinator.getComponentType<Jump>(), false);
+    keyboardMovementSignature.set(gCoordinator.getComponentType<Dash>(), false);
     gCoordinator.setSystemSignature<KeyboardMovementSystem>(keyboardMovementSignature);
 
     Signature clientSignature;
@@ -244,6 +303,32 @@ int main(int argc, char *argv[]) {
     dashSignature.set(gCoordinator.getComponentType<CKinematic>());
     gCoordinator.setSystemSignature<DashSystem>(dashSignature);
 
+    // Set up signature for intro screen system
+    Signature introScreenSignature;
+    introScreenSignature.set(gCoordinator.getComponentType<IntroScreen>());
+    gCoordinator.setSystemSignature<IntroScreenSystem>(introScreenSignature);
+
+    Signature platformSpawnerSignature;
+    platformSpawnerSignature.set(gCoordinator.getComponentType<PlatformSpawner>());
+    gCoordinator.setSystemSignature<PlatformSpawnerSystem>(platformSpawnerSignature);
+
+    Signature shooterSignature;
+    shooterSignature.set(gCoordinator.getComponentType<Shooter>());
+    shooterSignature.set(gCoordinator.getComponentType<Transform>());
+    gCoordinator.setSystemSignature<ShooterSystem>(shooterSignature);
+
+    Signature scoreSignature;
+    scoreSignature.set(gCoordinator.getComponentType<Score>());
+    scoreSignature.set(gCoordinator.getComponentType<Transform>());
+    gCoordinator.setSystemSignature<ScoreSystem>(scoreSignature);
+
+    Signature scoreDisplaySignature;
+    scoreDisplaySignature.set(gCoordinator.getComponentType<Score>());
+    gCoordinator.setSystemSignature<ScoreDisplaySystem>(scoreDisplaySignature);
+
+    Signature monsterSpawnerSignature;
+    gCoordinator.setSystemSignature<MonsterSpawnerSystem>(monsterSpawnerSignature);
+
     zmq::socket_t reply_socket(context, ZMQ_DEALER);
     std::string id = identity + "R";
     reply_socket.set(zmq::sockopt::routing_id, id);
@@ -254,6 +339,15 @@ int main(int argc, char *argv[]) {
             receiverSystem->update(reply_socket, strategy.get());
         }
     });
+
+    Entity introEntity = gCoordinator.createEntity();
+    gCoordinator.addComponent(introEntity, IntroScreen{});
+
+    Entity spawner = gCoordinator.createEntity();
+    gCoordinator.addComponent(spawner, PlatformSpawner{});
+
+    platformSpawnerSystem->init();
+    monsterSpawnerSystem->init();
 
 
     Entity mainCamera = gCoordinator.createEntity();
@@ -271,11 +365,11 @@ int main(int argc, char *argv[]) {
     std::cout << "Loaded texture dimensions: " << texWidth << "x" << texHeight << std::endl;
 
     // Calculate a good base size for the character (e.g., 1/8th of screen height)
-    float desiredHeight = SCREEN_HEIGHT / 8.0f; // Adjust this ratio to make character bigger/smaller
+    float desiredHeight = SCREEN_HEIGHT / 11.0f; // Adjust this ratio to make character bigger/smaller
     float scale = desiredHeight / texHeight; // Calculate scale to achieve desired height
 
     Sprite sprite;
-    sprite.texturePath = "assets/images/monsters/1.png";
+    sprite.texturePath = "assets/images/moodle.png";
     sprite.srcRect = {0, 0, texWidth, texHeight};
     sprite.scale = scale;
     sprite.origin = {0, 0};
@@ -289,28 +383,63 @@ int main(int argc, char *argv[]) {
 
     // Set transform dimensions to these exact values
     gCoordinator.addComponent(mainChar, Transform{
-                                  SCREEN_WIDTH / 2.0f - (desiredWidth / 2.0f), // center horizontally
-                                  SCREEN_HEIGHT - desiredHeight - 10.0f, // place above ground
+                                  SCREEN_WIDTH / 2, // center horizontally
+                                  SCREEN_HEIGHT - desiredHeight - 240.0f, // place above ground
                                   desiredHeight, // height
                                   desiredWidth, // width
                                   0 // orientation
                               });
     gCoordinator.addComponent(mainChar, sprite);
     gCoordinator.addComponent(mainChar, CKinematic{});
-    gCoordinator.addComponent(mainChar, KeyboardMovement{150.f});
+    gCoordinator.addComponent(mainChar, KeyboardMovement{200.f});
     gCoordinator.addComponent(mainChar, ClientEntity{0, false});
     gCoordinator.addComponent(mainChar, Destroy{});
-    gCoordinator.addComponent(mainChar, Jump{50.f, 1.f, false, 0.0f, true, 120.f});
-    gCoordinator.addComponent(mainChar, Gravity{0, 100});
+    // gCoordinator.addComponent(mainChar, Jump{50.f, 1.f, true, 0.0f, true, 120.f});
+    gCoordinator.addComponent(mainChar, Gravity{0, 1000});
     gCoordinator.addComponent(mainChar, Respawnable{
                                   {0, SCREEN_HEIGHT - 200.f, 32, 32, 0, 1}, false
                               });
     gCoordinator.addComponent(mainChar, RigidBody{1.f});
     gCoordinator.addComponent(mainChar, Collision{true, false, CollisionLayer::PLAYER});
-    gCoordinator.addComponent(mainChar, Dash{});
-    gCoordinator.addComponent(mainChar, Stomp{});
+    gCoordinator.addComponent(mainChar, Shooter{true, 0.5f, 0.0f});
+    gCoordinator.addComponent(mainChar, Score{0, SCREEN_HEIGHT - desiredHeight - 240.0f});
     std::cout << "MainChar: " << gCoordinator.getEntityKey(mainChar) << std::endl;
     mainCharID = gCoordinator.getEntityKey(mainChar);
+
+    SDL_Texture *tempTexture2 = TextureManager::getInstance()->loadTexture("assets/images/platform.png");
+    SDL_QueryTexture(tempTexture2, nullptr, nullptr, &texWidth, &texHeight);
+
+
+    Sprite platformSprite;
+    platformSprite.texturePath = "assets/images/platform.png";
+    platformSprite.srcRect = {0, 0, texWidth, texHeight};
+    platformSprite.scale = 1.0f;
+    platformSprite.origin = {0, 0};
+    platformSprite.flipX = false;
+    platformSprite.flipY = false;
+    float desiredPlatformHeight = SCREEN_HEIGHT / 8.0f; // Adjust this ratio to make character bigger/smaller
+    float platformScale = desiredPlatformHeight / texHeight; // Calculate scale to achieve desired height
+    float aspectRatio2 = (float) texWidth / texHeight;
+    float desiredPlatformWidth = desiredPlatformHeight * aspectRatio2;
+
+
+    // init platform for start screen
+    auto platform = gCoordinator.createEntity();
+    gCoordinator.addComponent(platform, Transform{
+                                  SCREEN_WIDTH / 2.f, // center horizontally
+                                  SCREEN_HEIGHT - 30.f, // place above ground
+                                  50.f, // height
+                                  120.f, // width
+                                  0 // orientation
+                              });
+    gCoordinator.addComponent(platform, platformSprite);
+    gCoordinator.addComponent(platform, CKinematic{});
+    gCoordinator.addComponent(platform, ClientEntity{0, false});
+    gCoordinator.addComponent(platform, Collision{false, true, CollisionLayer::OTHER});
+    gCoordinator.addComponent(platform, VerticalBoost{});
+    gCoordinator.addComponent(platform, RigidBody{-1.f});
+    gCoordinator.addComponent(platform, Destroy{});
+
 
     Event entityCreatedEvent{eventTypeToString(MainCharCreated), {}};
     entityCreatedEvent.data = MainCharCreatedData{mainChar, strategy->get_message(mainChar, Message::CREATE)};
@@ -335,6 +464,18 @@ int main(int argc, char *argv[]) {
         }
     });
 
+    std::thread physicsThread(physicsUpdate,
+                              std::ref(gameTimeline),
+                              kinematicSystem,
+                              jumpSystem,
+                              gravitySystem,
+                              collisionSystem,
+                              deathSystem,
+                              dashSystem,
+                              shooterSystem,
+                              keyboardMovementSystem,
+                              projectileHandlerSystem);
+
     while (GameManager::getInstance()->gameRunning) {
         doInput();
         prepareScene();
@@ -346,18 +487,25 @@ int main(int argc, char *argv[]) {
 
         dt = std::max(dt, engine_constants::FRAME_RATE); // Cap the maximum dt to 60fps
 
-        kinematicSystem->update(dt);
-        jumpSystem->update(dt);
-        gravitySystem->update(dt);
-        keyboardMovementSystem->update();
-        collisionSystem->update();
-        deathSystem->update();
-        destroySystem->update();
+        static int updateCounter = 0;
+        if (++updateCounter >= 6 && introScreenSystem->hasGameStarted()) {
+            // Update every 6th frame
+            platformSpawnerSystem->update(mainCamera);
+            monsterSpawnerSystem->update(mainCamera);
+            updateCounter = 0;
+        }
+        scoreSystem->update();
+        scoreDisplaySystem->update();
+        moveBetween2PointsSystem->update(dt, monsterTimeline);
         cameraSystem->update(mainChar);
         renderSystem->update(mainCamera);
         eventSystem->update();
-        dashSystem->update(dt);
         replayHandler->update();
+
+        if (!introScreenSystem->hasGameStarted()) {
+            introScreenSystem->update();
+        }
+
 
         auto elapsed_time = gameTimeline.getElapsedTime();
         auto time_to_sleep = (1.0f / 60.0f) - (elapsed_time - current_time); // Ensure float division
@@ -374,6 +522,8 @@ int main(int argc, char *argv[]) {
     send_delete_signal(client_socket, mainChar, strategy.get());
     t1.join();
     t2.join();
+    physicsRunning = false;
+    physicsThread.join();
     cleanupSDL();
     std::cout << "Closing " << ENGINE_NAME << " Engine" << std::endl;
     return 0;

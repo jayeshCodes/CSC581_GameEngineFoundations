@@ -27,7 +27,8 @@ enum EventType {
     StartReplaying,
     StopReplaying,
     EntityCreated,
-    EntityDestroyed
+    EntityDestroyed,
+    ProjectileCreate
 };
 
 inline std::string eventTypeToString(EventType type) {
@@ -64,6 +65,8 @@ inline std::string eventTypeToString(EventType type) {
             return "EntityCreated";
         case EntityDestroyed:
             return "EntityDestroyed";
+        case ProjectileCreate:
+            return "ProjectileCreate";
         default: return "Unknown";
     }
 }
@@ -143,5 +146,11 @@ struct EntityDestroyedData {
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(EntityDestroyedData, entity, id)
 
+struct ProjectileCreateData {
+    Transform shooterTransform;
+    float angle;
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ProjectileCreateData, shooterTransform, angle)
 
 #endif //EVENT_HPP

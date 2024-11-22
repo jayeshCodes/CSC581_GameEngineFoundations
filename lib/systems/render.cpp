@@ -13,6 +13,7 @@ extern App *app;
 
 class RenderSystem : public System {
 public:
+    bool debugDraw = false; // Toggle debug drawing
     // Update method to handle rendering and camera control
     void update(const Entity camera) const {
         Camera cameraComponent{0, 0, 0, 0, 0, 0};
@@ -24,55 +25,52 @@ public:
         SDL_RenderGetViewport(app->renderer, &viewport);
 
         for (const Entity entity: entities) {
-            const auto &transform = gCoordinator.getComponent<Transform>(entity);
+            const auto& transform = gCoordinator.getComponent<Transform>(entity);
             float screenX = transform.x;
             float screenY = transform.y - cameraComponent.y;
 
+            // Draw sprite if entity has one
             if (gCoordinator.hasComponent<Sprite>(entity)) {
-                const auto &sprite = gCoordinator.getComponent<Sprite>(entity);
-                SDL_Texture *texture = TextureManager::getInstance()->loadTexture(sprite.texturePath);
-                if (!texture) {
-                    continue;
-                }
+                const auto& sprite = gCoordinator.getComponent<Sprite>(entity);
+                SDL_Texture* texture = TextureManager::getInstance()->loadTexture(sprite.texturePath);
+                if (!texture) continue;
 
-                // Get texture dimensions
-                int texWidth, texHeight;
-                SDL_QueryTexture(texture, nullptr, nullptr, &texWidth, &texHeight);
-
-                // Calculate destination rectangle based on transform dimensions
                 SDL_FRect dstRect = {
                     screenX,
                     screenY,
-                    transform.w, // Use transform width directly
-                    transform.h // Use transform height directly
+                    transform.w,    // Use transform width
+                    transform.h     // Use transform height
                 };
 
-                // Set up source rectangle to use full texture
-                SDL_Rect srcRect = {
-                    0, 0, texWidth, texHeight
-                };
-
-                // Ensure alpha blending is enabled
-                SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
-
-                // Render the sprite
+                // Draw the sprite
                 SDL_RenderCopyExF(
                     app->renderer,
                     texture,
-                    &srcRect,
+                    &sprite.srcRect,
                     &dstRect,
                     transform.orientation,
-                    nullptr, // Render from center
+                    nullptr,
                     sprite.flipX ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE
                 );
 
-                // Debug visualization of bounds (optional)
-#ifdef DEBUG_RENDER
-                SDL_SetRenderDrawColor(app->renderer, 255, 0, 0, 255);
-                SDL_RenderDrawRectF(app->renderer, &dstRect);
-#endif
-            } else if (gCoordinator.hasComponent<Color>(entity)) {
-                const auto &color = gCoordinator.getComponent<Color>(entity);
+                // Debug visualization
+                if (debugDraw) {
+                    // Draw collision bounds in red
+                    SDL_SetRenderDrawColor(app->renderer, 255, 0, 0, 255);
+                    SDL_RenderDrawRectF(app->renderer, &dstRect);
+
+                    // Draw center point
+                    SDL_FRect centerPoint = {
+                        screenX + transform.w/2 - 2,
+                        screenY + transform.h/2 - 2,
+                        4,
+                        4
+                    };
+                    SDL_RenderFillRectF(app->renderer, &centerPoint);
+                }
+            }
+            else if (gCoordinator.hasComponent<Color>(entity)) {
+                const auto& color = gCoordinator.getComponent<Color>(entity);
                 SDL_SetRenderDrawColor(app->renderer, color.color.r, color.color.g, color.color.b, color.color.a);
 
                 SDL_FRect tRect = {
