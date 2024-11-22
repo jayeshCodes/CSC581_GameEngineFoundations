@@ -223,41 +223,39 @@ struct VerticalBoost {
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(VerticalBoost, velocity)
 
 struct Sprite {
-    SDL_Texture* texture = nullptr;
-    SDL_Rect srcRect;  // Source rectangle (what part of the texture to show)
+    std::string texturePath; // Store the path instead of the texture pointer
+    SDL_Rect srcRect;
     bool flipX = false;
     bool flipY = false;
     float scale = 1.0f;
-    SDL_FPoint origin = {0, 0};  // Rotation origin point
-
-    ~Sprite() {
-        if (texture) {
-            SDL_DestroyTexture(texture);
-            texture = nullptr;
-        }
-    }
+    SDL_FPoint origin = {0, 0};
 };
 
-inline void to_json(nlohmann::json& j, const Sprite& s) {
-    // We don't serialize the texture pointer, just the source rectangle and transform properties
+inline void to_json(nlohmann::json &j, const Sprite &s) {
     j = nlohmann::json{
-            {"srcRect", {
+        {"texturePath", s.texturePath},
+        {
+            "srcRect", {
                 {"x", s.srcRect.x},
                 {"y", s.srcRect.y},
                 {"w", s.srcRect.w},
                 {"h", s.srcRect.h}
-            }},
-            {"flipX", s.flipX},
-            {"flipY", s.flipY},
-            {"scale", s.scale},
-            {"origin", {
+            }
+        },
+        {"flipX", s.flipX},
+        {"flipY", s.flipY},
+        {"scale", s.scale},
+        {
+            "origin", {
                 {"x", s.origin.x},
                 {"y", s.origin.y}
-            }}
+            }
+        }
     };
 }
 
-inline void from_json(const nlohmann::json& j, Sprite& s) {
+inline void from_json(const nlohmann::json &j, Sprite &s) {
+    s.texturePath = j["texturePath"];
     s.srcRect.x = j["srcRect"]["x"];
     s.srcRect.y = j["srcRect"]["y"];
     s.srcRect.w = j["srcRect"]["w"];

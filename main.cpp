@@ -263,14 +263,19 @@ int main(int argc, char *argv[]) {
         std::cout << "Current working directory: " << cwd << std::endl;
     }
 
+    std::string path = "assets/images/moodle.png";
+
     // moodle sprite
     Sprite sprite;
-    sprite.texture = TextureManager::getInstance()->loadTexture("assets/images/moodle.png");
-    sprite.srcRect = {0, 0, 32, 32};
-    sprite.scale = 100.0f;
+    sprite.texturePath = path;  // Add this string member to Sprite struct
+    sprite.srcRect = {0, 0, 32, 32};   // We'll update this once we load the texture
+    sprite.scale = 1.0f;
+    sprite.origin = {0, 0};
+    sprite.flipX = false;
+    sprite.flipY = false;
 
     auto mainChar = gCoordinator.createEntity();
-    gCoordinator.addComponent(mainChar, Transform{0.f, SCREEN_HEIGHT - 200.f, 32, 32, 0});
+    gCoordinator.addComponent(mainChar, Transform{0.f, SCREEN_HEIGHT - 200.f, (float) 32, (float) 32, 0});
     gCoordinator.addComponent(mainChar, sprite);
     gCoordinator.addComponent(mainChar, CKinematic{});
     gCoordinator.addComponent(mainChar, KeyboardMovement{150.f});

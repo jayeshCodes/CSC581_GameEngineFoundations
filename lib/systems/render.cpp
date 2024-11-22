@@ -5,6 +5,8 @@
 #include "../ECS/system.hpp"
 #include "../model/components.hpp"
 #include "../core/structs.hpp"
+#include "../helpers/texture_manager.hpp"
+#include <iostream>
 
 extern Coordinator gCoordinator;
 extern App *app;
@@ -28,10 +30,23 @@ public:
 
             // If entity has a sprite, render it
             if (gCoordinator.hasComponent<Sprite>(entity)) {
-                const auto &sprite = gCoordinator.getComponent<Sprite>(entity);
-                if (!sprite.texture) continue; // Skip if texture not loaded
+                const auto& sprite = gCoordinator.getComponent<Sprite>(entity);
 
-                // Calculate destination rectangle
+                // Load texture using the path
+                SDL_Texture* texture = TextureManager::getInstance()->loadTexture(sprite.texturePath);
+                if (!texture) {
+                    std::cout << "Failed to load texture for entity " << entity << ": " << sprite.texturePath << std::endl;
+                    continue;
+                }
+
+                // Get texture dimensions if we haven't already
+                if (sprite.srcRect.w == 0 || sprite.srcRect.h == 0) {
+                    int w, h;
+                    SDL_QueryTexture(texture, nullptr, nullptr, &w, &h);
+                    const_cast<Sprite&>(sprite).srcRect.w = w;
+                    const_cast<Sprite&>(sprite).srcRect.h = h;
+                }
+
                 SDL_FRect dstRect = {
                     screenX,
                     screenY,
@@ -39,15 +54,13 @@ public:
                     transform.h * sprite.scale
                 };
 
-                // Calculate flip flags
                 SDL_RendererFlip flip = SDL_FLIP_NONE;
-                if (sprite.flipX) flip = (SDL_RendererFlip) (flip | SDL_FLIP_HORIZONTAL);
-                if (sprite.flipY) flip = (SDL_RendererFlip) (flip | SDL_FLIP_VERTICAL);
+                if (sprite.flipX) flip = (SDL_RendererFlip)(flip | SDL_FLIP_HORIZONTAL);
+                if (sprite.flipY) flip = (SDL_RendererFlip)(flip | SDL_FLIP_VERTICAL);
 
-                // Render the sprite
                 SDL_RenderCopyExF(
                     app->renderer,
-                    sprite.texture,
+                    texture,
                     &sprite.srcRect,
                     &dstRect,
                     transform.orientation,
