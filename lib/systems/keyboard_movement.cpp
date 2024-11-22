@@ -46,6 +46,38 @@ public:
     void update() {
         for (auto &entity: entities) {
             keyboardState = SDL_GetKeyboardState(nullptr);
+
+            if (gCoordinator.hasComponent<Sprite>(entity)) {
+                auto &sprite = gCoordinator.getComponent<Sprite>(entity);
+                auto &transform = gCoordinator.getComponent<Transform>(entity);
+
+                // Scale adjustments
+                if (keyboardState[SDL_SCANCODE_EQUALS]) {
+                    // Plus key
+                    sprite.scale += 0.05f;
+                    transform.w = sprite.srcRect.w * sprite.scale;
+                    transform.h = sprite.srcRect.h * sprite.scale;
+                    std::cout << "Scale: " << sprite.scale << std::endl;
+                }
+                if (keyboardState[SDL_SCANCODE_MINUS]) {
+                    // Minus key
+                    if (sprite.scale > 0.5f) {
+                        // Prevent going below minimum visible scale
+                        sprite.scale -= 0.05f;
+                        transform.w = sprite.srcRect.w * sprite.scale;
+                        transform.h = sprite.srcRect.h * sprite.scale;
+                        std::cout << "Scale: " << sprite.scale << std::endl;
+                    }
+                }
+
+                // Print current configuration when P is pressed
+                if (keyboardState  [SDL_SCANCODE_P]) {
+                    std::cout << "Current configuration:" << std::endl;
+                    std::cout << "Scale: " << sprite.scale << std::endl;
+                    std::cout << "Transform: x=" << transform.x << ", y=" << transform.y
+                            << ", w=" << transform.w << ", h=" << transform.h << std::endl;
+                }
+            }
             int64_t now = gameTimeline.getElapsedTime();
             bool comboEventTriggered = false;
 
@@ -99,6 +131,7 @@ public:
                     };
                     eventCoordinator.emit(std::make_shared<Event>(releaseEvent));
                 }
+
 
                 prevKeyState[key] = isPressed; // Update previous state
             }

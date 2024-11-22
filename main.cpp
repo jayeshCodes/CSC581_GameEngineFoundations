@@ -270,24 +270,29 @@ int main(int argc, char *argv[]) {
     SDL_QueryTexture(tempTexture, nullptr, nullptr, &texWidth, &texHeight);
     std::cout << "Loaded texture dimensions: " << texWidth << "x" << texHeight << std::endl;
 
-    // Create the sprite with proper dimensions
+    // Calculate a good base size for the character (e.g., 1/8th of screen height)
+    float desiredHeight = SCREEN_HEIGHT / 8.0f; // Adjust this ratio to make character bigger/smaller
+    float scale = desiredHeight / texHeight; // Calculate scale to achieve desired height
+
     Sprite sprite;
-    sprite.texturePath = "assets/images/knife.png";
-    sprite.srcRect = {0, 0, texWidth, texHeight}; // Use full texture dimensions
-    sprite.scale = 0.5f; // Scale down the sprite since it's 590x610
+    sprite.texturePath = "assets/images/monsters/1.png";
+    sprite.srcRect = {0, 0, texWidth, texHeight};
+    sprite.scale = scale;
     sprite.origin = {0, 0};
     sprite.flipX = false;
     sprite.flipY = false;
 
     auto mainChar = gCoordinator.createEntity();
-    float scaledWidth = texWidth * sprite.scale;
-    float scaledHeight = texHeight * sprite.scale;
 
+    float aspectRatio = (float) texWidth / texHeight;
+    float desiredWidth = desiredHeight * aspectRatio;
+
+    // Set transform dimensions to these exact values
     gCoordinator.addComponent(mainChar, Transform{
-                                  0.f, // x
-                                  SCREEN_HEIGHT - scaledHeight, // y
-                                  scaledHeight, // h - match texture height
-                                  scaledWidth, // w - match texture width
+                                  SCREEN_WIDTH / 2.0f - (desiredWidth / 2.0f), // center horizontally
+                                  SCREEN_HEIGHT - desiredHeight - 10.0f, // place above ground
+                                  desiredHeight, // height
+                                  desiredWidth, // width
                                   0 // orientation
                               });
     gCoordinator.addComponent(mainChar, sprite);

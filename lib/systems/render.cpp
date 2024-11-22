@@ -18,7 +18,6 @@ public:
         Camera cameraComponent{0, 0, 0, 0, 0, 0};
         if (camera != INVALID_ENTITY) {
             cameraComponent = gCoordinator.getComponent<Camera>(camera);
-
         }
 
         SDL_Rect viewport;
@@ -31,53 +30,48 @@ public:
 
             if (gCoordinator.hasComponent<Sprite>(entity)) {
                 const auto &sprite = gCoordinator.getComponent<Sprite>(entity);
-
-
                 SDL_Texture *texture = TextureManager::getInstance()->loadTexture(sprite.texturePath);
                 if (!texture) {
                     continue;
                 }
 
-                // Get and print texture dimensions
+                // Get texture dimensions
                 int texWidth, texHeight;
                 SDL_QueryTexture(texture, nullptr, nullptr, &texWidth, &texHeight);
 
-
+                // Calculate destination rectangle based on transform dimensions
                 SDL_FRect dstRect = {
                     screenX,
                     screenY,
-                    transform.w * sprite.scale,
-                    transform.h * sprite.scale
+                    transform.w, // Use transform width directly
+                    transform.h // Use transform height directly
                 };
 
-                // Draw a red rectangle to see the sprite bounds
-                SDL_SetRenderDrawColor(app->renderer, 255, 0, 0, 255);
-                SDL_RenderDrawRectF(app->renderer, &dstRect);
-
-                SDL_BlendMode blendMode;
-                SDL_GetTextureBlendMode(texture, &blendMode);
-
+                // Set up source rectangle to use full texture
+                SDL_Rect srcRect = {
+                    0, 0, texWidth, texHeight
+                };
 
                 // Ensure alpha blending is enabled
                 SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
 
-                int result = SDL_RenderCopyExF(
+                // Render the sprite
+                SDL_RenderCopyExF(
                     app->renderer,
                     texture,
-                    &sprite.srcRect,
+                    &srcRect,
                     &dstRect,
                     transform.orientation,
-                    &sprite.origin,
+                    nullptr, // Render from center
                     sprite.flipX ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE
                 );
 
-                if (result < 0) {
-                    std::cerr << "Error rendering texture: " << SDL_GetError() << std::endl;
-                } else {
-
-                }
+                // Debug visualization of bounds (optional)
+#ifdef DEBUG_RENDER
+                SDL_SetRenderDrawColor(app->renderer, 255, 0, 0, 255);
+                SDL_RenderDrawRectF(app->renderer, &dstRect);
+#endif
             } else if (gCoordinator.hasComponent<Color>(entity)) {
-
                 const auto &color = gCoordinator.getComponent<Color>(entity);
                 SDL_SetRenderDrawColor(app->renderer, color.color.r, color.color.g, color.color.b, color.color.a);
 
@@ -88,7 +82,6 @@ public:
                     transform.h
                 };
 
-                SDL_RenderDrawRectF(app->renderer, &tRect);
                 SDL_RenderFillRectF(app->renderer, &tRect);
             }
         }
