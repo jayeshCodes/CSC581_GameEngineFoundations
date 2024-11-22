@@ -265,17 +265,31 @@ int main(int argc, char *argv[]) {
 
     std::string path = "assets/images/moodle.png";
 
-    // moodle sprite
+    SDL_Texture *tempTexture = TextureManager::getInstance()->loadTexture("assets/images/moodle.png");
+    int texWidth, texHeight;
+    SDL_QueryTexture(tempTexture, nullptr, nullptr, &texWidth, &texHeight);
+    std::cout << "Loaded texture dimensions: " << texWidth << "x" << texHeight << std::endl;
+
+    // Create the sprite with proper dimensions
     Sprite sprite;
-    sprite.texturePath = path;  // Add this string member to Sprite struct
-    sprite.srcRect = {0, 0, 32, 32};   // We'll update this once we load the texture
-    sprite.scale = 1.0f;
+    sprite.texturePath = "assets/images/knife.png";
+    sprite.srcRect = {0, 0, texWidth, texHeight}; // Use full texture dimensions
+    sprite.scale = 0.5f; // Scale down the sprite since it's 590x610
     sprite.origin = {0, 0};
     sprite.flipX = false;
     sprite.flipY = false;
 
     auto mainChar = gCoordinator.createEntity();
-    gCoordinator.addComponent(mainChar, Transform{0.f, SCREEN_HEIGHT - 200.f, (float) 32, (float) 32, 0});
+    float scaledWidth = texWidth * sprite.scale;
+    float scaledHeight = texHeight * sprite.scale;
+
+    gCoordinator.addComponent(mainChar, Transform{
+                                  0.f, // x
+                                  SCREEN_HEIGHT - scaledHeight, // y
+                                  scaledHeight, // h - match texture height
+                                  scaledWidth, // w - match texture width
+                                  0 // orientation
+                              });
     gCoordinator.addComponent(mainChar, sprite);
     gCoordinator.addComponent(mainChar, CKinematic{});
     gCoordinator.addComponent(mainChar, KeyboardMovement{150.f});
@@ -297,6 +311,10 @@ int main(int argc, char *argv[]) {
     entityCreatedEvent.data = MainCharCreatedData{mainChar, strategy->get_message(mainChar, Message::CREATE)};
     eventCoordinator.emitServer(client_socket, std::make_shared<Event>(entityCreatedEvent));
     gCoordinator.getComponent<ClientEntity>(mainChar).synced = true;
+
+    // After creating mainChar and adding all components
+    std::cout << "Is mainChar in render system: " <<
+            (renderSystem->entities.find(mainChar) != renderSystem->entities.end()) << std::endl;
 
 
     auto clientEntity = gCoordinator.createEntity();

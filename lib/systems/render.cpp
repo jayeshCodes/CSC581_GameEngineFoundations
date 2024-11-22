@@ -18,34 +18,30 @@ public:
         Camera cameraComponent{0, 0, 0, 0, 0, 0};
         if (camera != INVALID_ENTITY) {
             cameraComponent = gCoordinator.getComponent<Camera>(camera);
+
         }
 
-        // Loop through all entities to render them
+        SDL_Rect viewport;
+        SDL_RenderGetViewport(app->renderer, &viewport);
+
         for (const Entity entity: entities) {
             const auto &transform = gCoordinator.getComponent<Transform>(entity);
-
-            // Calculate screen position
             float screenX = transform.x;
             float screenY = transform.y - cameraComponent.y;
 
-            // If entity has a sprite, render it
             if (gCoordinator.hasComponent<Sprite>(entity)) {
-                const auto& sprite = gCoordinator.getComponent<Sprite>(entity);
+                const auto &sprite = gCoordinator.getComponent<Sprite>(entity);
 
-                // Load texture using the path
-                SDL_Texture* texture = TextureManager::getInstance()->loadTexture(sprite.texturePath);
+
+                SDL_Texture *texture = TextureManager::getInstance()->loadTexture(sprite.texturePath);
                 if (!texture) {
-                    std::cout << "Failed to load texture for entity " << entity << ": " << sprite.texturePath << std::endl;
                     continue;
                 }
 
-                // Get texture dimensions if we haven't already
-                if (sprite.srcRect.w == 0 || sprite.srcRect.h == 0) {
-                    int w, h;
-                    SDL_QueryTexture(texture, nullptr, nullptr, &w, &h);
-                    const_cast<Sprite&>(sprite).srcRect.w = w;
-                    const_cast<Sprite&>(sprite).srcRect.h = h;
-                }
+                // Get and print texture dimensions
+                int texWidth, texHeight;
+                SDL_QueryTexture(texture, nullptr, nullptr, &texWidth, &texHeight);
+
 
                 SDL_FRect dstRect = {
                     screenX,
@@ -54,22 +50,34 @@ public:
                     transform.h * sprite.scale
                 };
 
-                SDL_RendererFlip flip = SDL_FLIP_NONE;
-                if (sprite.flipX) flip = (SDL_RendererFlip)(flip | SDL_FLIP_HORIZONTAL);
-                if (sprite.flipY) flip = (SDL_RendererFlip)(flip | SDL_FLIP_VERTICAL);
+                // Draw a red rectangle to see the sprite bounds
+                SDL_SetRenderDrawColor(app->renderer, 255, 0, 0, 255);
+                SDL_RenderDrawRectF(app->renderer, &dstRect);
 
-                SDL_RenderCopyExF(
+                SDL_BlendMode blendMode;
+                SDL_GetTextureBlendMode(texture, &blendMode);
+
+
+                // Ensure alpha blending is enabled
+                SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+
+                int result = SDL_RenderCopyExF(
                     app->renderer,
                     texture,
                     &sprite.srcRect,
                     &dstRect,
                     transform.orientation,
                     &sprite.origin,
-                    flip
+                    sprite.flipX ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE
                 );
-            }
-            // If entity has a color, render colored rectangle
-            else if (gCoordinator.hasComponent<Color>(entity)) {
+
+                if (result < 0) {
+                    std::cerr << "Error rendering texture: " << SDL_GetError() << std::endl;
+                } else {
+
+                }
+            } else if (gCoordinator.hasComponent<Color>(entity)) {
+
                 const auto &color = gCoordinator.getComponent<Color>(entity);
                 SDL_SetRenderDrawColor(app->renderer, color.color.r, color.color.g, color.color.b, color.color.a);
 

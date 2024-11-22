@@ -3,5 +3,5 @@
 #define ENGINE_NAME "Moodle Jump"
 #define ENGINE_VERSION ""
 
-#define SCREEN_WIDTH 430
-#define SCREEN_HEIGHT 932
+#define SCREEN_WIDTH 500
+#define SCREEN_HEIGHT 1000
