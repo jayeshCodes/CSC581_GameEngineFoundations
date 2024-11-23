@@ -75,6 +75,12 @@ private:
                     score.score = 0;
                     score.highestY = INITIAL_Y;
                 }
+
+                // Reset respawnable if it exists
+                if (gCoordinator.hasComponent<Respawnable>(entity)) {
+                    auto& respawnable = gCoordinator.getComponent<Respawnable>(entity);
+                    respawnable.isDead = false;
+                }
             }
         }
 
