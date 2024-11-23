@@ -54,6 +54,7 @@ private:
         gCoordinator.addComponent(monster, ClientEntity{0, true});
         gCoordinator.addComponent(monster, MovingPlatform{x, x +50.f , TO, 0, HORIZONTAL});
         gCoordinator.addComponent(monster, Destroy{});
+        gCoordinator.addComponent(monster, Monster{100.f});
 
         activeMonsters.push_back(monster);
         lastSpawnY = y;

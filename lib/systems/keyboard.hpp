@@ -67,16 +67,6 @@ private:
                     }
                     break;
 
-                case SDL_SCANCODE_SPACE:
-                    if (isKeyRelease) {
-                        keyboard.wasSpaceReleased = true;
-                    } else if (jump && jump->canJump && !jump->isJumping) {
-                        jump->isJumping = true;
-                        jump->canJump = false;
-                        jump->jumpTime = 0.f;
-                    }
-                    break;
-
                 case SDL_SCANCODE_8:
                     if (!isKeyRelease) {
                         Event startReplayEvent{eventTypeToString(EventType::StartRecording), {}};

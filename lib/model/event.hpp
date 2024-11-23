@@ -28,7 +28,12 @@ enum EventType {
     StopReplaying,
     EntityCreated,
     EntityDestroyed,
-    ProjectileCreate
+    ProjectileCreate,
+    GameOver,
+    GameRestart,
+    GameStarted,
+    MonsterHit,
+    MonsterDefeated
 };
 
 inline std::string eventTypeToString(EventType type) {
@@ -67,6 +72,16 @@ inline std::string eventTypeToString(EventType type) {
             return "EntityDestroyed";
         case ProjectileCreate:
             return "ProjectileCreate";
+        case GameOver:
+            return "GameOver";
+        case GameRestart:
+            return "GameRestart";
+        case GameStarted:
+            return "GameStarted";
+        case MonsterHit:
+            return "MonsterHit";
+        case MonsterDefeated:
+            return "MonsterDefeated";
         default: return "Unknown";
     }
 }
@@ -149,8 +164,24 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(EntityDestroyedData, entity, id)
 struct ProjectileCreateData {
     Transform shooterTransform;
     float angle;
+    float velocity;  // Added velocity fieldr
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ProjectileCreateData, shooterTransform, angle)
+
+struct GameOverData {
+    Entity player;
+    Entity monster;
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(GameOverData, player, monster)
+
+struct MonsterHitData {
+    Entity monster;
+    Entity projectile;
+    float damage;
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(MonsterHitData, monster, projectile, damage)
 
 #endif //EVENT_HPP

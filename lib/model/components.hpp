@@ -313,6 +313,25 @@ struct Score {
     float highestY = 0; // track score based on the highest y coordinate reached in the game world
 };
 
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Score, score, highestY)
+
+struct Monster {
+    float health = 100;
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Monster, health)
+
+struct MainChar {
+};
+
+struct ScorePopup {
+    float duration = 1.0f;
+    float currentTime = 0.0f;
+    std::string text;
+};
+
+
+
 using ALL_COMPONENTS = std::variant<Transform, Color, CKinematic, Camera, Gravity, KeyboardMovement, Server, Receiver,
     MovingPlatform, ServerEntity, ClientEntity, Destroy, Collision, Jump, Respawnable, RigidBody, Dash, Stomp,
-    VerticalBoost, Sprite, IntroScreen, PlatformSpawner, Shooter, Projectile>;
+    VerticalBoost, Sprite, IntroScreen, PlatformSpawner, Shooter, Projectile, Score>;

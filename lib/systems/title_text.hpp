@@ -34,6 +34,7 @@ public:
         // Load the fonts we'll need
         fontHelper->loadFont("title", "assets/fonts/Dokdo-Regular.ttf", 48);
         fontHelper->loadFont("subtitle", "assets/fonts/Dokdo-Regular.ttf", 24);
+        fontHelper->loadFont("howto", "assets/fonts/Dokdo-Regular.ttf", 24);
     }
 
     void update() { // co-authored by GitHub Copilot
@@ -69,6 +70,19 @@ public:
             fontHelper->renderText("Press Enter to Start", "subtitle",
                                    SDL_Color{255, 255, 255, alpha},
                                    subtitleX, subtitleY);
+
+            fontHelper->renderText("How to Play:", "howto",
+                                   SDL_Color{255, 255, 255, 255},
+                                   subtitleX, subtitleY + 50);
+            fontHelper->renderText("A or D to move", "howto",
+                                   SDL_Color{255, 255, 255, 255},
+                                   subtitleX, subtitleY + 80);
+            fontHelper->renderText("Space to shoot monsters", "howto",
+                                   SDL_Color{255, 255, 255, 255},
+                                   subtitleX, subtitleY + 110);
+            fontHelper->renderText("DO NOT TOUCH THE MONSTERS", "howto",
+                                   SDL_Color{255, 0, 0, 255},
+                                   subtitleX, subtitleY + 140);
 
             // Check for Enter key press
             if (keyboardState[SDL_SCANCODE_RETURN] && !gameStarted) {

@@ -45,9 +45,15 @@
 #endif
 #include <limits.h>  // for PATH_MAX
 
+#include "lib/systems/game_over_handler.hpp"
+#include "lib/systems/monster_collision.hpp"
+#include "lib/systems/monster_defeated_handler.hpp"
+#include "lib/systems/monster_hit_effects.hpp"
 #include "lib/systems/monster_spawner.hpp"
 #include "lib/systems/platform_spawner.hpp"
 #include "lib/systems/projectile_handler.hpp"
+#include "lib/systems/projectile_monster_collision.hpp"
+#include "lib/systems/restart_handler.hpp"
 #include "lib/systems/score.hpp"
 #include "lib/systems/score_display.hpp"
 #include "lib/systems/shoot.hpp"
@@ -111,7 +117,9 @@ void physicsUpdate(Timeline &gameTimeline,
                    std::shared_ptr<DashSystem> dashSystem,
                    std::shared_ptr<ShooterSystem> shooterSystem,
                    std::shared_ptr<KeyboardMovementSystem> keyboardMovementSystem,
-                   std::shared_ptr<ProjectileHandlerSystem> projectileHandlerSystem) {
+                   std::shared_ptr<ProjectileHandlerSystem> projectileHandlerSystem,
+                   std::shared_ptr<ProjectileMonsterCollisionSystem> projectileMonsterCollisionSystem,
+                   std::shared_ptr<GameOverHandlerSystem> gameOverHandlerSystem) {
     const float FIXED_TIMESTEP = 1.0f / 120.0f; // 120 Hz physics updates
     int64_t lastTime = gameTimeline.getElapsedTime();
 
@@ -123,7 +131,7 @@ void physicsUpdate(Timeline &gameTimeline,
         dt = std::min(dt, FIXED_TIMESTEP); // Prevent large time steps
 
         // Update physics systems
-        if (!gameTimeline.isPaused()) {
+        if (!gameTimeline.isPaused() && !gameOverHandlerSystem->isGameOver) {
             keyboardMovementSystem->update();
             kinematicSystem->update(dt);
             jumpSystem->update(dt);
@@ -133,6 +141,7 @@ void physicsUpdate(Timeline &gameTimeline,
             dashSystem->update(dt);
             shooterSystem->update(dt);
             projectileHandlerSystem->update(dt);
+            projectileMonsterCollisionSystem->update();
         }
 
         // Sleep to maintain consistent update rate
@@ -199,6 +208,9 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Shooter>();
     gCoordinator.registerComponent<Projectile>();
     gCoordinator.registerComponent<Score>();
+    gCoordinator.registerComponent<Monster>();
+    gCoordinator.registerComponent<MainChar>();
+    gCoordinator.registerComponent<ScorePopup>();
 
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
@@ -230,6 +242,12 @@ int main(int argc, char *argv[]) {
     auto scoreSystem = gCoordinator.registerSystem<ScoreSystem>();
     auto scoreDisplaySystem = gCoordinator.registerSystem<ScoreDisplaySystem>();
     auto monsterSpawnerSystem = gCoordinator.registerSystem<MonsterSpawnerSystem>();
+    auto monsterCollisionSystem = gCoordinator.registerSystem<MonsterCollisionSystem>();
+    auto gameOverHandlerSystem = gCoordinator.registerSystem<GameOverHandlerSystem>();
+    auto restartHandlerSystem = gCoordinator.registerSystem<RestartHandlerSystem>();
+    auto projectileMonsterCollisionSystem = gCoordinator.registerSystem<ProjectileMonsterCollisionSystem>();
+    auto monsterHitEffectsSystem = gCoordinator.registerSystem<MonsterHitEffectsSystem>();
+    auto monsterDefeatedHandler = gCoordinator.registerSystem<MonsterDefeatedHandler>();
 
     Signature renderSignature;
     renderSignature.set(gCoordinator.getComponentType<Transform>());
@@ -331,6 +349,30 @@ int main(int argc, char *argv[]) {
     Signature monsterSpawnerSignature;
     gCoordinator.setSystemSignature<MonsterSpawnerSystem>(monsterSpawnerSignature);
 
+    Signature monsterCollisionSignature;
+    monsterCollisionSignature.set(gCoordinator.getComponentType<Transform>());
+    gCoordinator.setSystemSignature<MonsterCollisionSystem>(monsterCollisionSignature);
+
+    Signature restartHandlerSignature;
+    gCoordinator.setSystemSignature<RestartHandlerSystem>(restartHandlerSignature);
+
+    Signature projectileMonsterCollisionSignature;
+    projectileMonsterCollisionSignature.set(gCoordinator.getComponentType<Transform>());
+    projectileMonsterCollisionSignature.set(gCoordinator.getComponentType<Monster>(), false);
+    projectileMonsterCollisionSignature.set(gCoordinator.getComponentType<Projectile>(), false);
+    gCoordinator.setSystemSignature<ProjectileMonsterCollisionSystem>(projectileMonsterCollisionSignature);
+
+    Signature monsterHitEffectsSignature;
+    monsterHitEffectsSignature.set(gCoordinator.getComponentType<Sprite>(), false);
+    gCoordinator.setSystemSignature<MonsterHitEffectsSystem>(monsterHitEffectsSignature);
+
+    // Set up signature to handle relevant components
+    Signature monsterDefeatedSignature;
+    monsterDefeatedSignature.set(gCoordinator.getComponentType<Transform>());
+    monsterDefeatedSignature.set(gCoordinator.getComponentType<Color>(), false);
+    monsterDefeatedSignature.set(gCoordinator.getComponentType<CKinematic>(), false);
+    gCoordinator.setSystemSignature<MonsterDefeatedHandler>(monsterDefeatedSignature);
+
     zmq::socket_t reply_socket(context, ZMQ_DEALER);
     std::string id = identity + "R";
     reply_socket.set(zmq::sockopt::routing_id, id);
@@ -405,6 +447,7 @@ int main(int argc, char *argv[]) {
     gCoordinator.addComponent(mainChar, Collision{true, false, CollisionLayer::PLAYER});
     gCoordinator.addComponent(mainChar, Shooter{true, 0.5f, 0.0f});
     gCoordinator.addComponent(mainChar, Score{0, SCREEN_HEIGHT - desiredHeight - 240.0f});
+    gCoordinator.addComponent(mainChar, MainChar{});
     std::cout << "MainChar: " << gCoordinator.getEntityKey(mainChar) << std::endl;
     mainCharID = gCoordinator.getEntityKey(mainChar);
 
@@ -476,7 +519,9 @@ int main(int argc, char *argv[]) {
                               dashSystem,
                               shooterSystem,
                               keyboardMovementSystem,
-                              projectileHandlerSystem);
+                              projectileHandlerSystem,
+                              projectileMonsterCollisionSystem,
+                              gameOverHandlerSystem);
 
     while (GameManager::getInstance()->gameRunning) {
         doInput();
@@ -496,6 +541,8 @@ int main(int argc, char *argv[]) {
             monsterSpawnerSystem->update(mainCamera);
             updateCounter = 0;
         }
+        monsterCollisionSystem->update();
+        gameOverHandlerSystem->update(dt);
         scoreSystem->update();
         scoreDisplaySystem->update();
         moveBetween2PointsSystem->update(dt, monsterTimeline);
@@ -503,6 +550,7 @@ int main(int argc, char *argv[]) {
         renderSystem->update(mainCamera);
         eventSystem->update();
         replayHandler->update();
+        monsterDefeatedHandler->update(dt);
 
         if (!introScreenSystem->hasGameStarted()) {
             introScreenSystem->update();

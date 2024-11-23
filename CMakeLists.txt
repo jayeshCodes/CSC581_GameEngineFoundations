@@ -66,7 +66,13 @@ set(SOURCES
         lib/systems/platform_spawner.hpp
         lib/systems/shoot.hpp
         lib/systems/projectile_handler.hpp
-        lib/systems/monster_spawner.hpp)
+        lib/systems/monster_spawner.hpp
+        lib/systems/monster_collision.hpp
+        lib/systems/game_over_handler.hpp
+        lib/systems/restart_handler.hpp
+        lib/systems/projectile_monster_collision.hpp
+        lib/systems/monster_hit_effects.hpp
+        lib/systems/monster_defeated_handler.hpp)
 
 
 add_executable(shade_engine ${SOURCES} main.cpp
