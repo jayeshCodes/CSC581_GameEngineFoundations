@@ -64,17 +64,24 @@ private:
             gCoordinator.removeComponent<Collision>(monster);
         }
 
+        // Set destroy component
+        if (gCoordinator.hasComponent<Destroy>(monster)) {
+            auto &destroy = gCoordinator.getComponent<Destroy>(monster);
+            destroy.destroy = true;
+            destroy.isSent = false; // Ensure it gets synced over network
+        } else {
+            gCoordinator.addComponent(monster, Destroy{-1, true, false});
+        }
+
         // Update player's score if it exists
         for (auto &[id, entity]: gCoordinator.getEntityIds()) {
             if (id == mainCharID && gCoordinator.hasComponent<Score>(entity)) {
                 auto &score = gCoordinator.getComponent<Score>(entity);
                 score.score += POINTS_PER_MONSTER;
-                std::cout << "Score updated: " << score.score << std::endl;
+                std::cout << "Updated score: " << score.score << std::endl;
                 break;
             }
         }
-
-        // createScorePopup(monster);
     }
 
     void createScorePopup(Entity monster) {
@@ -170,25 +177,6 @@ public:
             }
 
             ++it;
-        }
-
-        // Update score popups
-        for (auto entity: entities) {
-            if (!gCoordinator.hasComponent<ScorePopup>(entity)) continue;
-
-            // auto &popup = gCoordinator.getComponent<ScorePopup>(entity);
-            // popup.currentTime += dt;
-
-            // if (popup.currentTime >= popup.duration) {
-            //     gCoordinator.destroyEntity(entity);
-            //     continue;
-            // }
-
-            if (gCoordinator.hasComponent<Color>(entity)) {
-                auto &color = gCoordinator.getComponent<Color>(entity);
-                // float alpha = 1.0f - (popup.currentTime / popup.duration);
-                // color.color.a = static_cast<Uint8>(alpha * 255);
-            }
         }
     }
 };
