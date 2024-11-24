@@ -19,7 +19,8 @@ extern Coordinator gCoordinator;
 class PlatformSpawnerSystem : public System {
 private:
     std::mutex spawnMutex;
-    std::queue<std::pair<float, float> > platformsToSpawn; // Queue of (x,y) coordinates
+    std::queue<std::pair<float, float>> platformsToSpawn; // Queue of (x,y) coordinates
+    const float DESPAWN_OFFSET = 100.0f; // How far below camera view to destroy platforms
 
     void queuePlatformSpawn(float x, float y) {
         std::lock_guard<std::mutex> lock(spawnMutex);
@@ -27,7 +28,7 @@ private:
     }
 
     void createPlatform(float x, float y) {
-        auto &spawner = gCoordinator.getComponent<PlatformSpawner>(*entities.begin());
+        auto& spawner = gCoordinator.getComponent<PlatformSpawner>(*entities.begin());
 
         Sprite platformSprite;
         platformSprite.texturePath = spawner.texturePath;
@@ -40,12 +41,12 @@ private:
         Entity platform = gCoordinator.createEntity();
 
         gCoordinator.addComponent(platform, Transform{
-                                      x,
-                                      y,
-                                      30.0f,
-                                      120.0f,
-                                      0
-                                  });
+            x,
+            y,
+            30.0f,
+            120.0f,
+            0
+        });
         gCoordinator.addComponent(platform, platformSprite);
         gCoordinator.addComponent(platform, CKinematic{});
         gCoordinator.addComponent(platform, ClientEntity{0, false});
@@ -55,20 +56,47 @@ private:
         gCoordinator.addComponent(platform, RigidBody{-1.f});
     }
 
-    float getRandomX(const PlatformSpawner &spawner) {
+    float getRandomX(const PlatformSpawner& spawner) {
         return spawner.minX + (Random::generateRandomFloat(0, 1) * (spawner.maxX - spawner.minX));
+    }
+
+    void checkAndDestroyPlatforms(float cameraY) {
+        for (auto& [id, entity] : gCoordinator.getEntityIds()) {
+            // Check if this entity has the components we're interested in
+            if (gCoordinator.hasComponent<Transform>(entity) &&
+                gCoordinator.hasComponent<Destroy>(entity) &&
+                gCoordinator.hasComponent<VerticalBoost>(entity)) {
+
+                auto& transform = gCoordinator.getComponent<Transform>(entity);
+
+                // If platform is below camera view plus offset, mark for destruction
+                if (transform.y > cameraY + SCREEN_HEIGHT + DESPAWN_OFFSET) {
+                    auto& destroy = gCoordinator.getComponent<Destroy>(entity);
+                    destroy.destroy = true;
+                    destroy.isSent = false;
+                }
+            }
+        }
     }
 
 public:
     void update(Entity cameraEntity) {
-        if (entities.empty()) return;
+        if (entities.empty()) {
 
-        auto &spawner = gCoordinator.getComponent<PlatformSpawner>(*entities.begin());
-        auto &camera = gCoordinator.getComponent<Camera>(cameraEntity);
+            return;
+        }
+
+        auto& spawner = gCoordinator.getComponent<PlatformSpawner>(*entities.begin());
+        auto& camera = gCoordinator.getComponent<Camera>(cameraEntity);
+
+        // Check for and destroy out-of-view platforms
+        checkAndDestroyPlatforms(camera.y);
+
+        // Debug print for camera position and next spawn position
+
 
         // Check if we need to spawn new platforms
-        if (camera.y < spawner.lastCameraY - spawner.baseSpawnInterval / 2) {
-            // Queue new platform for spawning instead of creating immediately
+        if (camera.y < spawner.lastCameraY - spawner.baseSpawnInterval/2) {
             float x = getRandomX(spawner);
             queuePlatformSpawn(x, spawner.nextSpawnY);
 
@@ -88,7 +116,7 @@ public:
 
     void init() {
         for (auto entity: entities) {
-            auto &spawner = gCoordinator.getComponent<PlatformSpawner>(entity);
+            auto& spawner = gCoordinator.getComponent<PlatformSpawner>(entity);
 
             spawner.baseSpawnInterval = 170.0f;
             spawner.spawnVariation = 20.0f;
@@ -100,7 +128,7 @@ public:
 
             spawner.texture = TextureManager::getInstance()->loadTexture(spawner.texturePath);
             SDL_QueryTexture(spawner.texture, nullptr, nullptr,
-                             &spawner.platformWidth, &spawner.platformHeight);
+                &spawner.platformWidth, &spawner.platformHeight);
 
             // Queue initial platforms instead of creating them immediately
             for (int i = 0; i < 5; i++) {
@@ -114,6 +142,5 @@ public:
         }
     }
 };
-
 
 #endif //PLATFORM_SPAWNER_HPP
