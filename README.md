@@ -1,3 +1,16 @@
+# Moodle Jump
+This game is built using Shade Engine. The game is a simple platformer where you have to jump from one platform to another avoiding the monsters.
+
+# How to Play
+
+1. Use `A` to move left and `D` to move right
+2. Use `Space` to shoot Moodle knives
+3. Do not touch the monsters
+
+- If you fall down you will die and will have the option to restart the game.
+- If you touch the monsters you will die and will have the option to restart the game.
+
+
 # Shade Engine
 
 Built by: Utsav Lal and Jayesh Gajbhar \
@@ -41,33 +54,6 @@ build menu.
 No further action is required for building the games. The engine and game are run from the same executable for this
 version.
 
-# Playing and Controls
-
-1. Use `AD` to move the player
-2. Use `Space` to jump
-3. Use `Shift + D` to dash right or `Shift + A` to dash left
-
-- If you fall down you will die and respawn after 5 seconds.
-- If you land on a platform the character will get locked on it unless you move. This is a feature so that player doesn't fall off the platform when it moves.
-- If you move towards the right of the screen the camera will pan ahead
-
-# Things included in the demo
-1. Events: We have the following events in the game:  EntityRespawn,
-   `EntityDeath`,
-   `EntityCollided`,
-   `EntityInput`,
-   `EntityTriggered`,
-   `MainCharCreated`,
-   `PositionChanged`,
-   `DashRight`,
-   `DashLeft`. There names are self-explanatory.
-2. Delayed Events: `EntityDeath` is a delayed event. It is raised after 5 seconds of the player falling down.
-3. Handlers: Inside `systems/` files which end with `handler` are event handlers. They are responsible for handling the
-   events. For example `combo_event_handler` is responsible for handling the `DashRight` and `DashLeft` events.
-4. Networked Events: `MainCharCreated` and `PositionChanged` events are networked events
-5. Chords: `DashRight` and `DashLeft` are input chord events. They are raised when the player presses `Shift + D` or
-   `Shift + A` respectively.
-
 # Clean Up
 
 To clean up
@@ -97,3 +83,7 @@ To clean up
       of vectors)
     - `systems/`: All the systems for the game engine like `PhysicsSystem`, `CollisionSystem`, etc. Systems that end
       with `handler` are event handlers.
+
+
+# Author
+[Jayesh Bhagyesh Gajbhar](https://www.jayeshgajbhar.com)
