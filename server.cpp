@@ -132,7 +132,6 @@ int main(int argc, char *argv[]) {
     gCoordinator.registerComponent<Receiver>();
     gCoordinator.registerComponent<RigidBody>();
     gCoordinator.registerComponent<Respawnable>();
-    gCoordinator.registerComponent<VerticalBoost>();
 
     auto renderSystem = gCoordinator.registerSystem<RenderSystem>();
     auto kinematicSystem = gCoordinator.registerSystem<KinematicSystem>();

@@ -60,9 +60,7 @@ set(SOURCES
         lib/systems/dash.hpp
         lib/systems/replay_handler.hpp
         lib/systems/position.hpp
-        lib/helpers/font_helper.cpp)
-
-add_executable(shade_engine ${SOURCES} main.cpp
+        lib/helpers/font_helper.cpp
         lib/systems/bubble_event_handler.hpp
         lib/systems/shooter_reset_handler.hpp
         lib/systems/shooter_disable_handler.hpp
@@ -77,9 +75,11 @@ add_executable(shade_engine ${SOURCES} main.cpp
         lib/systems/instruction_render.hpp
         lib/systems/bubble_shooter.hpp
         lib/systems/game_over_handler.hpp
-        lib/systems/reset_handler.hpp)
-add_executable(shade_engine_server ${SOURCES} server.cpp
+        lib/systems/reset_handler.hpp
         lib/helpers/font_helper.cpp)
+
+add_executable(shade_engine ${SOURCES} main.cpp)
+add_executable(shade_engine_server ${SOURCES} server.cpp)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -100,6 +100,8 @@ target_link_libraries(shade_engine PRIVATE
 
 # Link libraries for shade_engine_server
 target_link_libraries(shade_engine_server PRIVATE
+        SDL2_mixer::SDL2_mixer
+        SDL2_ttf::SDL2_ttf
         SDL2::SDL2
         cppzmq
         nlohmann_json::nlohmann_json
