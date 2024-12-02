@@ -92,7 +92,11 @@ public:
                     keyPressTime[key] = now;
                     Event individualEvent{eventTypeToString(EventType::EntityInput), EntityInputData{entity, key}};
                     eventCoordinator.emit(std::make_shared<Event>(individualEvent));
-                } else if (!isPressed && wasPressed) {
+                } else if (isPressed) {
+                    // Key is being held down
+                    Event holdEvent{eventTypeToString(EventType::EntityInput), EntityInputData{entity, key}};
+                    eventCoordinator.emit(std::make_shared<Event>(holdEvent));
+                }else if (wasPressed) {
                     // Key just released
                     Event releaseEvent{
                         eventTypeToString(EventType::EntityInput), EntityInputData{entity, key | 0x8000}

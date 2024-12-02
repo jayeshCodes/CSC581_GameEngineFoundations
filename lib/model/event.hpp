@@ -79,7 +79,7 @@ struct EntityDeathData {
     Transform respawnPosition;
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(EntityDeathData, respawnPosition);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(EntityDeathData, entity, respawnPosition);
 
 struct EntityCollidedData {
     Entity entityA;
