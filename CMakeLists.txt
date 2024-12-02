@@ -98,7 +98,6 @@ set (SNAKE_SOURCE
         games/snake/systems/oob_detector.hpp
         games/snake/handlers/game_state_handler.hpp
         games/snake/helpers/text_helper.hpp
-        games/snake/systems/score.hpp
 )
 
 
