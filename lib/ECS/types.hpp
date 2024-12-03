@@ -8,6 +8,7 @@
 #include <array>
 #include <bitset>
 #include <cstdint>
+#include <vector>
 
 // Forward declare ALL_COMPONENTS to avoid circular dependency
 namespace Components {
